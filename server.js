@@ -1347,6 +1347,16 @@ function getPublicData(includeLargeLists = false) {
     });
   }
 
+  const refPembinaanList = includeLargeLists ? db.prepare('SELECT nama_wbp, status_integrasi FROM pentahapan_pembinaan').all() : [];
+  const refMap = new Map();
+  if (includeLargeLists) {
+    for (const r of refPembinaanList) {
+      if (r.nama_wbp) {
+        refMap.set(r.nama_wbp.trim().toUpperCase(), r.status_integrasi);
+      }
+    }
+  }
+
   const pentahapanPembinaanDetail = includeLargeLists ? db
       .prepare(`SELECT d.no_reg AS noReg,
         d.nama_wbp AS namaWbp,
@@ -1357,16 +1367,34 @@ function getPublicData(includeLargeLists = false) {
         d.tanggal3,
         d.tanggal4,
         d.keterangan,
-        COALESCE(NULLIF(TRIM(d.status_integrasi), ''), p.status_integrasi, '-') AS statusIntegrasi
+        TRIM(d.status_integrasi) AS statusIntegrasiD
       FROM pentahapan_pembinaan_detail d
-      LEFT JOIN pentahapan_pembinaan p ON UPPER(TRIM(p.nama_wbp)) = UPPER(TRIM(d.nama_wbp))
       WHERE COALESCE(d.is_active, 1) = 1
       ORDER BY d.nama_wbp COLLATE NOCASE ASC`)
     .all()
-    .map((item) => ({
-      ...item,
-      isStatusOverdue: isIntegrationOverdue(item.tanggal2, item.statusIntegrasi),
-    })) : [];
+    .map((item) => {
+       const statusIntegrasiD = item.statusIntegrasiD;
+       let statusIntegrasi = '-';
+       if (statusIntegrasiD && statusIntegrasiD !== '') {
+          statusIntegrasi = statusIntegrasiD;
+       } else if (item.namaWbp) {
+          const mapVal = refMap.get(item.namaWbp.trim().toUpperCase());
+          if (mapVal) statusIntegrasi = mapVal;
+       }
+       return {
+         noReg: item.noReg,
+         namaWbp: item.namaWbp,
+         jenisKejahatan: item.jenisKejahatan,
+         blokKamar: item.blokKamar,
+         tanggal1: item.tanggal1,
+         tanggal2: item.tanggal2,
+         tanggal3: item.tanggal3,
+         tanggal4: item.tanggal4,
+         keterangan: item.keterangan,
+         statusIntegrasi: statusIntegrasi,
+         isStatusOverdue: isIntegrationOverdue(item.tanggal2, statusIntegrasi)
+       };
+    }) : [];
 
   const jadwalKegiatan = db
     .prepare(`SELECT
@@ -2971,6 +2999,14 @@ app.get('/kalapas/table/remisi', (req, res) => {
 app.get('/kalapas/table/pembinaan', (req, res) => {
   const umum = getPublicData();
 
+  const refPembinaanList = db.prepare('SELECT nama_wbp, status_integrasi FROM pentahapan_pembinaan').all();
+  const refMap = new Map();
+  for (const r of refPembinaanList) {
+    if (r.nama_wbp) {
+      refMap.set(r.nama_wbp.trim().toUpperCase(), r.status_integrasi);
+    }
+  }
+
   const detailData = db.prepare(`SELECT d.no_reg AS noReg,
         d.nama_wbp AS namaWbp,
         d.jenis_kejahatan AS jenisKejahatan,
@@ -2980,15 +3016,25 @@ app.get('/kalapas/table/pembinaan', (req, res) => {
         d.tanggal3,
         d.tanggal4,
         d.keterangan,
-        COALESCE(NULLIF(TRIM(d.status_integrasi), ''), p.status_integrasi, '-') AS statusIntegrasi
+        TRIM(d.status_integrasi) AS statusIntegrasiD
       FROM pentahapan_pembinaan_detail d
-      LEFT JOIN pentahapan_pembinaan p ON UPPER(TRIM(p.nama_wbp)) = UPPER(TRIM(d.nama_wbp))
       WHERE COALESCE(d.is_active, 1) = 1
       ORDER BY d.nama_wbp COLLATE NOCASE ASC`).all()
-    .map((item) => ({
-      ...item,
-      isStatusOverdue: isIntegrationOverdue(item.tanggal2, item.statusIntegrasi),
-    }));
+    .map((item) => {
+       const statusIntegrasiD = item.statusIntegrasiD;
+       let statusIntegrasi = '-';
+       if (statusIntegrasiD && statusIntegrasiD !== '') {
+          statusIntegrasi = statusIntegrasiD;
+       } else if (item.namaWbp) {
+          const mapVal = refMap.get(item.namaWbp.trim().toUpperCase());
+          if (mapVal) statusIntegrasi = mapVal;
+       }
+       return {
+         ...item,
+         statusIntegrasi: statusIntegrasi,
+         isStatusOverdue: isIntegrationOverdue(item.tanggal2, statusIntegrasi)
+       };
+    });
 
   const rows = detailData.map(item => [
     item.noReg || '-',
