@@ -1306,7 +1306,7 @@ function requireKalapasLogin(req, res, next) {
 }
 
 // ─── Helper: baca semua data publik dari SQLite ───────────────────────────────
-function getPublicData() {
+function getPublicData(includeLargeLists = false) {
   const statistik = db.prepare('SELECT * FROM statistik WHERE id = 1').get();
   const remisiTitle = getAppSetting('remisi_title', 'BESARAN REMISI');
   const menuTitle = getAppSetting('menu_title', 'DAFTAR MENU MAKAN HARI INI');
@@ -1322,21 +1322,21 @@ function getPublicData() {
 
   const activeRemisiBatch = getActiveRemisiBatch();
 
-  const besaranRemisi = db
+  const besaranRemisi = includeLargeLists ? db
     .prepare(`
       SELECT jenis, nama, agama, besaran, remisi_bulan AS remisiBulan, remisi_hari AS remisiHari, keterangan
       FROM besaran_remisi
       WHERE (? = 0 OR batch_id = ?)
       ORDER BY nama COLLATE NOCASE ASC
     `)
-    .all(Number(activeRemisiBatch?.id || 0), Number(activeRemisiBatch?.id || 0));
+    .all(Number(activeRemisiBatch?.id || 0), Number(activeRemisiBatch?.id || 0)) : [];
 
   const menuMakan = getDailyMenuByDate(todayYmd);
   const menuMakanHistory = getDailyMenuHistoryRows();
 
-  const rawPembinaan = db
+  const rawPembinaan = includeLargeLists ? db
     .prepare('SELECT nama_wbp, status_integrasi FROM pentahapan_pembinaan ORDER BY nama_wbp COLLATE NOCASE ASC')
-    .all();
+    .all() : [];
   const pentahapanPembinaan = [];
   for (let i = 0; i < rawPembinaan.length; i += 2) {
     pentahapanPembinaan.push({
@@ -1347,7 +1347,7 @@ function getPublicData() {
     });
   }
 
-  const pentahapanPembinaanDetail = db
+  const pentahapanPembinaanDetail = includeLargeLists ? db
       .prepare(`SELECT d.no_reg AS noReg,
         d.nama_wbp AS namaWbp,
         d.jenis_kejahatan AS jenisKejahatan,
@@ -1366,7 +1366,7 @@ function getPublicData() {
     .map((item) => ({
       ...item,
       isStatusOverdue: isIntegrationOverdue(item.tanggal2, item.statusIntegrasi),
-    }));
+    })) : [];
 
   const jadwalKegiatan = db
     .prepare(`SELECT
@@ -2571,7 +2571,7 @@ app.use('/admin', (req, res, next) => {
 app.get('/', (req, res) => {
   const todayYmd = getTodayYmd();
   res.render('index', {
-    ...getPublicData(),
+    ...getPublicData(false),
     clinicSummary: getClinicData({ tanggal: todayYmd }).clinicSummary,
     activePage: 'umum'
   });
@@ -2932,6 +2932,7 @@ app.get('/kalapas/table/remisi', (req, res) => {
   }
 
   const whereSql = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
   const list = db.prepare(`
     SELECT
       r.id,
@@ -2963,12 +2964,33 @@ app.get('/kalapas/table/remisi', (req, res) => {
     selectedBatch,
     searchKeyword,
     isSearchMode,
+    reqQuery: req.query
   });
 });
 
 app.get('/kalapas/table/pembinaan', (req, res) => {
   const umum = getPublicData();
-  const rows = umum.pentahapanPembinaanDetail.map(item => [
+
+  const detailData = db.prepare(`SELECT d.no_reg AS noReg,
+        d.nama_wbp AS namaWbp,
+        d.jenis_kejahatan AS jenisKejahatan,
+        d.blok_kamar AS blokKamar,
+        d.tanggal1,
+        d.tanggal2,
+        d.tanggal3,
+        d.tanggal4,
+        d.keterangan,
+        COALESCE(NULLIF(TRIM(d.status_integrasi), ''), p.status_integrasi, '-') AS statusIntegrasi
+      FROM pentahapan_pembinaan_detail d
+      LEFT JOIN pentahapan_pembinaan p ON UPPER(TRIM(p.nama_wbp)) = UPPER(TRIM(d.nama_wbp))
+      WHERE COALESCE(d.is_active, 1) = 1
+      ORDER BY d.nama_wbp COLLATE NOCASE ASC`).all()
+    .map((item) => ({
+      ...item,
+      isStatusOverdue: isIntegrationOverdue(item.tanggal2, item.statusIntegrasi),
+    }));
+
+  const rows = detailData.map(item => [
     item.noReg || '-',
     item.namaWbp || '-',
     item.jenisKejahatan || '-',
@@ -4194,6 +4216,19 @@ app.get('/kalapas/table/agama', (req, res) => {
 app.get('/api/public-data-version', (_req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.json({ version: getPublicDataVersion() });
+});
+
+app.get('/api/public/tables', (req, res) => {
+  try {
+    const data = getPublicData(true);
+    res.json({
+      besaranRemisi: data.besaranRemisi || [],
+      pentahapanPembinaan: data.pentahapanPembinaan || [],
+      pentahapanPembinaanDetail: data.pentahapanPembinaanDetail || []
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════════
@@ -5515,6 +5550,7 @@ app.get('/admin/pembinaan-detail', requireAccess('pembinaan-detail'), (req, res)
     ...item,
     is_status_overdue: isIntegrationOverdue(item.tanggal2, item.status_integrasi),
   }));
+
   const edit = req.query.edit ? db.prepare('SELECT * FROM pentahapan_pembinaan_detail WHERE id=?').get(Number(req.query.edit)) : null;
   const activeCount = Number(db.prepare('SELECT COUNT(*) AS c FROM pentahapan_pembinaan_detail WHERE COALESCE(is_active, 1) = 1').get()?.c || 0);
   const inactiveCount = Number(db.prepare('SELECT COUNT(*) AS c FROM pentahapan_pembinaan_detail WHERE COALESCE(is_active, 1) = 0').get()?.c || 0);

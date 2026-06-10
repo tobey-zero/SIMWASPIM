@@ -131,7 +131,7 @@
                                 <th>KETERANGAN</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="tbody-besaran-remisi">
                             <% besaranRemisi.forEach(item=> { %>
                                 <tr>
                                     <td>
@@ -156,6 +156,7 @@
                                 <% }) %>
                         </tbody>
                     </table>
+                    <div id="loader-besaran-remisi" style="text-align:center; padding:20px; color:#aaa; display:none;">Memuat data...</div>
                 </div>
             </div>
 
@@ -210,7 +211,7 @@
                                 <th>STATUS INTEGRASI</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="tbody-pentahapan-detail">
                             <% pentahapanPembinaanDetail.forEach(item=> { %>
                                 <tr>
                                     <td>
@@ -247,6 +248,7 @@
                                 <% }) %>
                         </tbody>
                     </table>
+                    <div id="loader-pentahapan-detail" style="text-align:center; padding:20px; color:#aaa; display:none;">Memuat data...</div>
                 </div>
             </div>
 
@@ -536,6 +538,79 @@
     </script>
     <script src="/js/overlay-guard.js?v=<%= Date.now() %>"></script>
     <script src="/js/display-mode.js?v=<%= Date.now() %>"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableBesaran = document.getElementById('tbody-besaran-remisi');
+            const loaderBesaran = document.getElementById('loader-besaran-remisi');
+            const tablePentahapan = document.getElementById('tbody-pentahapan-detail');
+            const loaderPentahapan = document.getElementById('loader-pentahapan-detail');
+
+            if (loaderBesaran) loaderBesaran.style.display = 'block';
+            if (loaderPentahapan) loaderPentahapan.style.display = 'block';
+
+            function formatDateIndo(dateStr) {
+                if (!dateStr || dateStr === '-') return '-';
+                try {
+                    return new Intl.DateTimeFormat('id-ID', {
+                        timeZone: 'Asia/Jakarta',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    }).format(new Date(dateStr));
+                } catch(e) {
+                    return dateStr;
+                }
+            }
+
+            fetch('/api/public/tables')
+                .then(r => r.json())
+                .then(data => {
+                    const { besaranRemisi, pentahapanPembinaanDetail } = data;
+                    
+                    if (tableBesaran) {
+                        let html = '';
+                        besaranRemisi.forEach(item => {
+                            html += `<tr>
+                                <td>${item.nama}</td>
+                                <td>${item.agama || '-'}</td>
+                                <td>${item.besaran}</td>
+                                <td>${item.remisiBulan || '-'}</td>
+                                <td>${item.remisiHari || '-'}</td>
+                                <td>${item.keterangan || item.jenis || '-'}</td>
+                            </tr>`;
+                        });
+                        tableBesaran.innerHTML = html;
+                        if(loaderBesaran) loaderBesaran.style.display = 'none';
+                    }
+
+                    if (tablePentahapan) {
+                        let html = '';
+                        pentahapanPembinaanDetail.forEach(item => {
+                            const cls = item.isStatusOverdue ? 'status-overdue-cell' : '';
+                            html += `<tr>
+                                <td>${item.noReg || '-'}</td>
+                                <td>${item.namaWbp || '-'}</td>
+                                <td>${item.jenisKejahatan || '-'}</td>
+                                <td>${item.blokKamar || '-'}</td>
+                                <td>${formatDateIndo(item.tanggal1)}</td>
+                                <td>${formatDateIndo(item.tanggal3)}</td>
+                                <td>${formatDateIndo(item.tanggal2)}</td>
+                                <td>${formatDateIndo(item.tanggal4)}</td>
+                                <td>${item.keterangan || '-'}</td>
+                                <td class="${cls}">${item.statusIntegrasi || '-'}</td>
+                            </tr>`;
+                        });
+                        tablePentahapan.innerHTML = html;
+                        if(loaderPentahapan) loaderPentahapan.style.display = 'none';
+                    }
+                })
+                .catch(err => {
+                    console.error('Gagal memuat data tabel:', err);
+                    if(loaderBesaran) loaderBesaran.textContent = 'Gagal memuat data.';
+                    if(loaderPentahapan) loaderPentahapan.textContent = 'Gagal memuat data.';
+                });
+        });
+    </script>
 </body>
 
 </html>
