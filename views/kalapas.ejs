@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>SIMWASPIM</title>
+    <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        .dashboard-main {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            grid-template-areas:
+                'summary middle sebaran';
+            gap: 12px;
+            width: 100%;
+            margin: 8px auto;
+            padding: 0 15px;
+            align-items: start;
+        }
+
+        .dashboard-main .panel-content {
+            padding: 9px;
+        }
+
+        .panel-summary {
+            grid-area: summary;
+        }
+
+        .panel-barutama {
+            grid-area: auto;
+        }
+
+        .panel-kapasitas {
+            grid-area: auto;
+        }
+
+        .dashboard-main > .panel-sebaran,
+        .dashboard-main > .panel-right-stack {
+            grid-area: sebaran;
+        }
+
+        .panel-middle-stack {
+            grid-area: middle;
+            display: grid;
+            gap: 12px;
+            align-content: start;
+            align-items: start;
+        }
+
+        .panel-right-stack {
+            grid-area: sebaran;
+            display: grid;
+            gap: 12px;
+            align-content: start;
+            align-items: start;
+        }
+
+        .logo.kalapas-logo {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .kalapas-logo-img {
+            width: 86px;
+            height: 86px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .quick-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px 15px 12px;
+        }
+
+        .quick-nav a {
+            text-decoration: none;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 7px;
+            padding: 7px 11px;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: .2px;
+            position: relative;
+        }
+
+        .quick-nav-alert {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            line-height: 16px;
+            text-align: center;
+            font-weight: 800;
+            border: 1px solid #fff;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.35);
+        }
+
+        .quick-nav-tooltip {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: calc(100% + 7px);
+            background: #dc2626;
+            color: #fff;
+            border-radius: 6px;
+            padding: 5px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.25;
+            white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .12s ease;
+            z-index: 10;
+        }
+
+        .quick-nav-warning:hover .quick-nav-tooltip,
+        .quick-nav-warning:focus-visible .quick-nav-tooltip {
+            opacity: 1;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .summary-card {
+            border-radius: 8px;
+            padding: 8px 10px;
+            min-height: 86px;
+            background: #f8fafc;
+            border: 1px solid #dbeafe;
+            position: relative;
+        }
+
+        .summary-head {
+            position: static;
+        }
+
+        .summary-label {
+            font-size: 11px;
+            color: #334155;
+            font-weight: bold;
+            margin-bottom: 4px;
+            line-height: 1.25;
+            padding-right: 52px;
+        }
+
+        .summary-icon {
+            width: 40px;
+            height: 40px;
+            color: #37547d;
+            opacity: .95;
+            position: absolute;
+            right: 9px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .summary-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .summary-value {
+            font-size: 24px;
+            color: #1e3a8a;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .summary-link {
+            display: inline-block;
+            margin-top: 5px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #1d4ed8;
+            text-decoration: none;
+        }
+
+        .finance-summary {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .finance-list {
+            display: grid;
+            gap: 5px;
+            font-size: 11px;
+            color: #0f172a;
+        }
+
+        .finance-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .finance-row strong {
+            color: #0f2e78;
+            font-size: 12px;
+        }
+
+        .finance-updated {
+            margin-top: 6px;
+            font-size: 10px;
+            color: #475569;
+            line-height: 1.35;
+        }
+
+        .donut-layout {
+            display: grid;
+            grid-template-columns: 96px 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .donut-chart {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .donut-chart::after {
+            content: '';
+            position: absolute;
+            inset: 15px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: inset 0 0 0 1px #dbeafe;
+        }
+
+        .donut-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e3a8a;
+            z-index: 1;
+        }
+
+        .donut-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 11px;
+            color: #1e293b;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+            display: inline-block;
+        }
+
+        .legend-label {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .block-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            max-height: 220px;
+            overflow: auto;
+            padding-right: 2px;
+        }
+
+        .block-card {
+            border: 1px solid #dbeafe;
+            border-radius: 8px;
+            background: #fff;
+            padding: 9px;
+        }
+
+        .block-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 7px;
+            gap: 8px;
+        }
+
+        .block-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+
+        .block-meta {
+            font-size: 10px;
+            color: #475569;
+        }
+
+        .room-row {
+            display: grid;
+            grid-template-columns: 1.2fr 2fr auto;
+            gap: 6px;
+            align-items: center;
+            font-size: 10px;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .room-track {
+            width: 100%;
+            height: 7px;
+            border-radius: 99px;
+            background: #e2e8f0;
+            overflow: hidden;
+        }
+
+        .room-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, #0ea5e9 0%, #2563eb 100%);
+        }
+
+        .board-section {
+            width: 100%;
+            padding: 0 15px 10px;
+        }
+
+        .board-panel {
+            border: 1px solid #d6deea;
+            border-radius: 8px;
+            background: #f8fafc;
+            overflow: hidden;
+        }
+
+        .board-panel-header {
+            margin: 0;
+            padding: 10px 12px;
+            border-bottom: 1px solid #214a9d;
+            background: #2f5fc7;
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: .4px;
+        }
+
+        .board-table-wrap {
+            padding: 10px;
+        }
+
+        .board-three-col {
+            display: grid;
+            grid-template-columns: 1.5fr 1.5fr 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .board-col {
+            min-width: 0;
+            display: grid;
+            gap: 10px;
+            align-content: start;
+        }
+
+        .clickable-chart {
+            cursor: pointer;
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+
+        .clickable-chart:hover,
+        .clickable-chart:focus-visible {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 10px rgba(37, 99, 235, .18);
+            outline: none;
+        }
+
+        .pie-card {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #fff;
+            padding: 17px 10px 21px;
+            min-height: 132px;
+        }
+
+        .pie-title {
+            margin: 0 0 8px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #0f2e78;
+            letter-spacing: .2px;
+            text-transform: uppercase;
+        }
+
+        .pie-layout {
+            display: grid;
+            grid-template-columns: 96px 1fr;
+            align-items: start;
+            gap: 8px;
+        }
+
+        .pie-chart {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            position: relative;
+            background: #dbeafe;
+        }
+
+        .pie-chart::after {
+            content: '';
+            position: absolute;
+            inset: 15px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: inset 0 0 0 1px #dbeafe;
+        }
+
+        .pie-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e3a8a;
+            z-index: 1;
+        }
+
+        .pie-legend {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 4px;
+            font-size: 10px;
+            color: #0f172a;
+        }
+
+        .pie-legend li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .pie-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 0;
+        }
+
+        .pie-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex: 0 0 auto;
+        }
+
+        .pie-label span:last-child {
+            max-width: 160px;
+            overflow-wrap: anywhere;
+            line-height: 1.2;
+        }
+
+        .crime-chart {
+            min-height: 220px;
+        }
+
+        .crime-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .crime-title {
+            margin: 0;
+            font-size: 12px;
+            font-weight: bold;
+            color: #0f2e78;
+            text-transform: uppercase;
+            line-height: 1.15;
+        }
+
+        .crime-total {
+            font-size: 34px;
+            font-weight: bold;
+            color: #1e3a8a;
+            line-height: 1;
+        }
+
+        .crime-bars {
+            display: grid;
+            gap: 4px;
+            max-height: 190px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 2px;
+        }
+
+        .crime-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 170px 36px;
+            gap: 6px;
+            align-items: center;
+            font-size: 10px;
+            color: #0f172a;
+        }
+
+        .crime-label {
+            font-weight: 700;
+            text-transform: uppercase;
+            line-height: 1.2;
+            overflow-wrap: anywhere;
+        }
+
+        .crime-track {
+            width: 100%;
+            height: 10px;
+            border-radius: 0;
+            background-image: repeating-linear-gradient(
+                to right,
+                #d1d5db 0,
+                #d1d5db 1px,
+                transparent 1px,
+                transparent calc(100% / var(--segments, 5))
+            );
+            background-size: 100% 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .crime-fill {
+            height: 100%;
+            border-radius: 0;
+            background: #0b7285;
+            width: 0;
+        }
+
+        .crime-value {
+            text-align: right;
+            font-weight: bold;
+            font-size: 10px;
+            color: #0f172a;
+        }
+
+        .crime-axis {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 170px 36px;
+            gap: 6px;
+            align-items: start;
+            margin-top: 2px;
+        }
+
+        .crime-axis-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #374151;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .crime-axis-labels span {
+            white-space: nowrap;
+        }
+
+        .vbar-card {
+            min-height: 220px;
+        }
+
+        .vbar-head {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 8px;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .vbar-total {
+            font-size: 40px;
+            line-height: 1;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+
+        .vbar-legend {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 3px;
+            font-size: 10px;
+            color: #0f172a;
+        }
+
+        .vbar-legend li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .vbar-legend-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 0;
+        }
+
+        .vbar-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex: 0 0 auto;
+        }
+
+        .vbar-chart {
+            height: 122px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 6px;
+            display: grid;
+            grid-template-rows: 1fr auto;
+            gap: 4px;
+        }
+
+        .vbar-plot {
+            position: relative;
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(26px, 1fr);
+            align-items: end;
+            gap: 8px;
+            padding: 0 2px;
+            background-image: repeating-linear-gradient(
+                to top,
+                #e5e7eb 0,
+                #e5e7eb 1px,
+                transparent 1px,
+                transparent 20%
+            );
+            background-size: 100% 100%;
+            overflow: hidden;
+        }
+
+        .vbar-col {
+            display: grid;
+            align-items: end;
+            justify-items: center;
+            height: 100%;
+        }
+
+        .vbar-col .vbar {
+            width: min(100%, 34px);
+            background: #0b7285;
+            border-radius: 0;
+            min-height: 2px;
+        }
+
+        .vbar-col .vbar-value {
+            font-size: 10px;
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 2px;
+            line-height: 1;
+        }
+
+        .vbar-labels {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(26px, 1fr);
+            gap: 8px;
+            padding: 0 2px;
+        }
+
+        .vbar-label {
+            font-size: 9px;
+            text-align: center;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.15;
+            word-break: break-word;
+            text-transform: uppercase;
+        }
+
+        .board-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .board-table th,
+        .board-table td {
+            border: 1px solid #cbd5e1;
+            padding: 5px 6px;
+            font-size: 11px;
+            color: #0f172a;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .board-table th {
+            background: #1e3a8a;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .board-table td.left,
+        .board-table th.left {
+            text-align: left;
+        }
+
+        .board-total td {
+            font-weight: bold;
+            background: #f8fafc;
+        }
+
+        @media (max-width: 1100px) {
+            .dashboard-main {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    'summary'
+                    'middle'
+                    'sebaran';
+            }
+
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .board-three-col {
+                grid-template-columns: 1fr;
+            }
+
+            .donut-layout {
+                grid-template-columns: 88px 1fr;
+            }
+
+            .donut-chart {
+                width: 88px;
+                height: 88px;
+            }
+
+            .donut-chart::after {
+                inset: 13px;
+            }
+
+            .donut-center {
+                font-size: 12px;
+            }
+
+            .pie-layout {
+                grid-template-columns: 88px 1fr;
+            }
+
+            .pie-chart {
+                width: 88px;
+                height: 88px;
+            }
+
+            .pie-label span:last-child {
+                max-width: 190px;
+            }
+        }
+    </style>
+</head>
+
+<body class="page-umum">
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo kalapas-logo">
+                    <img src="/images/simwaspim.jpeg" alt="Logo SIMWASPIM" class="kalapas-logo-img">
+                </div>
+                <div class="header-info">
+                    <h1>SIMWASPIM – SISTEM PENGAWASAN PIMPINAN</h1>
+                    <h3>LAPAS KELAS 1 MEDAN</h3>
+                </div>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Kapasitas</div>
+                    <div class="stat-value">
+                        <%= kapasitas %>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Penghuni</div>
+                    <div class="stat-value">
+                        <%= totalPenghuni %>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Bebas Hari Ini</div>
+                    <div class="stat-value">
+                        <%= bebasHariIni %> Orang
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">
+                        Pengunjung Hari Ini
+                        <% if (!hasStatistikKunjunganTodayUpdate) { %>
+                            <span
+                                title="Belum update hari ini"
+                                aria-label="Belum update hari ini"
+                                style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;margin-left:4px;border-radius:999px;background:#dc2626;color:#fff;font-size:10px;font-weight:700;line-height:1;vertical-align:middle;"
+                            >!</span>
+                        <% } %>
+                    </div>
+                    <div class="stat-value">
+                        <%= pengunjungHariIni %> Orang
+                    </div>
+                </div>
+                <div class="stat-item bebas">
+                    <div class="stat-label">Tanggal</div>
+                    <div class="stat-value">
+                        <%= tanggal %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-nav">
+            <a href="/kalapas">📊 Dashboard Kalapas</a>
+            <a href="/" class="<%= hasPembinaanStatMismatch ? 'quick-nav-warning' : '' %>">🏢 Krisna
+                <% if (hasPembinaanStatMismatch) { %>
+                    <span class="quick-nav-alert" title="Data pembinaan dan statistik penghuni belum sinkron">!</span>
+                    <span class="quick-nav-tooltip">Pentahapan Pembinaan: <%= totalPentahapanPembinaan %> | Total Penghuni Statistik: <%= totalPenghuniStatistik %> (Selisih <%= pembinaanStatMismatchGap %>)</span>
+                <% } %>
+            </a>
+            <a href="/klinik">🏥 Klinik</a>
+            <a href="/kalapas/papan-isi" class="<%= !hasPapanIsiTodayUpdate ? 'quick-nav-warning' : '' %>">📋 Papan Isi
+                <% if (!hasPapanIsiTodayUpdate) { %>
+                    <span class="quick-nav-alert" title="Papan isi belum ada update hari ini">!</span>
+                    <span class="quick-nav-tooltip">Papan Isi belum ada update hari ini</span>
+                <% } %>
+            </a>
+            <a href="/kalapas/table/dapur" class="<%= (!hasDapurTodayUpdate || hasDapurDistribusiPending) ? 'quick-nav-warning' : '' %>">🍽️ Dapur
+                <% if (!hasDapurTodayUpdate || hasDapurDistribusiPending) { %>
+                    <span class="quick-nav-alert" title="Notifikasi Dapur">!</span>
+                                        <span class="quick-nav-tooltip"><%= (!hasDapurTodayUpdate && hasDapurDistribusiPending)
+                                            ? (`Menu dapur belum diupdate & distribusi belum lengkap (jam: ${dapurDistribusiMissingJam.join(', ')})`)
+                                            : (!hasDapurTodayUpdate
+                                                ? 'Menu dapur hari ini belum diupdate'
+                                                : (`Distribusi makanan hari ini belum lengkap (jam: ${dapurDistribusiMissingJam.join(', ')})`)) %></span>
+                <% } %>
+            </a>
+            <a href="/kalapas/table/kamar-blok" class="<%= !hasLuarTembokToday ? 'quick-nav-warning' : '' %>">🔒 Pengamanan
+                <% if (!hasLuarTembokToday) { %>
+                    <span class="quick-nav-alert" title="WBP Luar Tembok Hari ini Kosong">!</span>
+                    <span class="quick-nav-tooltip">WBP Luar Tembok Hari ini Kosong</span>
+                <% } %>
+            </a>
+            <a href="/kalapas/table/kamtib" class="<%= (!hasKamtibMonthlyPengawalanUpdate || pengaduanDiterimaCount > 0) ? 'quick-nav-warning' : '' %>">🛡️ Kamtib
+                <% if (!hasKamtibMonthlyPengawalanUpdate || pengaduanDiterimaCount > 0) { %>
+                    <span class="quick-nav-alert" title="Notifikasi Kamtib">!</span>
+                    <span class="quick-nav-tooltip"><%= !hasKamtibMonthlyPengawalanUpdate ? 'Bulan ini belum ada update Giat Pengawalan' : (`Ada ${pengaduanDiterimaCount} pengaduan berstatus diterima`) %></span>
+                <% } %>
+            </a>
+            <a href="/kalapas/table/giiatja" class="<%= (!hasGiiatjaMonthlyUpdate || !hasGiiatjaSaranaTodayUpdate) ? 'quick-nav-warning' : '' %>">🏭 GIIATJA
+                <% if (!hasGiiatjaMonthlyUpdate || !hasGiiatjaSaranaTodayUpdate) { %>
+                    <span class="quick-nav-alert" title="Notifikasi GIIATJA">!</span>
+                    <span class="quick-nav-tooltip"><%= (!hasGiiatjaMonthlyUpdate && !hasGiiatjaSaranaTodayUpdate)
+                        ? 'Bulan ini GIIATJA belum ada update & sarana kerja hari ini belum diisi'
+                        : (!hasGiiatjaMonthlyUpdate
+                            ? 'Bulan ini GIIATJA belum ada update'
+                            : 'Sarana kerja hari ini belum diisi') %></span>
+                <% } %>
+            </a>
+            <a href="/kalapas/table/tu-umum">📑 Tata Usaha</a>
+        </div>
+    </header>
+
+    <% const summaryRows=[ { label: 'Remisi' , value: besaranRemisi.length, link: '/kalapas/table/remisi' }, {
+        label: 'Pentahapan Pembinaan' , value: pentahapanPembinaanDetail.length, link: '/kalapas/table/pembinaan' }, {
+        label: 'Jadwal Kegiatan Pembinaan' , value: jadwalKegiatan.length, link: '/kalapas/table/jadwal-kegiatan' }, {
+        label: 'Warga Binaan Sakit' , value: wbpBerobat.length, link: '/kalapas/table/berobat' }, {
+        label: 'Tenaga Medis' , value: tenagaMedis.length, link: '/kalapas/table/tenaga-medis' }, {
+        label: 'WBP Luar Tembok' , value: luarTembokTodayCount, link: '/kalapas/table/luar-tembok' }, {
+        label: 'Giat Pengawalan' , value: pengawalanSummary.totalPengawalan, link: '/kalapas/table/pengawalan' }, {
+        label: 'Giat Razia' , value: raziaSummary.totalJadwalRazia, link: '/kalapas/table/razia-jadwal' }, {
+        label: 'Barang Bukti Razia' , value: raziaSummary.totalBarangBukti, link: '/kalapas/table/razia-barang-bukti' },
+        { label: 'Data Stapsel' , value: securitySummary.totalStrapsel, link: '/kalapas/table/strapsel' }, {
+        label: 'Pengaduan Masyarakat', value: totalPengaduanMasyarakat, link: '/kalapas/table/pengaduan' }, {
+        label: 'Laporan BMN' , value: tuUmumSummary.totalTuUmum, link: '/kalapas/table/tu-bmn' }, { label: 'Kepegawaian'
+        , value: tuUmumSummary.totalPegawai, link: '/kalapas/table/kepegawaian' },
+        { label: 'Kegiatan GIIATJA', value: giiatjaSummary.kegiatan, link: '/kalapas/table/giiatja-kegiatan' },
+        { label: 'WBP yang Mendapatkan Pelatihan', value: giiatjaSummary.pelatihan, link: '/kalapas/table/giiatja-pelatihan' },
+        { label: 'WBP Yang Mendapatkan Premi', value: giiatjaSummary.premi, link: '/kalapas/table/giiatja-premi' } ]; const
+        summaryIconFor = (label) => {
+        const key = String(label || '').toLowerCase();
+        if (key.includes('remisi')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h10l6 6v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"></path><path d="M14 5v6h6"></path></svg>';
+        if (key.includes('pengaduan')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H7l-3 3z"></path><path d="M8 9h8M8 12h6"></path></svg>';
+        if (key.includes('giiatja') || key === 'kegiatan') return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M8 3v4M16 3v4M7 11h10M7 15h6"></path></svg>';
+        if (key.includes('sertifikat')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"></path><path d="M9 12l2 2 4-4"></path></svg>';
+        if (key.includes('premi')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M8 10h8M8 14h8"></path></svg>';
+        if (key.includes('pembinaan')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"></path><path d="M8 2v4M16 2v4M8 10h8M8 14h8M8 18h5"></path></svg>';
+        if (key.includes('jadwal')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M8 2v4M16 2v4M3 10h18M9 14l2 2 4-4"></path></svg>';
+        if (key.includes('sakit') || key.includes('medis')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M12 9v6M9 12h6"></path></svg>';
+        if (key.includes('luar tembok')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V8l4-2 4 2 4-2 4 2v13"></path><path d="M11 3h10M17 3v8"></path></svg>';
+        if (key.includes('pengawalan')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"></path><path d="M9 12l2 2 4-4"></path></svg>';
+        if (key.includes('razia')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>';
+        if (key.includes('stapsel') || key.includes('strapsel')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"></path><path d="M15 3v3h3M9 11h6M9 15h6"></path></svg>';
+        if (key.includes('bmn')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v13H3z"></path><path d="M8 7V4h8v3M7 12h10"></path></svg>';
+        if (key.includes('kepegawaian')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"></path></svg>';
+        return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M8 12h8"></path></svg>';
+        }; const
+        occupied=Number(totalPenghuni) || 0; const capacityNum=Number(kapasitas) || 0; const
+        available=Math.max(capacityNum - occupied, 0); const occupancyRate=capacityNum> 0 ? ((occupied / capacityNum) *
+        100) : 0;
+        const overCapacity = Math.max(occupied - capacityNum, 0);
+        %>
+
+        <div class="dashboard-main">
+            <div class="panel panel-summary">
+                <div class="panel-header">RINGKASAN DATA JUMLAH</div>
+                <div class="panel-content">
+                    <div class="summary-grid">
+                        <% summaryRows.forEach(item=> { %>
+                            <div class="summary-card">
+                                <div class="summary-head">
+                                    <div class="summary-label">
+                                        <%= item.label %>
+                                    </div>
+                                    <div class="summary-icon"><%- summaryIconFor(item.label) %></div>
+                                </div>
+                                <div class="summary-value">
+                                    <%= item.value %>
+                                </div>
+                                <a href="<%= item.link %>" class="summary-link">Lihat detail</a>
+                            </div>
+                            <% }) %>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-middle-stack">
+
+                <div class="panel panel-kapasitas">
+                    <div class="panel-header">GRAFIK KAPASITAS HUNIAN</div>
+                    <div class="panel-content">
+                        <div class="pie-card">
+                            <h4 class="pie-title">Kapasitas Hunian</h4>
+                            <div class="donut-layout">
+                                <div class="donut-chart" data-occupancy="<%= occupancyRate.toFixed(1) %>">
+                                    <div class="donut-center">
+                                        <%= occupancyRate.toFixed(1) %>%
+                                    </div>
+                                </div>
+                                <div class="donut-legend">
+                                    <div class="legend-item"><span class="legend-label"><span class="legend-dot"
+                                                style="background:#005F73;"></span>Terisi</span><strong>
+                                            <%= occupied %>
+                                        </strong></div>
+                                    <div class="legend-item"><span class="legend-label"><span class="legend-dot"
+                                                style="background:#94D2BD;"></span>Sisa Kapasitas</span><strong>
+                                            <%= available %>
+                                        </strong></div>
+                                    <div class="legend-item"><span class="legend-label"><span class="legend-dot"
+                                                style="background:#EE9B00;"></span>Over Capacity</span><strong>
+                                            <%= overCapacity %>
+                                        </strong></div>
+                                    <div class="legend-item"><span class="legend-label"><span class="legend-dot"
+                                                style="background:#CA6702;"></span>Kapasitas Total</span><strong>
+                                            <%= capacityNum %>
+                                        </strong></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-barutama">
+                    <div class="panel-header">GRAFIK DATA KEUANGAN</div>
+                    <div class="panel-content">
+                        <div class="pie-card clickable-chart" tabindex="0" role="link"
+                            data-link="/kalapas/table/tu-realisasi"
+                            data-values="<%= [financeSummary.realisasiBelanja, financeSummary.sisaPagu].join(',') %>"
+                            data-labels="Realisasi Belanja|Sisa Pagu" data-center-mode="percent"
+                            data-center-value="<%= financeSummary.realisasiPercent.toFixed(1) %>">
+                            <h4 class="pie-title">Realisasi Belanja Bagian Keuangan</h4>
+                            <div class="finance-summary">
+                                <div class="pie-layout" style="grid-template-columns:1fr;">
+                                    <div class="pie-chart">
+                                        <div class="pie-center">
+                                            <%= financeSummary.realisasiPercent.toFixed(0) %>%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="finance-list">
+                                        <div class="finance-row"><span>Total Pagu</span><strong>
+                                                <%= financeSummary.totalPaguLabel %>
+                                            </strong></div>
+                                        <div class="finance-row"><span>Realisasi Belanja</span><strong>
+                                                <%= financeSummary.realisasiBelanjaLabel %>
+                                            </strong></div>
+                                        <div class="finance-row"><span>Sisa Pagu</span><strong>
+                                                <%= financeSummary.sisaPaguLabel %>
+                                            </strong></div>
+                                    </div>
+                                    <div class="finance-updated">Data per <%= financeSummary.updatedAtLabel %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="panel-right-stack">
+                <div class="panel panel-sebaran">
+                    <div class="panel-header">SEBARAN PENGHUNI PER GEDUNG</div>
+                    <div class="panel-content">
+                        <% const gedungTotalsMap = {};
+                        (housingBlocks || []).forEach(item => {
+                        const gedungName = (item.gedung || '-').trim() || '-';
+                        gedungTotalsMap[gedungName] = (gedungTotalsMap[gedungName] || 0) + (Number(item.totalPenghuni) || 0);
+                        });
+                        const gedungLabels = Object.keys(gedungTotalsMap);
+                        const gedungValues = gedungLabels.map(label => gedungTotalsMap[label]); %>
+                        <div class="pie-card clickable-chart" tabindex="0" role="link" data-link="/kalapas/table/kamar-blok"
+                            data-values="<%= gedungValues.join(',') %>"
+                            data-labels="<%= gedungLabels.join('|') %>">
+                            <h4 class="pie-title">Sebaran Penghuni per Gedung</h4>
+                            <div class="pie-layout">
+                                <div class="pie-chart">
+                                    <div class="pie-center">0</div>
+                                </div>
+                                <ul class="pie-legend"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-giiatja">
+                    <div class="panel-header">GRAFIK PENDAPATAN NEGARA BUKAN PAJAK</div>
+                    <div class="panel-content">
+                        <div class="pie-card clickable-chart" tabindex="0" role="link" data-link="/kalapas/table/pnbp-giiatja"
+                            data-values="<%= [giiatjaPnbpChart.totalJumlahPnbp, giiatjaPnbpChart.sisaTargetPnbp].join(',') %>"
+                            data-labels="PNBP Tercapai|Sisa Target"
+                            data-center-mode="percent"
+                            data-center-value="<%= giiatjaPnbpChart.progressPercent.toFixed(1) %>">
+                            <h4 class="pie-title">Grafik Pendapatan negara bukan pajak</h4>
+                            <div class="pie-layout">
+                                <div class="pie-chart">
+                                    <div class="pie-center"><%= giiatjaPnbpChart.progressPercent.toFixed(0) %>%</div>
+                                </div>
+                                <ul class="pie-legend"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="board-section">
+            <div class="board-panel">
+                <h3 class="board-panel-header">PAPAN KEADAAN ISI LEMBAGA PEMASYARAKATAN</h3>
+                <% const regLabels=(housingBlocks || []).map(item=> item.namaBlock);
+                    const regValues = (housingBlocks || []).map(item => Number(item.totalPenghuni) || 0);
+
+                    const khususLabels = (pidanaKhusus || []).map(item => item.jenis);
+                    const khususValues = (pidanaKhusus || []).map(item => Number(item.jumlah) || 0);
+
+                    const umumLabels = (pidanaUmum || []).map(item => item.jenis);
+                    const umumValues = (pidanaUmum || []).map(item => Number(item.jumlah) || 0);
+
+                    const wnaByNegara = {};
+                    (wnaNegara || []).forEach(item => {
+                    const negara = item.asalNegara || '-';
+                    wnaByNegara[negara] = (wnaByNegara[negara] || 0) + 1;
+                    });
+                    const wnaNegaraLabels = Object.keys(wnaByNegara);
+                    const wnaNegaraValues = wnaNegaraLabels.map(label => wnaByNegara[label]);
+
+                    const luarLabels = (luarTembok || []).map(item => item.status);
+                    const luarValues = (luarTembok || []).map(item => (Number(item.wniKeluar)||0) +
+                    (Number(item.wniMasuk)||0) + (Number(item.wnaKeluar)||0) + (Number(item.wnaMasuk)||0));
+
+                    const agamaLabels = (agama || []).map(item => item.agama);
+                    const agamaValues = (agama || []).map(item => (Number(item.wni)||0) + (Number(item.wna)||0));
+                    %>
+                    <div class="board-table-wrap board-three-col">
+
+                        <div class="pie-card clickable-chart crime-chart" tabindex="0" role="link"
+                            data-link="/kalapas/table/pidana-khusus" data-values="<%= khususValues.join(',') %>"
+                            data-labels="<%= khususLabels.join('|') %>" data-show-zero="true" data-chart-type="horizontal-bars">
+                            <div class="crime-header">
+                                <h4 class="crime-title">Pidana Khusus</h4>
+                                <div class="crime-total">0</div>
+                            </div>
+                            <div class="crime-bars"></div>
+                        </div>
+
+                        <div class="pie-card clickable-chart crime-chart" tabindex="0" role="link"
+                            data-link="/kalapas/table/pidana-umum" data-values="<%= umumValues.join(',') %>"
+                            data-labels="<%= umumLabels.join('|') %>" data-show-zero="true" data-chart-type="horizontal-bars">
+                            <div class="crime-header">
+                                <h4 class="crime-title">Pidana Umum</h4>
+                                <div class="crime-total">0</div>
+                            </div>
+                            <div class="crime-bars"></div>
+                        </div>
+
+                        <div class="pie-card vbar-card clickable-chart" tabindex="0" role="link" data-link="/kalapas/table/agama"
+                            data-values="<%= agamaValues.join(',') %>" data-labels="<%= agamaLabels.join('|') %>" data-chart-type="vertical-bars">
+                            <h4 class="pie-title">Jumlah Berdasarkan Agama</h4>
+                            <div class="vbar-head">
+                                <div class="vbar-total">0</div>
+                                <ul class="vbar-legend"></ul>
+                            </div>
+                            <div class="vbar-chart">
+                                <div class="vbar-plot"></div>
+                                <div class="vbar-labels"></div>
+                            </div>
+                        </div>
+
+
+                        <div class="pie-card vbar-card clickable-chart" tabindex="0" role="link" data-link="/kalapas/table/wna"
+                            data-values="<%= wnaNegaraValues.join(',') %>"
+                            data-labels="<%= wnaNegaraLabels.join('|') %>" data-chart-type="vertical-bars">
+                            <h4 class="pie-title">Warga Negara Asing</h4>
+                            <div class="vbar-head">
+                                <div class="vbar-total">0</div>
+                                <ul class="vbar-legend"></ul>
+                            </div>
+                            <div class="vbar-chart">
+                                <div class="vbar-plot"></div>
+                                <div class="vbar-labels"></div>
+                            </div>
+                        </div>
+
+                        <div class="pie-card vbar-card clickable-chart" tabindex="0" role="link"
+                            data-link="/kalapas/table/wbp-luar-lapas" data-values="<%= luarValues.join(',') %>"
+                            data-labels="<%= luarLabels.join('|') %>" data-chart-type="vertical-bars">
+                            <h4 class="pie-title">WBP di Luar Lapas</h4>
+                            <div class="vbar-head">
+                                <div class="vbar-total">0</div>
+                                <ul class="vbar-legend"></ul>
+                            </div>
+                            <div class="vbar-chart">
+                                <div class="vbar-plot"></div>
+                                <div class="vbar-labels"></div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-bottom" style="display:flex;justify-content:space-between;align-items:center;">
+                <p style="text-align:left;flex:1;max-width:60%;"><strong>SIMWASPIM</strong> - Sistem Pengawasan Pimpinan
+                </p>
+                <p style="text-align:right;flex:1;">Dashboard Pimpinan Lapas Rutan<br>
+                    Copyright &copy; <%= new Date().getFullYear() %>, by Dimstatons. All Right Reserved</p>
+            </div>
+        </footer>
+
+        <script>
+            (function () {
+                var colorPalette = [
+                    '#005F73', '#0A9396', '#94D2BD', '#E9D8A6', '#EE9B00',
+                    '#CA6702', '#BB3E03', '#AE2012', '#9B2226', '#3A86FF',
+                    '#8338EC', '#FF006E', '#FB5607', '#FFBE0B', '#2A9D8F',
+                    '#264653', '#8ECAE6', '#219EBC', '#6A4C93', '#F15BB5'
+                ];
+
+                document.querySelectorAll('.room-fill[data-room-percent]').forEach(function (el) {
+                    var value = Number(el.getAttribute('data-room-percent')) || 0;
+                    el.style.width = Math.max(0, Math.min(100, value)) + '%';
+                });
+
+                var donut = document.querySelector('.donut-chart[data-occupancy]');
+                if (donut) {
+                    var occ = Number(donut.getAttribute('data-occupancy')) || 0;
+                    var safeOcc = Math.max(0, Math.min(100, occ));
+                    var donutPrimary = colorPalette[0];
+                    var donutSecondary = colorPalette[2];
+                    donut.style.background = 'conic-gradient(' + donutPrimary + ' 0% ' + safeOcc + '%, ' + donutSecondary + ' ' + safeOcc + '% 100%)';
+                }
+
+                document.querySelectorAll('.pie-card[data-values]').forEach(function (card) {
+                    var rawValues = (card.getAttribute('data-values') || '').split(',').map(function (v) { return Number(v) || 0; });
+                    var rawLabels = (card.getAttribute('data-labels') || '').split('|');
+                    var showZero = (card.getAttribute('data-show-zero') || '').toLowerCase() === 'true';
+                    var chartType = (card.getAttribute('data-chart-type') || '').toLowerCase();
+                    var pairs = [];
+
+                    for (var i = 0; i < rawValues.length; i++) {
+                        if (rawValues[i] > 0 || (showZero && rawValues[i] === 0)) {
+                            pairs.push({ label: rawLabels[i] || ('Data ' + (i + 1)), value: rawValues[i] });
+                        }
+                    }
+
+                    var total = pairs.reduce(function (sum, item) { return sum + item.value; }, 0);
+                    var chartEl = card.querySelector('.pie-chart');
+                    var centerEl = card.querySelector('.pie-center');
+                    var legendEl = card.querySelector('.pie-legend');
+                    var crimeTotalEl = card.querySelector('.crime-total');
+                    var crimeBarsEl = card.querySelector('.crime-bars');
+                    var vbarTotalEl = card.querySelector('.vbar-total');
+                    var vbarLegendEl = card.querySelector('.vbar-legend');
+                    var vbarPlotEl = card.querySelector('.vbar-plot');
+                    var vbarLabelsEl = card.querySelector('.vbar-labels');
+                    var centerMode = (card.getAttribute('data-center-mode') || '').toLowerCase();
+                    var centerValue = Number(card.getAttribute('data-center-value')) || 0;
+
+                    if (chartType === 'horizontal-bars') {
+                        if (crimeTotalEl) {
+                            crimeTotalEl.textContent = String(total);
+                        }
+
+                        if (crimeBarsEl) {
+                            crimeBarsEl.innerHTML = '';
+
+                            if (!pairs.length) {
+                                var emptyRow = document.createElement('div');
+                                emptyRow.className = 'crime-row';
+                                emptyRow.innerHTML = '<div class="crime-label">Belum ada data</div><div class="crime-track"><div class="crime-fill" style="width:0%"></div></div><div class="crime-value">0</div>';
+                                crimeBarsEl.appendChild(emptyRow);
+                                return;
+                            }
+
+                            var maxValue = pairs.reduce(function (max, item) {
+                                return item.value > max ? item.value : max;
+                            }, 0);
+                            var computeNiceAxis = function (value) {
+                                var safeValue = Math.max(1, Number(value) || 1);
+                                var desiredTicks = 6;
+                                var roughStep = safeValue / (desiredTicks - 1);
+                                var power = Math.pow(10, Math.floor(Math.log10(roughStep)));
+                                var normalized = roughStep / power;
+                                var niceNormalized;
+
+                                if (normalized <= 1) niceNormalized = 1;
+                                else if (normalized <= 2) niceNormalized = 2;
+                                else if (normalized <= 5) niceNormalized = 5;
+                                else niceNormalized = 10;
+
+                                var step = niceNormalized * power;
+                                var axisMax = Math.ceil(safeValue / step) * step;
+                                var segments = Math.max(1, Math.round(axisMax / step));
+
+                                return { step: step, axisMax: axisMax, segments: segments };
+                            };
+
+                            var axis = computeNiceAxis(maxValue);
+                            var step = axis.step;
+                            var axisMax = axis.axisMax;
+                            var segments = axis.segments;
+
+                            pairs.sort(function (a, b) { return b.value - a.value; });
+
+                            pairs.forEach(function (item) {
+                                var width = axisMax > 0 ? (item.value / axisMax) * 100 : 0;
+                                var row = document.createElement('div');
+                                row.className = 'crime-row';
+                                row.innerHTML =
+                                    '<div class="crime-label">' + item.label + '</div>' +
+                                    '<div class="crime-track" style="--segments:' + segments + '"><div class="crime-fill" style="width:' + Math.max(0, Math.min(100, width)).toFixed(2) + '%"></div></div>' +
+                                    '<div class="crime-value">' + item.value + '</div>';
+                                crimeBarsEl.appendChild(row);
+                            });
+
+                            var axis = document.createElement('div');
+                            axis.className = 'crime-axis';
+                            var ticks = '';
+                            for (var t = 0; t <= segments; t++) {
+                                ticks += '<span>' + (t * step) + '</span>';
+                            }
+                            axis.innerHTML =
+                                '<div></div>' +
+                                '<div class="crime-axis-labels">' + ticks + '</div>' +
+                                '<div></div>';
+                            crimeBarsEl.appendChild(axis);
+                        }
+
+                        return;
+                    }
+
+                    if (chartType === 'vertical-bars') {
+                        if (vbarTotalEl) {
+                            vbarTotalEl.textContent = String(total);
+                        }
+
+                        if (vbarLegendEl) vbarLegendEl.innerHTML = '';
+                        if (vbarPlotEl) vbarPlotEl.innerHTML = '';
+                        if (vbarLabelsEl) vbarLabelsEl.innerHTML = '';
+
+                        if (!pairs.length) {
+                            if (vbarLegendEl) {
+                                vbarLegendEl.innerHTML = '<li><span class="vbar-legend-label"><span class="vbar-dot" style="background:' + colorPalette[1] + ';"></span><span>Belum ada data</span></span><strong>0</strong></li>';
+                            }
+                            return;
+                        }
+
+                        var maxValueV = pairs.reduce(function (max, item) { return item.value > max ? item.value : max; }, 0);
+
+                        pairs.forEach(function (item, index) {
+                            var color = colorPalette[index % colorPalette.length];
+                            var percent = maxValueV > 0 ? (item.value / maxValueV) * 100 : 0;
+
+                            if (vbarLegendEl) {
+                                var li = document.createElement('li');
+                                li.innerHTML = '<span class="vbar-legend-label"><span class="vbar-dot" style="background:' + color + ';"></span><span>' + item.label + '</span></span><strong>' + item.value + '</strong>';
+                                vbarLegendEl.appendChild(li);
+                            }
+
+                            if (vbarPlotEl) {
+                                var col = document.createElement('div');
+                                col.className = 'vbar-col';
+                                col.innerHTML = '<div class="vbar-value">' + item.value + '</div><div class="vbar" style="height:' + Math.max(2, Math.min(100, percent)).toFixed(2) + '%; background:' + color + ';"></div>';
+                                vbarPlotEl.appendChild(col);
+                            }
+
+                            if (vbarLabelsEl) {
+                                var label = document.createElement('div');
+                                label.className = 'vbar-label';
+                                label.textContent = item.label;
+                                vbarLabelsEl.appendChild(label);
+                            }
+                        });
+
+                        return;
+                    }
+
+                    if (!chartEl || !centerEl) return;
+
+                    if (centerMode === 'percent') {
+                        centerEl.textContent = Math.max(0, Math.min(100, centerValue)).toFixed(0) + '%';
+                    } else {
+                        centerEl.textContent = total;
+                    }
+                    if (legendEl) legendEl.innerHTML = '';
+
+                    if (!pairs.length || total <= 0) {
+                        chartEl.style.background = '#dbeafe';
+                        if (legendEl) {
+                            if (showZero && pairs.length) {
+                                pairs.forEach(function (item, index) {
+                                    var color = colorPalette[index % colorPalette.length];
+                                    var li = document.createElement('li');
+                                    li.innerHTML = '<span class="pie-label"><span class="pie-dot" style="background:' + color + ';"></span><span>' + item.label + '</span></span><strong>' + item.value + '</strong>';
+                                    legendEl.appendChild(li);
+                                });
+                            } else {
+                                legendEl.innerHTML = '<li><span class="pie-label"><span class="pie-dot" style="background:' + colorPalette[1] + ';"></span><span>Belum ada data</span></span><strong>0</strong></li>';
+                            }
+                        }
+                        return;
+                    }
+
+                    var current = 0;
+                    var segments = [];
+
+                    pairs.forEach(function (item, index) {
+                        var percent = (item.value / total) * 100;
+                        var next = current + percent;
+                        var color = colorPalette[index % colorPalette.length];
+                        segments.push(color + ' ' + current.toFixed(2) + '% ' + next.toFixed(2) + '%');
+                        current = next;
+
+                        if (legendEl) {
+                            var li = document.createElement('li');
+                            li.innerHTML = '<span class="pie-label"><span class="pie-dot" style="background:' + color + ';"></span><span>' + item.label + '</span></span><strong>' + item.value + '</strong>';
+                            legendEl.appendChild(li);
+                        }
+                    });
+
+                    chartEl.style.background = 'conic-gradient(' + segments.join(',') + ')';
+                });
+
+                document.querySelectorAll('.clickable-chart[data-link]').forEach(function (el) {
+                    var url = el.getAttribute('data-link');
+                    if (!url) return;
+                    el.addEventListener('click', function () { window.location.href = url; });
+                    el.addEventListener('keydown', function (evt) {
+                        if (evt.key === 'Enter' || evt.key === ' ') {
+                            evt.preventDefault();
+                            window.location.href = url;
+                        }
+                    });
+                });
+            })();
+        </script>
+        <script src="/js/overlay-guard.js?v=<%= Date.now() %>"></script>
+        <script src="/js/display-mode.js?v=<%= Date.now() %>"></script>
+</body>
+
+</html>

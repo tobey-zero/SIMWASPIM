@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jadwal Kegiatan – Admin Lapas</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-wrapper">
+  <%- include('_sidebar') %>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title"><h2>📅 Jadwal Kegiatan</h2><p>Kelola jadwal kegiatan pembinaan</p></div>
+      <div class="topbar-actions"><a href="/" target="_blank" class="btn-public">🌐 Lihat Publik</a></div>
+    </div>
+    <div class="content-area">
+      <% const hariOptions = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu']; %>
+      <% const editIsCustomHari = !!(edit && edit.hari && !hariOptions.includes(edit.hari)); %>
+      <% if (success) { %><div class="alert alert-success">✅ Data berhasil disimpan.</div><% } %>
+
+      <div class="card">
+        <div class="card-header"><h3>➕ Tambah Jadwal</h3></div>
+        <div class="card-body">
+          <form method="POST" action="/admin/jadwal/add">
+            <div class="form-grid col-4" style="margin-bottom:12px;">
+              <div class="form-group">
+                <label>Hari</label>
+                <select id="hari-select-add" name="hari" required>
+                  <option value="">-- Pilih Hari --</option>
+                  <option value="Senin">Senin</option>
+                  <option value="Selasa">Selasa</option>
+                  <option value="Rabu">Rabu</option>
+                  <option value="Kamis">Kamis</option>
+                  <option value="Jumat">Jumat</option>
+                  <option value="Sabtu">Sabtu</option>
+                  <option value="Minggu">Minggu</option>
+                  <option value="CUSTOM">Custom (Ketik Manual)</option>
+                </select>
+              </div>
+              <div class="form-group" id="hari-custom-wrap-add" style="display:none;">
+                <label>Hari Manual</label>
+                <input id="hari-custom-add" type="text" name="hari_custom" placeholder="Contoh: Hari Libur Nasional">
+              </div>
+              <div class="form-group">
+                <label>Waktu</label>
+                <textarea name="waktu" rows="2" placeholder="cth: 08.00 - 09.30" required></textarea>
+              </div>
+              <div class="form-group">
+                <label>Kegiatan</label>
+                <textarea name="kegiatan" rows="2" placeholder="Nama kegiatan" required></textarea>
+              </div>
+              <div class="form-group">
+                <label>Lokasi</label>
+                <textarea name="lokasi" rows="2" placeholder="cth: Lapangan Lapas" required></textarea>
+              </div>
+              <div class="form-group">
+                <label>Penanggung Jawab</label>
+                <textarea name="penanggung_jawab" rows="2" placeholder="cth: Petugas Bimbingan" required></textarea>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">➕ Tambah</button>
+          </form>
+        </div>
+      </div>
+
+      <% if (edit) { %>
+      <div class="edit-panel">
+        <h4>✏️ Edit Jadwal (ID: <%= edit.id %>)</h4>
+        <form method="POST" action="/admin/jadwal/<%= edit.id %>/update">
+          <div class="form-grid col-4" style="margin-bottom:12px;">
+            <div class="form-group">
+              <label>Hari</label>
+              <select id="hari-select-edit" name="hari" required>
+                <% hariOptions.forEach(h => { %>
+                <option value="<%= h %>" <%= edit.hari===h?'selected':'' %>><%= h %></option>
+                <% }) %>
+                <option value="CUSTOM" <%= editIsCustomHari ? 'selected' : '' %>>Custom (Ketik Manual)</option>
+              </select>
+            </div>
+            <div class="form-group" id="hari-custom-wrap-edit" style="display:<%= editIsCustomHari ? 'block' : 'none' %>;">
+              <label>Hari Manual</label>
+              <input id="hari-custom-edit" type="text" name="hari_custom" value="<%= editIsCustomHari ? edit.hari : '' %>" placeholder="Contoh: Hari Libur Nasional">
+            </div>
+            <div class="form-group">
+              <label>Waktu</label>
+              <textarea name="waktu" rows="2" required><%= edit.waktu || '' %></textarea>
+            </div>
+            <div class="form-group">
+              <label>Kegiatan</label>
+              <textarea name="kegiatan" rows="2" required><%= edit.kegiatan %></textarea>
+            </div>
+            <div class="form-group">
+              <label>Lokasi</label>
+              <textarea name="lokasi" rows="2" required><%= edit.lokasi || '' %></textarea>
+            </div>
+            <div class="form-group">
+              <label>Penanggung Jawab</label>
+              <textarea name="penanggung_jawab" rows="2" required><%= edit.penanggung_jawab || '' %></textarea>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button type="submit" class="btn btn-success btn-sm">💾 Simpan</button>
+            <a href="/admin/jadwal" class="btn btn-secondary btn-sm">✕ Batal</a>
+          </div>
+        </form>
+      </div>
+      <% } %>
+
+      <div class="card">
+        <div class="card-header"><h3>Daftar Jadwal (<%= list.length %> item)</h3></div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>#</th><th>Hari</th><th>Waktu</th><th>Kegiatan</th><th>Lokasi</th><th>Penanggung Jawab</th><th>Aksi</th></tr></thead>
+              <tbody>
+                <% list.forEach((item, i) => { %>
+                <tr>
+                  <td><%= i+1 %></td>
+                  <td><%= item.hari||'-' %></td>
+                  <td style="white-space:pre-line;"><%= item.waktu||'-' %></td>
+                  <td style="white-space:pre-line;"><%= item.kegiatan %></td>
+                  <td style="white-space:pre-line;"><%= item.lokasi||'-' %></td>
+                  <td style="white-space:pre-line;"><%= item.penanggung_jawab||'-' %></td>
+                  <td>
+                    <div class="actions">
+                      <a href="/admin/jadwal?edit=<%= item.id %>" class="btn btn-warning btn-xs">✏️ Edit</a>
+                      <form method="POST" action="/admin/jadwal/<%= item.id %>/delete" style="display:inline" onsubmit="return confirm('Hapus?')">
+                        <button class="btn btn-danger btn-xs">🗑 Hapus</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+                <% }) %>
+                <% if (!list.length) { %><tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px;">Belum ada data</td></tr><% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    function bindCustomHari(selectId, wrapId, inputId) {
+      var selectEl = document.getElementById(selectId);
+      var wrapEl = document.getElementById(wrapId);
+      var inputEl = document.getElementById(inputId);
+      if (!selectEl || !wrapEl || !inputEl) return;
+
+      function sync() {
+        var isCustom = selectEl.value === 'CUSTOM';
+        wrapEl.style.display = isCustom ? 'block' : 'none';
+        inputEl.required = isCustom;
+        if (!isCustom) inputEl.value = '';
+      }
+
+      selectEl.addEventListener('change', sync);
+      sync();
+    }
+
+    bindCustomHari('hari-select-add', 'hari-custom-wrap-add', 'hari-custom-add');
+    bindCustomHari('hari-select-edit', 'hari-custom-wrap-edit', 'hari-custom-edit');
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= pageTitle %> - Kalapas</title>
+  <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
+  <style>
+    .pengaduan-kamtib-wrap { padding: 14px 15px; }
+    .pengaduan-kamtib-toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: end;
+      margin-bottom: 10px;
+    }
+    .pengaduan-kamtib-toolbar a, .pengaduan-kamtib-toolbar button {
+      text-decoration: none;
+      color: #fff;
+      background: #1a4bb8;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 6px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .pengaduan-kamtib-submenu {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .pengaduan-kamtib-submenu a {
+      text-decoration: none;
+      border: 1px solid #93c5fd;
+      color: #1e3a8a;
+      background: #eff6ff;
+      border-radius: 6px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .pengaduan-kamtib-submenu a.active {
+      color: #fff;
+      background: #1a4bb8;
+      border-color: rgba(255,255,255,.3);
+    }
+    .pengaduan-kamtib-filter {
+      display: flex;
+      gap: 8px;
+      align-items: end;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+    .pengaduan-kamtib-filter label {
+      font-size: 11px;
+      color: #1e293b;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .pengaduan-kamtib-filter select,
+    .pengaduan-kamtib-filter input[type="text"] {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 7px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      background: #fff;
+    }
+    .pengaduan-kamtib-filter input[type="text"] { min-width: 260px; }
+    .pengaduan-kamtib-table-wrap {
+      border: 1px solid #dbe3ef;
+      border-radius: 10px;
+      overflow: auto;
+      background: #fff;
+    }
+    .pengaduan-kamtib-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1250px;
+    }
+    .pengaduan-kamtib-table th,
+    .pengaduan-kamtib-table td {
+      border: 1px solid #e2e8f0;
+      padding: 8px 9px;
+      font-size: 12px;
+      color: #0f172a;
+      vertical-align: top;
+    }
+    .pengaduan-kamtib-table th {
+      background: #1e3a8a;
+      color: #fff;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .kamtib-preview-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #1d4ed8;
+      color: #1d4ed8;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: bold;
+      background: #eff6ff;
+    }
+    .kamtib-empty {
+      text-align: center;
+      color: #64748b;
+      padding: 14px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body class="page-umum">
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="logo kalapas-logo">
+          <img src="/images/simwaspim.jpeg" alt="Logo SIMWASPIM" class="kalapas-logo-img">
+        </div>
+        <div class="header-info">
+          <h2>KAMTIB</h2>
+          <h3>PENGADUAN MASYARAKAT</h3>
+          <p class="address"><%= subtitle %></p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="pengaduan-kamtib-wrap">
+    <div class="pengaduan-kamtib-toolbar">
+      <a href="<%= backUrl %>">⬅ Kembali ke Kamtib</a>
+      <form method="GET" action="/kalapas/table/pengaduan" class="pengaduan-kamtib-filter">
+        <div>
+          <label>Bulan</label>
+          <select name="month">
+            <% monthOptions.forEach(opt => { %>
+              <option value="<%= opt.value %>" <%= opt.value === selectedMonth ? 'selected' : '' %>><%= opt.label %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label>Tahun</label>
+          <select name="year">
+            <% yearOptions.forEach(year => { %>
+              <option value="<%= year %>" <%= String(year) === String(selectedYear) ? 'selected' : '' %>><%= year %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label>Pencarian</label>
+          <input type="text" name="search" value="<%= searchKeyword || '' %>" placeholder="Cari no pengaduan, nama, no wa, jenis, materi, status, tanggal...">
+        </div>
+        <button type="submit">Terapkan</button>
+        <a href="/kalapas/table/pengaduan?month=<%= selectedMonth %>&year=<%= selectedYear %>">Reset</a>
+      </form>
+    </div>
+
+    <div class="pengaduan-kamtib-submenu">
+      <a href="/kalapas/table/kamtib" class="<%= kamtibSubmenu && kamtibSubmenu.active === 'ringkasan' ? 'active' : '' %>">🛡 Ringkasan</a>
+      <a href="/kalapas/table/razia-jadwal" class="<%= kamtibSubmenu && kamtibSubmenu.active === 'razia-jadwal' ? 'active' : '' %>">📅 Giat Razia</a>
+      <a href="/kalapas/table/razia-barang-bukti" class="<%= kamtibSubmenu && kamtibSubmenu.active === 'razia-barang-bukti' ? 'active' : '' %>">📦 Barang Bukti</a>
+      <a href="/kalapas/table/pengawalan" class="<%= kamtibSubmenu && kamtibSubmenu.active === 'pengawalan' ? 'active' : '' %>">🚔 Pengawalan</a>
+      <a href="/kalapas/table/strapsel" class="<%= kamtibSubmenu && kamtibSubmenu.active === 'strapsel' ? 'active' : '' %>">⛓ Strapsel</a>
+      <a href="/kalapas/table/register-f" class="<%= kamtibSubmenu && kamtibSubmenu.active === 'register-f' ? 'active' : '' %>">📘 Register F</a>
+      <a href="/kalapas/table/piket-jaga?month=<%= encodeURIComponent(selectedMonth) %>&year=<%= encodeURIComponent(selectedYear) %>" class="<%= kamtibSubmenu && kamtibSubmenu.active === 'piket-jaga' ? 'active' : '' %>">🧷 Piket Jaga</a>
+      <a href="/kalapas/table/pengaduan?month=<%= encodeURIComponent(selectedMonth) %>&year=<%= encodeURIComponent(selectedYear) %>" class="<%= kamtibSubmenu && kamtibSubmenu.active === 'pengaduan' ? 'active' : '' %>">📢 Pengaduan</a>
+    </div>
+
+    <div class="pengaduan-kamtib-table-wrap">
+      <table class="pengaduan-kamtib-table">
+        <thead>
+          <tr>
+            <th>NO PENGADUAN</th>
+            <th>TANGGAL</th>
+            <th>NIK</th>
+            <th>NAMA</th>
+            <th>NO WHATSAPP</th>
+            <th>JENIS</th>
+            <th>MATERI ADUAN</th>
+            <th>STATUS</th>
+            <th>DOKUMENTASI</th>
+            <th>TINDAK LANJUT</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% list.forEach(item => { %>
+          <tr>
+            <td><%= item.noPengaduan || '-' %></td>
+            <td><%= formatDateIndo(item.tanggalPengaduan || '-') %></td>
+            <td><%= item.nik || '-' %></td>
+            <td><%= item.nama || '-' %></td>
+            <td><%= item.noWhatsapp || '-' %></td>
+            <td><%= item.jenisPengaduan || '-' %></td>
+            <td style="white-space: pre-line;"><%= item.materiPengaduan || '-' %></td>
+            <td><%= item.status || '-' %></td>
+            <td>
+              <% if (item.dokumentasiPath) { %>
+                <a href="<%= item.dokumentasiPath %>" target="_blank" rel="noopener noreferrer" class="kamtib-preview-btn">🔍 View</a>
+              <% } else { %>
+                -
+              <% } %>
+            </td>
+            <td style="white-space: pre-line;">
+              <% if (String(item.status || '').toUpperCase() === 'DITOLAK') { %>
+                <%= item.alasanPenolakan || '-' %>
+              <% } else if (String(item.status || '').toUpperCase() === 'DIPROSES' || String(item.status || '').toUpperCase() === 'SELESAI') { %>
+                <div style="margin-bottom:<%= item.lampiranAdminPath ? '6px' : '0' %>;"><%= item.deskripsiTindakLanjut || '-' %></div>
+                <% if (item.lampiranAdminPath) { %>
+                  <a href="<%= item.lampiranAdminPath %>" target="_blank" rel="noopener noreferrer" class="kamtib-preview-btn">🔍 View</a>
+                <% } %>
+              <% } else if (item.lampiranAdminPath) { %>
+                <a href="<%= item.lampiranAdminPath %>" target="_blank" rel="noopener noreferrer" class="kamtib-preview-btn">🔍 View</a>
+              <% } else { %>
+                -
+              <% } %>
+            </td>
+          </tr>
+          <% }) %>
+          <% if (!list.length) { %>
+            <tr><td colspan="10" class="kamtib-empty">Belum ada data pada filter ini</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

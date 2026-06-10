@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= pageTitle %> - Kalapas</title>
+  <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
+  <style>
+    .kalapas-table-wrap { padding: 14px 15px; }
+    .kalapas-table-toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .kalapas-table-toolbar a {
+      text-decoration: none;
+      color: #fff;
+      background: #1a4bb8;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 6px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .finance-hero {
+      border: 1px solid #1e40af;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #1e3a8a 0%, #2563eb 100%);
+      color: #fff;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .finance-hero-top {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .finance-hero-box {
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, .35);
+      background: rgba(15, 23, 42, .3);
+      padding: 8px 10px;
+    }
+
+    .finance-hero-box.sisa {
+      background: linear-gradient(135deg, #166534 0%, #15803d 100%);
+      border-color: rgba(187, 247, 208, .55);
+    }
+
+    .finance-hero-box .label {
+      font-size: 11px;
+      opacity: .95;
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+
+    .finance-hero-box .value {
+      font-size: 22px;
+      font-weight: bold;
+      line-height: 1.1;
+    }
+
+    .finance-hero-mid {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-weight: bold;
+      font-size: 12px;
+      margin-bottom: 5px;
+      color: #dbeafe;
+    }
+
+    .finance-hero-track {
+      width: 100%;
+      height: 26px;
+      border-radius: 99px;
+      background: rgba(15, 23, 42, .55);
+      overflow: hidden;
+      border: 1px solid rgba(191, 219, 254, .5);
+    }
+
+    .finance-hero-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
+      color: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: bold;
+      white-space: nowrap;
+      min-width: 44px;
+    }
+
+    .finance-hero-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: bold;
+      opacity: .95;
+    }
+
+    .finance-summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: rgba(15, 23, 42, .5);
+    }
+
+    .finance-summary-table th,
+    .finance-summary-table td {
+      border: 1px solid rgba(93, 142, 255, 0.5);
+      padding: 8px 9px;
+      font-size: 12px;
+      text-align: center;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .finance-summary-table th {
+      background: #1e3a8a;
+    }
+
+    .finance-summary-table td {
+      background: #2d5a9f;
+    }
+
+    .finance-summary-table tbody tr:hover td {
+      background: #365ba8;
+      color: #fff;
+    }
+
+    .indikator-block {
+      margin-top: 12px;
+      border: 1px solid rgba(191, 219, 254, .35);
+      border-radius: 8px;
+      background: rgba(15, 23, 42, .2);
+      padding: 10px;
+    }
+
+    .indikator-title {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: #dbeafe;
+      letter-spacing: .2px;
+      margin-bottom: 8px;
+    }
+
+    .indikator-scroll {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .indikator-table {
+      min-width: 1400px;
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(15, 23, 42, .5);
+    }
+
+    .indikator-table th,
+    .indikator-table td {
+      border: 1px solid rgba(93, 142, 255, 0.5);
+      padding: 6px 7px;
+      font-size: 11px;
+      text-align: center;
+      color: #fff;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+
+    .indikator-table th {
+      background: #1e3a8a;
+      font-weight: 700;
+    }
+
+    .indikator-table tbody td {
+      background: #2d5a9f;
+    }
+
+    .indikator-table tbody tr:hover td {
+      background: #365ba8;
+      color: #fff;
+    }
+
+    @media (max-width: 880px) {
+      .finance-hero-top { grid-template-columns: 1fr; }
+      .finance-hero-box .value { font-size: 18px; }
+      .finance-hero-bottom { flex-direction: column; }
+    }
+  </style>
+</head>
+<body class="page-umum">
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="logo kalapas-logo">
+          <img src="/images/simwaspim.jpeg" alt="Logo SIMWASPIM" class="kalapas-logo-img">
+        </div>
+        <div class="header-info">
+          <h2><%= sectionTitle %></h2>
+          <h3>Data Realisasi Keuangan</h3>
+          <p class="address"><%= subtitle %></p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="kalapas-table-wrap">
+    <div class="kalapas-table-toolbar">
+      <a href="<%= backUrl %>">⬅ Kembali ke Kalapas</a>
+    </div>
+
+    <% if (typeof tuSubmenu !== 'undefined' && tuSubmenu) { %>
+      <div class="kalapas-submenu" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+        <a href="/kalapas/table/tu-umum?tab=realisasi" class="<%= tuSubmenu.active === 'realisasi' ? 'active' : '' %>" style="text-decoration:none;border:1px solid #93c5fd;color:<%= tuSubmenu.active === 'realisasi' ? '#fff' : '#1e3a8a' %>;background:<%= tuSubmenu.active === 'realisasi' ? '#1a4bb8' : '#eff6ff' %>;border-radius:6px;padding:7px 11px;font-size:12px;font-weight:bold;">📊 Realisasi</a>
+        <a href="/kalapas/table/tu-umum?tab=bmn" class="<%= tuSubmenu.active === 'bmn' ? 'active' : '' %>" style="text-decoration:none;border:1px solid #93c5fd;color:<%= tuSubmenu.active === 'bmn' ? '#fff' : '#1e3a8a' %>;background:<%= tuSubmenu.active === 'bmn' ? '#1a4bb8' : '#eff6ff' %>;border-radius:6px;padding:7px 11px;font-size:12px;font-weight:bold;">📦 BMN</a>
+        <a href="/kalapas/table/tu-umum?tab=kepegawaian" class="<%= tuSubmenu.active === 'kepegawaian' ? 'active' : '' %>" style="text-decoration:none;border:1px solid #93c5fd;color:<%= tuSubmenu.active === 'kepegawaian' ? '#fff' : '#1e3a8a' %>;background:<%= tuSubmenu.active === 'kepegawaian' ? '#1a4bb8' : '#eff6ff' %>;border-radius:6px;padding:7px 11px;font-size:12px;font-weight:bold;">👥 Kepegawaian</a>
+      </div>
+    <% } %>
+
+    <div class="panel kalapas-table-panel">
+      <div class="panel-header red">
+        <span>Realisasi Belanja Bagian Keuangan</span>
+      </div>
+      <div class="panel-content" style="padding:10px;">
+        <div class="finance-hero" style="margin-bottom:0;">
+          <div class="finance-hero-top">
+            <div class="finance-hero-box">
+              <div class="label">Total Pagu</div>
+              <div class="value"><%= financeSummary.totalPaguLabel %></div>
+            </div>
+            <div class="finance-hero-box">
+              <div class="label">Realisasi Belanja</div>
+              <div class="value"><%= financeSummary.realisasiBelanjaLabel %></div>
+            </div>
+            <div class="finance-hero-box sisa">
+              <div class="label">Sisa Pagu</div>
+              <div class="value"><%= financeSummary.sisaPaguLabel %></div>
+            </div>
+          </div>
+
+          <div class="finance-hero-mid">
+            <span>Total Realisasi Belanja <%= financeSummary.realisasiPercent.toFixed(0) %>%</span>
+            <span>Sisa Pagu <%= financeSummary.sisaPercent.toFixed(0) %>%</span>
+          </div>
+          <div class="finance-hero-track">
+            <div class="finance-hero-fill" data-percent="<%= financeSummary.realisasiPercent.toFixed(1) %>"><%= financeSummary.realisasiPercent.toFixed(0) %>%</div>
+          </div>
+          <div class="finance-hero-bottom">
+            <span>Realisasi: <%= financeSummary.realisasiBelanjaLabel %></span>
+            <span>Data per <%= financeSummary.updatedAtLabel %></span>
+          </div>
+
+          <table class="finance-summary-table" style="margin-top:12px;">
+            <thead>
+              <tr>
+                <th style="width:15%;"></th>
+                <th>PEGAWAI</th>
+                <th>BARANG</th>
+                <th>MODAL</th>
+                <th>TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="text-align:left;font-weight:bold;background:rgba(15,23,42,.35);">PAGU</td>
+                <td><%= (financeSummary.paguPegawai || 0).toLocaleString('id-ID') %></td>
+                <td><%= (financeSummary.paguBarang || 0).toLocaleString('id-ID') %></td>
+                <td><%= (financeSummary.paguModal || 0).toLocaleString('id-ID') %></td>
+                <td><%= (financeSummary.totalPagu || 0).toLocaleString('id-ID') %></td>
+              </tr>
+              <tr>
+                <td style="text-align:left;font-weight:bold;background:rgba(15,23,42,.35);">REALISASI</td>
+                <td><%= (financeSummary.realisasiPegawai || 0).toLocaleString('id-ID') %></td>
+                <td><%= (financeSummary.realisasiBarang || 0).toLocaleString('id-ID') %></td>
+                <td><%= (financeSummary.realisasiModal || 0).toLocaleString('id-ID') %></td>
+                <td><%= (financeSummary.realisasiBelanja || 0).toLocaleString('id-ID') %></td>
+              </tr>
+              <tr>
+                <td style="text-align:left;font-weight:bold;background:rgba(15,23,42,.35);">PERSENTASE</td>
+                <td><%= financeSummary.persentasePegawai.toFixed(2) %>%</td>
+                <td><%= financeSummary.persentaseBarang.toFixed(2) %>%</td>
+                <td><%= financeSummary.persentaseModal.toFixed(2) %>%</td>
+                <td><%= financeSummary.persentaseTotal.toFixed(2) %>%</td>
+              </tr>
+              <tr>
+                <td style="text-align:left;font-weight:bold;background:rgba(15,23,42,.35);">SISA</td>
+                <td><%= (financeSummary.sisaPegawai || 0).toLocaleString('id-ID') %></td>
+                <td><%= (financeSummary.sisaBarang || 0).toLocaleString('id-ID') %></td>
+                <td><%= (financeSummary.sisaModal || 0).toLocaleString('id-ID') %></td>
+                <td><%= (financeSummary.sisaPagu || 0).toLocaleString('id-ID') %></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="font-size:12px;color:#dbeafe;margin-top:8px;text-align:right;">Data per <%= financeSummary.updatedAtLabel %></div>
+
+          <div class="indikator-block">
+            <div class="indikator-title">INDIKATOR PELAKSANAAN ANGGARAN SATKER</div>
+            <div class="indikator-scroll">
+              <table class="indikator-table">
+                <thead>
+                  <tr>
+                    <th>NO</th>
+                    <th>Periode</th>
+                    <th>Kode KPPN</th>
+                    <th>Kode BA</th>
+                    <th>Kode Satker</th>
+                    <th>Uraian Satker</th>
+                    <th>Keterangan</th>
+                    <th>Revisi DIPA</th>
+                    <th>Deviasi Halaman III DIPA</th>
+                    <th>Nilai Aspek</th>
+                    <th>Penyerapan Anggaran</th>
+                    <th>Belanja Kontraktual</th>
+                    <th>Penyelesaian Tagihan</th>
+                    <th>Pengelolaan UP dan TUP</th>
+                    <th>Nilai Aspek</th>
+                    <th>Capaian Output</th>
+                    <th>Nilai Aspek</th>
+                    <th>Nilai Total</th>
+                    <th>Konversi Bobot</th>
+                    <th>Dispensasi SPM (Pengurangan)</th>
+                    <th>Nilai Akhir</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><%= financeIndicator.no %></td>
+                    <td><%= financeIndicator.periode %></td>
+                    <td><%= financeIndicator.kodeKppn %></td>
+                    <td><%= financeIndicator.kodeBa %></td>
+                    <td><%= financeIndicator.kodeSatker %></td>
+                    <td><%= financeIndicator.uraianSatker %></td>
+                    <td><%= financeIndicator.keterangan %></td>
+                    <td><%= financeIndicator.revisiDipa %></td>
+                    <td><%= financeIndicator.deviasiHalamanIiiDipa %></td>
+                    <td><%= financeIndicator.nilaiAspekPerencanaan %></td>
+                    <td><%= financeIndicator.penyerapanAnggaran %></td>
+                    <td><%= financeIndicator.belanjaKontraktual %></td>
+                    <td><%= financeIndicator.penyelesaianTagihan %></td>
+                    <td><%= financeIndicator.pengelolaanUpDanTup %></td>
+                    <td><%= financeIndicator.nilaiAspekPelaksanaan %></td>
+                    <td><%= financeIndicator.capaianOutput %></td>
+                    <td><%= financeIndicator.nilaiAspekHasil %></td>
+                    <td><%= financeIndicator.nilaiTotal %></td>
+                    <td><%= financeIndicator.konversiBobot %></td>
+                    <td><%= financeIndicator.dispensasiSpm %></td>
+                    <td><%= financeIndicator.nilaiAkhir %></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <% if (financeSummary.pdfPath) { %>
+        <div style="padding:14px 10px 0;border-top:1px solid rgba(191,219,254,.3);">
+          <div style="font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:8px;">Preview Laporan PDF</div>
+          <iframe
+            src="<%= financeSummary.pdfPath %>#toolbar=1&navpanes=0"
+            title="Preview Laporan PDF Realisasi"
+            style="width:100%;height:720px;border:1px solid rgba(191,219,254,.35);border-radius:6px;background:#fff;"
+          ></iframe>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var fill = document.querySelector('.finance-hero-fill[data-percent]');
+      if (!fill) return;
+      var value = Number(fill.getAttribute('data-percent')) || 0;
+      var safeValue = Math.max(0, Math.min(100, value));
+      fill.style.width = safeValue + '%';
+    })();
+  </script>
+</body>
+</html>

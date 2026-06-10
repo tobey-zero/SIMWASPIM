@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>KRISNA - Sistem Informasi Warga Binaan</title>
+    <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
+    <style>
+        .status-overdue-cell {
+            background: #ff0000;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .menu-photo {
+            cursor: zoom-in;
+        }
+
+        .menu-photo-lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.86);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 24px;
+        }
+
+        .menu-photo-lightbox.is-open {
+            display: flex;
+        }
+
+        .menu-photo-lightbox img {
+            max-width: min(92vw, 1100px);
+            max-height: 88vh;
+            width: auto;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+            background: #fff;
+        }
+
+        .menu-photo-lightbox .close-btn {
+            position: absolute;
+            top: 18px;
+            right: 20px;
+            width: 38px;
+            height: 38px;
+            border: 0;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 26px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .menu-photo-lightbox .close-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+    </style>
+</head>
+
+<body class="page-umum">
+    <!-- Header Full Width -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo" data-secret-kalapas="true" style="cursor: pointer;">
+                    <img src="/images/Logo.jpeg" alt="Logo" data-secret-kalapas="true" style="width: 100%; height: 100%; object-fit: contain; display: block;">
+                </div>
+                <div class="header-info">
+                    <h2>KETERBUKAAN INFORMASI WARGA BINAAN</h2>
+                    <h3>LAPAS KELAS 1 MEDAN</h3>
+                    <p class="address">Jl. Lembaga Pemasyarakatan No.27, Tj. Gusta, Kec. Medan Helvetia, Kota Medan, Sumatera Utara 20125</p>
+                    <p class="contact">Phone: (061) 8452195 | Email: lapas1medan27@yahoo.co.id</p>
+                </div>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Kapasitas</div>
+                    <div class="stat-value">
+                        <%= kapasitas %>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Penghuni</div>
+                    <div class="stat-value">
+                        <%= totalPenghuni %>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Bebas Hari Ini</div>
+                    <div class="stat-value">
+                        <%= bebasHariIni %> Orang
+                    </div>
+                </div>
+                <!-- Tampilan tanggal hari ini -->
+                <div class="stat-item bebas">
+                    <div class="stat-label">Tanggal</div>
+                    <div class="stat-value">
+                        <%= tanggal %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- Main Container dengan 2 Kolom (4:8) -->
+    <div class="main-container">
+        <!-- Kolom Kiri (4) -->
+        <div class="left-column">
+            <!-- Panel Atas Kiri: Besaran Remisi -->
+            <div class="panel">
+                <div class="panel-header red"><%= remisiTitle %></div>
+                <div class="panel-content">
+                    <table class="table-remisi">
+                        <thead>
+                            <tr>
+                                <th>NAMA WARGA BINAAN</th>
+                                <th>AGAMA</th>
+                                <th>BESARAN REMISI</th>
+                                <th>TOTAL BULAN REMISI</th>
+                                <th>TOTAL HARI REMISI</th>
+                                <th>KETERANGAN</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% besaranRemisi.forEach(item=> { %>
+                                <tr>
+                                    <td>
+                                        <%= item.nama %>
+                                    </td>
+                                    <td>
+                                        <%= item.agama || '-' %>
+                                    </td>
+                                    <td>
+                                        <%= item.besaran %>
+                                    </td>
+                                    <td>
+                                        <%= item.remisiBulan || '-' %>
+                                    </td>
+                                    <td>
+                                        <%= item.remisiHari || '-' %>
+                                    </td>
+                                    <td>
+                                        <%= item.keterangan || item.jenis || '-' %>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Panel Bawah Kiri: Menu Makan -->
+            <div class="panel">
+                <div class="panel-header red">DOKUMENTASI KEGIATAN PEMBINAAN HARIAN</div>
+                
+                    <div class="panel-content documentation"
+                        style="padding: 0; align-items: stretch; justify-content: stretch;">
+                        <% if (dokumentasiMedia && dokumentasiMedia.length) { %>
+                            <% const firstMedia = dokumentasiMedia[0]; %>
+                            <% if (firstMedia.mediaType === 'video') { %>
+                                <video id="doc-media-player" src="<%= firstMedia.mediaPath %>" autoplay muted playsinline controls <%= dokumentasiMedia.length === 1 ? 'loop' : '' %>
+                                    style="width: 100%; height: 100%; object-fit: cover; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; display: block;"></video>
+                            <% } else { %>
+                                <img id="doc-media-player" src="<%= firstMedia.mediaPath %>" alt="Dokumentasi kegiatan"
+                                    style="width: 100%; height: 100%; object-fit: cover; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; display: block;">
+                            <% } %>
+                            <script id="doc-media-playlist" type="application/json"><%- JSON.stringify(dokumentasiMedia) %></script>
+                        <% } else { %>
+                                <div class="photo-placeholder"
+                                    style="border-radius: 0 0 8px 8px; height: 100%; aspect-ratio: auto;">
+                                    <p>Media Dokumentasi Kegiatan</p>
+                                </div>
+                        <% } %>
+                    </div>
+            </div>
+
+        </div>
+
+        <!-- Kolom Kanan (8) -->
+        <div class="right-column">
+            <!-- Panel Atas Kanan: Detail Pentahapan Pembinaan -->
+            <div class="panel panel-pembinaan-detail">
+                <div class="panel-header-with-date"
+                    style="padding: 10px 15px; font-weight: bold; font-size: 14px; background-color: #1e3a8a; color: white;">
+                    <span class="panel-title">DETAIL PENTAHAPAN PEMBINAAN</span>
+                </div>
+                <div class="panel-content">
+                    <table class="table-pembinaan-detail">
+                        <thead>
+                            <tr>
+                                <th>NO. REG</th>
+                                <th>NAMA WARGA BINAAN</th>
+                                <th>JENIS KEJAHATAN</th>
+                                <th>BLOK/KAMAR</th>
+                                <th>TANGGAL 1/3</th>
+                                <th>TANGGAL 1/2</th>
+                                <th>TANGGAL 2/3</th>
+                                <th>TANGGAL EKSPIRASI AKHIR</th>
+                                <th>KETERANGAN PROGRAM PEMBINAAN</th>
+                                <th>STATUS INTEGRASI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% pentahapanPembinaanDetail.forEach(item=> { %>
+                                <tr>
+                                    <td>
+                                        <%= item.noReg %>
+                                    </td>
+                                    <td>
+                                        <%= item.namaWbp %>
+                                    </td>
+                                    <td>
+                                        <%= item.jenisKejahatan || '-' %>
+                                    </td>
+                                    <td>
+                                        <%= item.blokKamar || '-' %>
+                                    </td>
+                                    <td>
+                                        <%= formatDateIndo(item.tanggal1) %>
+                                    </td>
+                                    <td>
+                                        <%= formatDateIndo(item.tanggal3) %>
+                                    </td>
+                                    <td>
+                                        <%= formatDateIndo(item.tanggal2) %>
+                                    </td>
+                                    <td>
+                                        <%= formatDateIndo(item.tanggal4) %>
+                                    </td>
+                                    <td>
+                                        <%= item.keterangan || '-' %>
+                                    </td>
+                                    <td class="<%= item.isStatusOverdue ? 'status-overdue-cell' : '' %>">
+                                        <%= item.statusIntegrasi %>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Panel Bawah Kanan: 2 Sub-panel -->
+            <div class="bottom-panels">
+                <!-- Sub-panel Kiri: Jadwal Kegiatan -->
+                <div class="panel sub-panel">
+                    <div class="panel-header-with-date" style="background: linear-gradient(135deg, #1a365d 0%, #2563eb 100%);">
+                        <span class="panel-title">JADWAL KEGIATAN PEMBINAAN</span>
+                    </div>
+                    <div class="panel-content">
+                        <table class="table-jadwal">
+                            <thead>
+                                <tr>
+                                    <th>HARI</th>
+                                    <th>WAKTU</th>
+                                    <th>KEGIATAN</th>
+                                    <th>LOKASI</th>
+                                    <th>PENANGGUNG JAWAB</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% const mergedJadwalRows = []; %>
+                                <% let jadwalIndex = 0; %>
+                                <% while (jadwalIndex < jadwalKegiatan.length) { %>
+                                    <% const hariValue = String(jadwalKegiatan[jadwalIndex].hari || '').trim() || '-'; %>
+                                    <% let hariEnd = jadwalIndex; %>
+                                    <% while (hariEnd < jadwalKegiatan.length) { %>
+                                        <% const nextHari = String(jadwalKegiatan[hariEnd].hari || '').trim() || '-'; %>
+                                        <% if (nextHari !== hariValue) { break; } %>
+                                        <% hariEnd += 1; %>
+                                    <% } %>
+
+                                    <% let pjStart = jadwalIndex; %>
+                                    <% while (pjStart < hariEnd) { %>
+                                        <% const pjValue = String(jadwalKegiatan[pjStart].penanggungJawab || '').trim() || '-'; %>
+                                        <% let pjEnd = pjStart; %>
+                                        <% while (pjEnd < hariEnd) { %>
+                                            <% const nextPj = String(jadwalKegiatan[pjEnd].penanggungJawab || '').trim() || '-'; %>
+                                            <% if (nextPj !== pjValue) { break; } %>
+                                            <% pjEnd += 1; %>
+                                        <% } %>
+
+                                        <% for (let rowIndex = pjStart; rowIndex < pjEnd; rowIndex += 1) { %>
+                                            <% const row = jadwalKegiatan[rowIndex]; %>
+                                            <% mergedJadwalRows.push({
+                                                hari: hariValue,
+                                                waktu: row.waktu || '-',
+                                                kegiatan: row.kegiatan || '-',
+                                                lokasi: row.lokasi || '-',
+                                                penanggungJawab: pjValue,
+                                                showHari: rowIndex === jadwalIndex,
+                                                hariRowspan: rowIndex === jadwalIndex ? (hariEnd - jadwalIndex) : 0,
+                                                showPenanggungJawab: rowIndex === pjStart,
+                                                penanggungJawabRowspan: rowIndex === pjStart ? (pjEnd - pjStart) : 0,
+                                            }); %>
+                                        <% } %>
+
+                                        <% pjStart = pjEnd; %>
+                                    <% } %>
+
+                                    <% jadwalIndex = hariEnd; %>
+                                <% } %>
+
+                                <% mergedJadwalRows.forEach((item) => { %>
+                                    <tr>
+                                        <% if (item.showHari) { %>
+                                            <td rowspan="<%= item.hariRowspan %>"><%= item.hari %></td>
+                                        <% } %>
+                                        <td><%= item.waktu %></td>
+                                        <td><%= item.kegiatan %></td>
+                                        <td><%= item.lokasi %></td>
+                                        <td><%= item.penanggungJawab %></td>
+                                    </tr>
+                                <% }) %>
+                                <% if (!jadwalKegiatan.length) { %>
+                                <tr>
+                                    <td colspan="5" style="text-align:center;">Belum ada jadwal</td>
+                                </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sub-panel Kanan: Dokumentasi -->
+                <div class="panel sub-panel">
+                    <div class="panel-header red"><%= menuTitle %></div>
+                    <div style="padding: 8px 12px 0; font-size: 11px; font-weight: 700; color: #64748b;">Tanggal: <%= todayMenuLabel %></div>
+                    <div class="panel-content">
+                    <table class="table-menu">
+                        <tbody>
+                            <% menuMakan.forEach(item=> { %>
+                                <tr class="<%= item.waktu === 'SNACK' ? 'snack' : '' %>">
+                                    <td class="waktu">
+                                        <%= item.waktu %>
+                                    </td>
+                                    <td class="menu-photo-cell">
+                                        <% if (item.photoPath) { %>
+                                            <img src="<%= item.photoPath %>" alt="Foto menu" class="menu-photo">
+                                            <% } else { %>
+                                                <div class="menu-photo-placeholder">-</div>
+                                                <% } %>
+                                    </td>
+                                    <td class="menu">
+                                        <%= item.menu %>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                                <% if (!menuMakan.length) { %>
+                                <tr>
+                                    <td colspan="3" style="text-align:center; padding: 14px; color: #6b7280; font-weight: 700;">Belum ada menu untuk hari ini</td>
+                                </tr>
+                                <% } %>
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <!-- Kata Bijak Running Text -->
+        <div class="footer-running">
+            <div class="footer-running-track">
+                <span><h2><%= kataBijak %></h2></span>
+            </div>
+        </div>
+
+        <!-- Footer Bottom -->
+        <div class="footer-bottom"
+            style="display: flex; justify-content: space-between; align-items: center; text-align: left;">
+            <p style="flex: 1; max-width: 60%;"><strong>KRISNA</strong> adalah sistem Keterbukaan Informasi Warga Binaan di
+                Lapas Kelas I Medan.</p>
+            <p style="text-align: right; flex: 1;">Copyright &copy; <%= new Date().getFullYear() %>, by Dimstatons. All Right Reserved</p>
+        </div>
+    </footer>
+    <script>
+        (function () {
+            document.querySelectorAll('[data-secret-kalapas="true"]').forEach(function (el) {
+                el.addEventListener('click', function () {
+                    window.location.href = '/kalapas';
+                });
+            });
+
+            const playlistEl = document.getElementById('doc-media-playlist');
+            if (!playlistEl) return;
+
+            const mediaPlayerContainer = document.querySelector('.panel-content.documentation');
+            if (!mediaPlayerContainer) return;
+
+            let playlist = [];
+            try {
+                playlist = JSON.parse(playlistEl.textContent || '[]');
+            } catch (_) {
+                playlist = [];
+            }
+
+            if (!Array.isArray(playlist) || playlist.length === 0) return;
+
+            if (playlist.length === 1) {
+                const onlyItem = playlist[0];
+                if (onlyItem && onlyItem.mediaType === 'video') {
+                    const existingPlayer = document.getElementById('doc-media-player');
+                    if (existingPlayer && existingPlayer.tagName && existingPlayer.tagName.toLowerCase() === 'video') {
+                        existingPlayer.loop = true;
+                        existingPlayer.muted = true;
+                        const playPromise = existingPlayer.play();
+                        if (playPromise && typeof playPromise.catch === 'function') {
+                            playPromise.catch(function () {});
+                        }
+                    }
+                }
+                return;
+            }
+
+            let currentIndex = 0;
+            let imageTimer = null;
+
+            function clearImageTimer() {
+                if (imageTimer) {
+                    clearTimeout(imageTimer);
+                    imageTimer = null;
+                }
+            }
+
+            function nextMedia() {
+                clearImageTimer();
+                currentIndex = (currentIndex + 1) % playlist.length;
+                renderMedia();
+            }
+
+            function renderMedia() {
+                clearImageTimer();
+                const item = playlist[currentIndex];
+                mediaPlayerContainer.innerHTML = '';
+
+                if (!item || !item.mediaPath) {
+                    nextMedia();
+                    return;
+                }
+
+                if (item.mediaType === 'video') {
+                    const video = document.createElement('video');
+                    video.src = item.mediaPath;
+                    video.autoplay = true;
+                    video.muted = true;
+                    video.controls = true;
+                    video.playsInline = true;
+                    video.style.width = '100%';
+                    video.style.height = '100%';
+                    video.style.objectFit = 'cover';
+                    video.style.borderBottomLeftRadius = '8px';
+                    video.style.borderBottomRightRadius = '8px';
+                    video.style.display = 'block';
+
+                    video.addEventListener('ended', nextMedia);
+                    video.addEventListener('error', nextMedia);
+                    mediaPlayerContainer.appendChild(video);
+                } else {
+                    const image = document.createElement('img');
+                    image.src = item.mediaPath;
+                    image.alt = 'Dokumentasi kegiatan';
+                    image.style.width = '100%';
+                    image.style.height = '100%';
+                    image.style.objectFit = 'cover';
+                    image.style.borderBottomLeftRadius = '8px';
+                    image.style.borderBottomRightRadius = '8px';
+                    image.style.display = 'block';
+                    image.addEventListener('error', nextMedia);
+                    mediaPlayerContainer.appendChild(image);
+
+                    const duration = Number(item.displayDurationSec) > 0 ? Number(item.displayDurationSec) : 8;
+                    imageTimer = setTimeout(nextMedia, duration * 1000);
+                }
+            }
+
+            renderMedia();
+        })();
+    </script>
+    <script>
+        (function () {
+            const photos = document.querySelectorAll('.menu-photo');
+            if (!photos.length) return;
+
+            const lightbox = document.createElement('div');
+            lightbox.className = 'menu-photo-lightbox';
+            lightbox.innerHTML = '<button type="button" class="close-btn" aria-label="Tutup">×</button><img src="" alt="Preview foto menu">';
+
+            const previewImg = lightbox.querySelector('img');
+            const closeBtn = lightbox.querySelector('.close-btn');
+
+            function closeLightbox() {
+                lightbox.classList.remove('is-open');
+                previewImg.src = '';
+            }
+
+            function openLightbox(src, alt) {
+                previewImg.src = src;
+                previewImg.alt = alt || 'Preview foto menu';
+                lightbox.classList.add('is-open');
+            }
+
+            photos.forEach((photo) => {
+                photo.addEventListener('click', () => {
+                    const src = photo.getAttribute('src') || '';
+                    if (!src) return;
+                    openLightbox(src, photo.getAttribute('alt'));
+                });
+            });
+
+            closeBtn.addEventListener('click', closeLightbox);
+            lightbox.addEventListener('click', (event) => {
+                if (event.target === lightbox) closeLightbox();
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && lightbox.classList.contains('is-open')) {
+                    closeLightbox();
+                }
+            });
+
+            document.body.appendChild(lightbox);
+        })();
+    </script>
+    <script src="/js/overlay-guard.js?v=<%= Date.now() %>"></script>
+    <script src="/js/display-mode.js?v=<%= Date.now() %>"></script>
+</body>
+
+</html>

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= pageTitle %> - Kalapas</title>
+  <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
+  <style>
+    .kalapas-table-wrap { padding: 14px 15px; }
+    .kalapas-table-toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .kalapas-table-toolbar a {
+      text-decoration: none;
+      color: #fff;
+      background: #1a4bb8;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 6px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .kalapas-submenu {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .kalapas-submenu a {
+      text-decoration: none;
+      border: 1px solid #93c5fd;
+      color: #1e3a8a;
+      background: #eff6ff;
+      border-radius: 6px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .kalapas-submenu a.active {
+      color: #fff;
+      background: #1a4bb8;
+      border-color: rgba(255,255,255,.3);
+    }
+    .kalapas-date-filter {
+      display: flex;
+      align-items: end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .kalapas-date-filter-wrap {
+      padding: 10px 10px 0;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .kalapas-filter-split {
+      padding: 10px 10px 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 40px;
+      flex-wrap: nowrap;
+      align-items: end;
+    }
+    .kalapas-search-server-form {
+      display: flex;
+      align-items: end;
+      gap: 8px;
+      flex-wrap: nowrap;
+      flex: 0 1 58%;
+      max-width: 760px;
+      min-width: 360px;
+    }
+    .kalapas-search-server-form .search-box {
+      flex: 1;
+      min-width: 280px;
+      max-width: 560px;
+    }
+    .kalapas-filter-split .kalapas-date-filter {
+      flex: 0 0 auto;
+      justify-content: flex-end;
+    }
+    .kalapas-search-server-form button {
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 6px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #fff;
+      background: #1a4bb8;
+    }
+    .kalapas-search-server-form .reset {
+      text-decoration: none;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #1e3a8a;
+      background: #eff6ff;
+      display: inline-flex;
+      align-items: center;
+    }
+    .kalapas-date-filter .label {
+      font-size: 11px;
+      color: #334155;
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+    .kalapas-date-filter input[type="date"] {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      background: #fff;
+    }
+    .kalapas-date-filter button,
+    .kalapas-date-filter .reset {
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 6px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .kalapas-date-filter button {
+      color: #fff;
+      background: #1a4bb8;
+    }
+    .kalapas-date-filter .reset {
+      color: #1e3a8a;
+      background: #eff6ff;
+      border-color: #cbd5e1;
+      display: inline-flex;
+      align-items: center;
+    }
+    .kalapas-search {
+      min-width: 280px;
+      max-width: 420px;
+      width: 100%;
+      padding: 9px 11px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    @media (max-width: 1180px) {
+      .kalapas-filter-split {
+        gap: 18px;
+      }
+      .kalapas-search-server-form {
+        flex-basis: 52%;
+        min-width: 320px;
+      }
+      .kalapas-search-server-form .search-box {
+        max-width: 460px;
+      }
+    }
+    @media (max-width: 980px) {
+      .kalapas-filter-split {
+        flex-wrap: wrap;
+      }
+      .kalapas-search-server-form {
+        flex: 1 1 100%;
+        max-width: 100%;
+        min-width: 0;
+      }
+      .kalapas-search-server-form .search-box {
+        max-width: 100%;
+      }
+      .kalapas-filter-split .kalapas-date-filter {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+    .kalapas-search-group {
+      display: grid;
+      gap: 4px;
+      min-width: 280px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .kalapas-search-label {
+      font-size: 11px;
+      color: #cbd5e1;
+      font-weight: bold;
+      letter-spacing: .2px;
+    }
+    .kalapas-table-panel .panel-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+    .kalapas-table-panel table th, .kalapas-table-panel table td {
+      font-size: 12px;
+      padding: 8px 9px;
+    }
+    .kalapas-empty {
+      text-align: center;
+      color: #64748b;
+      padding: 14px;
+      font-weight: bold;
+    }
+    .kalapas-table-panel + .kalapas-table-panel {
+      margin-top: 12px;
+    }
+    .kalapas-preview-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #1d4ed8;
+      color: #1d4ed8;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: bold;
+      background: #eff6ff;
+    }
+    .status-overdue {
+      background: #ef4444;
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .th-sort-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .th-sort-links {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .th-sort-link {
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 0 2px;
+      border: 0;
+      border-radius: 0;
+      color: #94a3b8;
+      background: transparent;
+      line-height: 1.2;
+    }
+    .th-sort-link.active {
+      color: #facc15;
+    }
+
+    .finance-hero {
+      border: 1px solid #1e40af;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #1e3a8a 0%, #2563eb 100%);
+      color: #fff;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .finance-hero-top {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .finance-hero-box {
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, .35);
+      background: rgba(15, 23, 42, .3);
+      padding: 8px 10px;
+    }
+
+    .finance-hero-box.sisa {
+      background: linear-gradient(135deg, #166534 0%, #15803d 100%);
+      border-color: rgba(187, 247, 208, .55);
+    }
+
+    .finance-hero-box .label {
+      font-size: 11px;
+      opacity: .95;
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+
+    .finance-hero-box .value {
+      font-size: 22px;
+      font-weight: bold;
+      line-height: 1.1;
+    }
+
+    .finance-hero-mid {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-weight: bold;
+      font-size: 12px;
+      margin-bottom: 5px;
+      color: #dbeafe;
+    }
+
+    .finance-hero-track {
+      width: 100%;
+      height: 26px;
+      border-radius: 99px;
+      background: rgba(15, 23, 42, .55);
+      overflow: hidden;
+      border: 1px solid rgba(191, 219, 254, .5);
+    }
+
+    .finance-hero-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
+      color: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: bold;
+      white-space: nowrap;
+      min-width: 44px;
+    }
+
+    .finance-hero-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: bold;
+      opacity: .95;
+    }
+
+    @media (max-width: 880px) {
+      .finance-hero-top { grid-template-columns: 1fr; }
+      .finance-hero-box .value { font-size: 18px; }
+      .finance-hero-bottom { flex-direction: column; }
+    }
+  </style>
+</head>
+<body class="page-umum">
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="logo kalapas-logo">
+          <img src="/images/simwaspim.jpeg" alt="Logo SIMWASPIM" class="kalapas-logo-img">
+        </div>
+        <div class="header-info">
+          <h2><%= (typeof headerTitle !== 'undefined' && headerTitle) ? headerTitle : sectionTitle %></h2>
+          <h3>Tampilan Tabel + Pencarian</h3>
+          <p class="address"><%= (typeof subtitle !== 'undefined' && subtitle) ? subtitle : '' %></p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="kalapas-table-wrap">
+    <div class="kalapas-table-toolbar">
+      <a href="<%= backUrl %>">⬅ Kembali ke Kalapas</a>
+    </div>
+
+    <% if (typeof pengamananSubmenu !== 'undefined' && pengamananSubmenu) { %>
+      <div class="kalapas-submenu">
+        <a href="/kalapas/table/kamar-blok" class="<%= pengamananSubmenu.active === 'kamar-blok' ? 'active' : '' %>">🏢 Kamar / Blok</a>
+        <a href="/kalapas/papan-isi" class="<%= pengamananSubmenu.active === 'papan-isi' ? 'active' : '' %>">📋 Papan Isi</a>
+        <a href="/kalapas/table/luar-tembok" class="<%= pengamananSubmenu.active === 'luar-tembok' ? 'active' : '' %>">🚶 WBP Luar Tembok</a>
+      </div>
+    <% } %>
+
+    <% if (typeof tuSubmenu !== 'undefined' && tuSubmenu) { %>
+      <div class="kalapas-submenu">
+        <a href="/kalapas/table/tu-umum?tab=realisasi" class="<%= tuSubmenu.active === 'realisasi' ? 'active' : '' %>">📊 Realisasi</a>
+        <a href="/kalapas/table/tu-umum?tab=bmn" class="<%= tuSubmenu.active === 'bmn' ? 'active' : '' %>">📦 BMN</a>
+        <a href="/kalapas/table/tu-umum?tab=kepegawaian" class="<%= tuSubmenu.active === 'kepegawaian' ? 'active' : '' %>">👥 Kepegawaian</a>
+      </div>
+    <% } %>
+
+    <% if (typeof kamtibSubmenu !== 'undefined' && kamtibSubmenu) { %>
+      <div class="kalapas-submenu">
+        <a href="/kalapas/table/kamtib" class="<%= kamtibSubmenu.active === 'ringkasan' ? 'active' : '' %>">🛡 Ringkasan</a>
+        <a href="/kalapas/table/razia-jadwal" class="<%= kamtibSubmenu.active === 'razia-jadwal' ? 'active' : '' %>">📅 Giat Razia</a>
+        <a href="/kalapas/table/razia-barang-bukti" class="<%= kamtibSubmenu.active === 'razia-barang-bukti' ? 'active' : '' %>">📦 Barang Bukti</a>
+        <a href="/kalapas/table/pengawalan" class="<%= kamtibSubmenu.active === 'pengawalan' ? 'active' : '' %>">🚔 Pengawalan</a>
+        <a href="/kalapas/table/strapsel" class="<%= kamtibSubmenu.active === 'strapsel' ? 'active' : '' %>">⛓ Strapsel</a>
+        <a href="/kalapas/table/register-f" class="<%= kamtibSubmenu.active === 'register-f' ? 'active' : '' %>">📘 Register F</a>
+        <a href="/kalapas/table/piket-jaga" class="<%= kamtibSubmenu.active === 'piket-jaga' ? 'active' : '' %>">🧷 Piket Jaga</a>
+        <a href="/kalapas/table/pengaduan" class="<%= kamtibSubmenu.active === 'pengaduan' ? 'active' : '' %>">📢 Pengaduan</a>
+      </div>
+    <% } %>
+
+    <% if (typeof financeSummary !== 'undefined' && financeSummary) { %>
+      <div class="panel kalapas-table-panel">
+        <div class="panel-header red">
+          <span>Realisasi Belanja Bagian Keuangan</span>
+        </div>
+        <div class="panel-content" style="padding:10px;">
+          <div class="finance-hero" style="margin-bottom:0;">
+            <div class="finance-hero-top">
+              <div class="finance-hero-box">
+                <div class="label">Total Pagu</div>
+                <div class="value"><%= financeSummary.totalPaguLabel %></div>
+              </div>
+              <div class="finance-hero-box">
+                <div class="label">Realisasi Belanja</div>
+                <div class="value"><%= financeSummary.realisasiBelanjaLabel %></div>
+              </div>
+              <div class="finance-hero-box sisa">
+                <div class="label">Sisa Pagu</div>
+                <div class="value"><%= financeSummary.sisaPaguLabel %></div>
+              </div>
+            </div>
+
+            <div class="finance-hero-mid">
+              <span>Total Realisasi Belanja <%= financeSummary.realisasiPercent.toFixed(0) %>%</span>
+              <span>Sisa Pagu <%= financeSummary.sisaPercent.toFixed(0) %>%</span>
+            </div>
+            <div class="finance-hero-track">
+              <div class="finance-hero-fill" data-width-percent="<%= Math.max(0, Math.min(100, financeSummary.realisasiPercent)) %>"><%= financeSummary.realisasiPercent.toFixed(0) %>%</div>
+            </div>
+            <div class="finance-hero-bottom">
+              <span>Realisasi: <%= financeSummary.realisasiBelanjaLabel %></span>
+              <span>Data per <%= financeSummary.updatedAtLabel %></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="panel kalapas-table-panel">
+      <div class="panel-header red">
+        <span><%= (typeof panelTitle !== 'undefined' && panelTitle) ? panelTitle : sectionTitle %></span>
+        <span id="rowCount"><%= rows.length %> data</span>
+      </div>
+      <div class="panel-content" style="padding:0;">
+        <% if (typeof dateFilter !== 'undefined' && dateFilter) { %>
+          <% if (dateFilter.searchEnabled) { %>
+            <div class="kalapas-filter-split">
+              <form method="GET" action="<%= dateFilter.action || '' %>" class="kalapas-search-server-form">
+                <% if (dateFilter.dateEnabled !== false) { %>
+                  <input type="hidden" name="tanggal" value="<%= dateFilter.value || dateFilter.todayValue || '' %>">
+                <% } %>
+                <div class="search-box">
+                  <div class="kalapas-search-label" style="color:#334155;"><%= dateFilter.searchLabel || 'Pencarian tabel ini' %></div>
+                  <input id="tableSearchServer" name="search" class="kalapas-search" type="text" value="<%= dateFilter.searchValue || '' %>" placeholder="<%= dateFilter.searchPlaceholder || 'Cari data...' %>" style="max-width:100%; width:100%;">
+                </div>
+                <button type="submit">Terapkan</button>
+                <% if (dateFilter.dateEnabled === false) { %>
+                  <a href="<%= dateFilter.resetUrl || (dateFilter.action || '') %>" class="reset">Reset</a>
+                <% } %>
+              </form>
+              <% if (dateFilter.dateEnabled !== false) { %>
+                <form method="GET" action="<%= dateFilter.action || '' %>" class="kalapas-date-filter">
+                  <div>
+                    <div class="label"><%= dateFilter.label || 'Filter tanggal' %></div>
+                    <input type="date" name="tanggal" value="<%= dateFilter.value || dateFilter.todayValue || '' %>">
+                  </div>
+                  <button type="submit">Terapkan</button>
+                  <a href="<%= dateFilter.resetUrl || (dateFilter.action || '') %>" class="reset">Hari ini</a>
+                </form>
+              <% } %>
+            </div>
+          <% } else { %>
+            <div class="kalapas-date-filter-wrap">
+              <form method="GET" action="<%= dateFilter.action || '' %>" class="kalapas-date-filter">
+                <div>
+                  <div class="label"><%= dateFilter.label || 'Filter tanggal' %></div>
+                  <input type="date" name="tanggal" value="<%= dateFilter.value || dateFilter.todayValue || '' %>">
+                </div>
+                <button type="submit">Terapkan</button>
+                <a href="<%= dateFilter.resetUrl || (dateFilter.action || '') %>" class="reset">Hari ini</a>
+              </form>
+            </div>
+          <% } %>
+          <% if (dateFilter.searchEnabled && dateFilter.searchValue) { %>
+            <div style="padding:0 10px 8px; font-size:12px; font-weight:700; color:#1e3a8a;">Mode pencarian aktif: menampilkan seluruh riwayat (tidak dibatasi tanggal).</div>
+          <% } %>
+        <% } %>
+        <div style="padding:10px 10px 0;">
+          <% if (!(typeof dateFilter !== 'undefined' && dateFilter && dateFilter.searchEnabled)) { %>
+            <div class="kalapas-search-group" style="max-width:100%;">
+              <div class="kalapas-search-label" style="color:#334155;">Pencarian tabel ini</div>
+              <input id="tableSearchPrimary" class="kalapas-search" type="text" placeholder="Cari data laporan barang pengguna..." style="max-width:100%;">
+            </div>
+          <% } %>
+        </div>
+        <div class="table-wrap">
+          <table class="admin-table" id="dataTable">
+            <thead>
+              <% if (typeof headerRows !== 'undefined' && Array.isArray(headerRows) && headerRows.length) { %>
+                <% headerRows.forEach((headerRow) => { %>
+                  <tr>
+                    <% (headerRow || []).forEach((cell) => { %>
+                      <th <% if (cell.rowspan) { %>rowspan="<%= cell.rowspan %>"<% } %> <% if (cell.colspan) { %>colspan="<%= cell.colspan %>"<% } %>>
+                        <% if (Array.isArray(cell.sortLinks) && cell.sortLinks.length) { %>
+                          <span class="th-sort-wrap">
+                            <span><%= cell.label %></span>
+                            <span class="th-sort-links">
+                              <% cell.sortLinks.forEach((sortLink) => { %>
+                                <a href="<%= sortLink.href %>" class="th-sort-link <%= sortLink.active ? 'active' : '' %>"><%= sortLink.label %></a>
+                              <% }) %>
+                            </span>
+                          </span>
+                        <% } else { %>
+                          <%= cell.label %>
+                        <% } %>
+                      </th>
+                    <% }) %>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <% columns.forEach(col => { %><th><%= col %></th><% }) %>
+                </tr>
+              <% } %>
+            </thead>
+            <tbody>
+              <% rows.forEach(row => { %>
+                <tr>
+                  <% row.forEach(cell => { %>
+                    <% const cellValue = (cell && typeof cell === 'object' && !Array.isArray(cell)) ? cell.value : cell; %>
+                    <% const cellClass = (cell && typeof cell === 'object' && !Array.isArray(cell)) ? (cell.className || '') : ''; %>
+                    <% const cellHref = (cell && typeof cell === 'object' && !Array.isArray(cell)) ? (cell.href || '') : ''; %>
+                    <td class="<%= cellClass %>">
+                      <% if (cellHref) { %>
+                        <a href="<%= cellHref %>" class="kalapas-preview-btn"><%= cellValue || 'Detail' %></a>
+                      <% } else if (typeof cellValue === 'string' && cellValue.startsWith('/uploads/') && /\.(png|jpg|jpeg|webp|gif)$/i.test(cellValue)) { %>
+                        <a href="<%= cellValue %>" target="_blank" rel="noopener noreferrer" class="kalapas-preview-btn">🔍 Preview</a>
+                      <% } else { %>
+                        <%= formatDateIndo(cellValue) %>
+                      <% } %>
+                    </td>
+                  <% }) %>
+                </tr>
+              <% }) %>
+              <% if (!rows.length) { %>
+                <% const emptyColspan = (Array.isArray(columns) && columns.length)
+                  ? columns.length
+                  : ((typeof headerRows !== 'undefined' && Array.isArray(headerRows) && headerRows.length)
+                    ? (headerRows[headerRows.length - 1] || []).reduce((sum, cell) => sum + (Number(cell.colspan) || 1), 0)
+                    : 1); %>
+                <tr><td colspan="<%= emptyColspan %>" class="kalapas-empty">Belum ada data</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <% if (typeof secondaryRows !== 'undefined' && typeof secondaryColumns !== 'undefined' && Array.isArray(secondaryRows) && Array.isArray(secondaryColumns)) { %>
+      <div class="panel kalapas-table-panel">
+        <div class="panel-header red">
+          <span><%= secondarySectionTitle || 'DATA TAMBAHAN' %></span>
+          <span id="rowCountSecondary"><%= secondaryRows.length %> data</span>
+        </div>
+        <div class="panel-content" style="padding:0;">
+          <div style="padding:10px 10px 0;">
+            <div class="kalapas-search-group" style="max-width:100%;">
+              <div class="kalapas-search-label" style="color:#334155;">Pencarian tabel ini</div>
+              <input id="tableSearchSecondary" class="kalapas-search" type="text" placeholder="Cari data kepegawaian..." style="max-width:100%;">
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table" id="dataTableSecondary">
+              <thead>
+                <% if (typeof secondaryHeaderRows !== 'undefined' && Array.isArray(secondaryHeaderRows) && secondaryHeaderRows.length) { %>
+                  <% secondaryHeaderRows.forEach((headerRow) => { %>
+                    <tr>
+                      <% (headerRow || []).forEach((cell) => { %>
+                        <th <% if (cell.rowspan) { %>rowspan="<%= cell.rowspan %>"<% } %> <% if (cell.colspan) { %>colspan="<%= cell.colspan %>"<% } %>>
+                          <% if (Array.isArray(cell.sortLinks) && cell.sortLinks.length) { %>
+                            <span class="th-sort-wrap">
+                              <span><%= cell.label %></span>
+                              <span class="th-sort-links">
+                                <% cell.sortLinks.forEach((sortLink) => { %>
+                                  <a href="<%= sortLink.href %>" class="th-sort-link <%= sortLink.active ? 'active' : '' %>"><%= sortLink.label %></a>
+                                <% }) %>
+                              </span>
+                            </span>
+                          <% } else { %>
+                            <%= cell.label %>
+                          <% } %>
+                        </th>
+                      <% }) %>
+                    </tr>
+                  <% }) %>
+                <% } else { %>
+                  <tr>
+                    <% secondaryColumns.forEach(col => { %><th><%= col %></th><% }) %>
+                  </tr>
+                <% } %>
+              </thead>
+              <tbody>
+                <% secondaryRows.forEach(row => { %>
+                  <tr>
+                    <% row.forEach(cell => { %>
+                      <td>
+                        <% if (typeof cell === 'string' && cell.startsWith('/uploads/') && /\.(png|jpg|jpeg|webp|gif)$/i.test(cell)) { %>
+                          <a href="<%= cell %>" target="_blank" rel="noopener noreferrer" class="kalapas-preview-btn">🔍 Preview</a>
+                        <% } else { %>
+                          <%= formatDateIndo(cell) %>
+                        <% } %>
+                      </td>
+                    <% }) %>
+                  </tr>
+                <% }) %>
+                <% if (!secondaryRows.length) { %>
+                  <tr><td colspan="<%= secondaryColumns.length %>" class="kalapas-empty">Belum ada data</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+  <script>
+    (function () {
+      document.querySelectorAll('.finance-hero-fill[data-width-percent]').forEach((element) => {
+        const widthPercent = Number(element.getAttribute('data-width-percent') || 0);
+        const bounded = Math.max(0, Math.min(100, widthPercent));
+        element.style.width = bounded + '%';
+      });
+
+      const searchPrimary = document.getElementById('tableSearchPrimary');
+      const searchSecondary = document.getElementById('tableSearchSecondary');
+      const table = document.getElementById('dataTable');
+      const bodyRows = Array.from(table.querySelectorAll('tbody tr'));
+      const rowCount = document.getElementById('rowCount');
+      const secondaryTable = document.getElementById('dataTableSecondary');
+      const secondaryRows = secondaryTable ? Array.from(secondaryTable.querySelectorAll('tbody tr')) : [];
+      const rowCountSecondary = document.getElementById('rowCountSecondary');
+
+      function applyPrimaryFilter() {
+        const keyword = ((searchPrimary && searchPrimary.value) || '').toLowerCase().trim();
+        let visiblePrimary = 0;
+
+        bodyRows.forEach((row) => {
+          const text = row.textContent.toLowerCase();
+          const match = !keyword || text.includes(keyword);
+          row.style.display = match ? '' : 'none';
+          if (match) visiblePrimary += 1;
+        });
+
+        if (rowCount) rowCount.textContent = visiblePrimary + ' data';
+      }
+
+      function applySecondaryFilter() {
+        const keyword = ((searchSecondary && searchSecondary.value) || '').toLowerCase().trim();
+        let visibleSecondary = 0;
+
+        secondaryRows.forEach((row) => {
+          const text = row.textContent.toLowerCase();
+          const match = !keyword || text.includes(keyword);
+          row.style.display = match ? '' : 'none';
+          if (match) visibleSecondary += 1;
+        });
+
+        if (rowCountSecondary) rowCountSecondary.textContent = visibleSecondary + ' data';
+      }
+
+      if (searchPrimary) searchPrimary.addEventListener('input', applyPrimaryFilter);
+      if (searchSecondary) searchSecondary.addEventListener('input', applySecondaryFilter);
+      applyPrimaryFilter();
+      applySecondaryFilter();
+    })();
+  </script>
+</body>
+</html>

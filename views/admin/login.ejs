@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= (typeof pageTitle !== 'undefined' && pageTitle) ? pageTitle : 'Admin Login – SIMWASPIM' %></title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="login-page">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="/images/simwaspim.jpeg" alt="SIMWASPIM" class="login-logo-image" width="56" height="56" style="width:56px;height:56px;max-width:56px;max-height:56px;display:block;margin:0 auto 8px;object-fit:contain;">
+      <h1>SIMWASPIM</h1>
+      <% const subtitle = String((typeof loginSubtitle !== 'undefined' && loginSubtitle) ? loginSubtitle : 'Sistem Pengawasan Pimpinan'); %>
+      <p><%- subtitle.replace(/\n/g, '<br>') %></p>
+    </div>
+    <% if (error) { %>
+    <div class="alert alert-danger">⚠️ <%= error %></div>
+    <% } %>
+    <form method="POST" action="<%= (typeof formAction !== 'undefined' && formAction) ? formAction : '/admin/login' %>">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Masukkan username" required autofocus>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Masukkan password" required>
+      </div>
+      <br>
+      <button type="submit" class="btn btn-primary">🔐 Masuk</button>
+    </form>
+    <% if (typeof helperText !== 'undefined' && helperText) { %>
+    <p style="text-align:center;margin-top:16px;font-size:11px;color:#aaa"><%= helperText %></p>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

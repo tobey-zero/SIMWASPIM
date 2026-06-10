@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Admin Lapas</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-wrapper">
+  <%- include('_sidebar') %>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title"><h2>Dashboard</h2><p>Ringkasan seluruh data sistem</p></div>
+      <div class="topbar-actions">
+        <a href="/" target="_blank" class="btn-public">🌐 Lihat Halaman Publik</a>
+      </div>
+    </div>
+    <div class="content-area">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-label">Besaran Remisi</div>
+          <div class="stat-card-value"><%= stats.remisi %></div>
+          <div class="stat-card-sub">entri data remisi</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-card-label">Menu Makan</div>
+          <div class="stat-card-value"><%= stats.menu %></div>
+          <div class="stat-card-sub">item menu hari ini</div>
+        </div>
+        <div class="stat-card teal">
+          <div class="stat-card-label">Jadwal Kegiatan</div>
+          <div class="stat-card-value"><%= stats.jadwal %></div>
+          <div class="stat-card-sub">item kegiatan</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-card-label">Giat Razia</div>
+          <div class="stat-card-value"><%= stats.raziaJadwal %></div>
+          <div class="stat-card-sub">agenda razia</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-card-label">Barang Bukti Razia</div>
+          <div class="stat-card-value"><%= stats.raziaBarangBukti %></div>
+          <div class="stat-card-sub">entri barang bukti</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-card-label">Giat Pengawalan</div>
+          <div class="stat-card-value"><%= stats.pengawalan %></div>
+          <div class="stat-card-sub">entri pengawalan</div>
+        </div>
+        <div class="stat-card teal">
+          <div class="stat-card-label">Strapsel</div>
+          <div class="stat-card-value"><%= stats.strapsel %></div>
+          <div class="stat-card-sub">entri data strapsel</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-card-label">TU Bagian Umum</div>
+          <div class="stat-card-value"><%= stats.tuUmum %></div>
+          <div class="stat-card-sub">laporan barang pengguna</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-card-label">GIIATJA</div>
+          <div class="stat-card-value"><%= stats.giiatja %></div>
+          <div class="stat-card-sub">entri kegiatan kerja</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-card-label">Kamar/Blok</div>
+          <div class="stat-card-value"><%= stats.kamarBlok %></div>
+          <div class="stat-card-sub">data blok hunian</div>
+        </div>
+        <div class="stat-card teal">
+          <div class="stat-card-label">Papan Keadaan Isi</div>
+          <div class="stat-card-value"><%= stats.papanIsi %></div>
+          <div class="stat-card-sub">baris data papan</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-card-label">User Admin</div>
+          <div class="stat-card-value"><%= stats.users %></div>
+          <div class="stat-card-sub">pengguna sistem</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>📌 Menu Cepat</h3><p>Akses langsung ke pengelolaan data</p></div>
+        <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;">
+          <% if(allowed.includes('statistik'))        { %><a href="/admin/statistik" class="btn btn-primary">📈 Statistik</a><% } %>
+          <% if(allowed.includes('remisi'))           { %><a href="/admin/remisi"    class="btn btn-primary">📋 Besaran Remisi</a><% } %>
+          <% if(allowed.includes('kata-bijak'))       { %><a href="/admin/kata-bijak" class="btn btn-primary">💬 Kata Bijak</a><% } %>
+          <% if(allowed.includes('menu'))             { %><a href="/admin/menu"      class="btn btn-success">🍽 Menu Makan</a><% } %>
+          <% if(allowed.includes('jadwal'))           { %><a href="/admin/jadwal"    class="btn btn-secondary">📅 Jadwal Kegiatan</a><% } %>
+          <% if(allowed.includes('pembinaan-detail')) { %><a href="/admin/pembinaan-detail" class="btn btn-secondary">🧭 Detail Pembinaan</a><% } %>
+          <% if(allowed.includes('giiatja'))          { %><a href="/admin/giiatja" class="btn btn-secondary">🏭 GIIATJA</a><% } %>
+          <% if(allowed.includes('razia'))            { %><a href="/admin/razia"    class="btn btn-danger">🚨 Razia</a><% } %>
+          <% if(allowed.includes('pengawalan'))       { %><a href="/admin/pengawalan" class="btn btn-danger">🛡️ Giat Pengawalan</a><% } %>
+          <% if(allowed.includes('strapsel'))         { %><a href="/admin/strapsel" class="btn btn-secondary">🛡️ Strapsel</a><% } %>
+          <% if(allowed.includes('piket-jaga'))       { %><a href="/admin/piket-jaga" class="btn btn-secondary">🧷 Piket Jaga</a><% } %>
+          <% if(allowed.includes('tu-umum'))          { %>
+            <a href="/admin/tu-umum/realisasi" class="btn btn-primary">💰 TU Realisasi</a>
+            <a href="/admin/tu-umum/barang" class="btn btn-primary">📦 TU Daftar Barang</a>
+            <a href="/admin/tu-umum/kepegawaian" class="btn btn-primary">👥 TU Kepegawaian</a>
+          <% } %>
+          <% if(allowed.includes('kamar-blok'))       { %><a href="/admin/kamar-blok" class="btn btn-success">🛏️ Kamar/Blok</a><% } %>
+          <% if(allowed.includes('papan-isi'))        { %><a href="/admin/papan-isi" class="btn btn-warning">📌 Papan Keadaan Isi</a><% } %>
+          <% if(allowed.includes('luar-tembok'))      { %><a href="/admin/luar-tembok" class="btn btn-warning">🧾 WBP Luar Tembok</a><% } %>
+          <% if(allowed.includes('pengaduan'))        { %><a href="/admin/pengaduan" class="btn btn-warning">📢 Pengaduan Masyarakat</a><% } %>
+          <% if(allowed.includes('users'))            { %><a href="/admin/users"     class="btn btn-danger">👤 Kelola User</a><% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
