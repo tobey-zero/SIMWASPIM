@@ -908,8 +908,8 @@
         </div>
     </header>
 
-    <% const summaryRows=[ { label: 'Remisi' , value: besaranRemisi.length, link: '/kalapas/table/remisi' }, {
-        label: 'Pentahapan Pembinaan' , value: pentahapanPembinaanDetail.length, link: '/kalapas/table/pembinaan' }, {
+    <% const summaryRows=[ { label: 'Remisi' , value: totalBesaranRemisi || 0, link: '/kalapas/table/remisi' }, {
+        label: 'Pentahapan Pembinaan' , value: totalPentahapanPembinaan || 0, link: '/kalapas/table/pembinaan' }, {
         label: 'Jadwal Kegiatan Pembinaan' , value: jadwalKegiatan.length, link: '/kalapas/table/jadwal-kegiatan' }, {
         label: 'Warga Binaan Sakit' , value: wbpBerobat.length, link: '/kalapas/table/berobat' }, {
         label: 'Tenaga Medis' , value: tenagaMedis.length, link: '/kalapas/table/tenaga-medis' }, {

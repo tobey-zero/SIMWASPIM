@@ -1457,10 +1457,12 @@ function getPublicData(includeLargeLists = false) {
     todayMenuLabel,
     todayYmd,
     besaranRemisi,
+    totalBesaranRemisi: Number(db.prepare('SELECT COUNT(*) AS c FROM besaran_remisi WHERE (? = 0 OR batch_id = ?)').get(Number(activeRemisiBatch?.id || 0), Number(activeRemisiBatch?.id || 0))?.c || 0),
     menuMakan,
     menuMakanHistory,
     pentahapanPembinaan,
     pentahapanPembinaanDetail,
+    totalPentahapanPembinaan: Number(db.prepare('SELECT COUNT(*) AS c FROM pentahapan_pembinaan_detail WHERE COALESCE(is_active, 1) = 1').get()?.c || 0),
     jadwalKegiatan,
     dokumentasiMedia,
     dokumentasiVideo,
@@ -2495,9 +2497,7 @@ function getKalapasData() {
   `).get(todayYmd)?.c || 0) > 0;
   const hasGiiatjaMonthlyUpdate = hasGiiatjaPelatihanThisMonth || hasGiiatjaPnbpThisMonth || hasGiiatjaPremiThisMonth || hasGiiatjaSaranaTodayUpdate;
   const totalPenghuniStatistik = Number(umum.totalPenghuni) || 0;
-  const totalPentahapanPembinaan = Array.isArray(umum.pentahapanPembinaanDetail)
-    ? umum.pentahapanPembinaanDetail.length
-    : 0;
+  const totalPentahapanPembinaan = Number(umum.totalPentahapanPembinaan) || 0;
   const hasPembinaanStatMismatch = totalPentahapanPembinaan !== totalPenghuniStatistik;
   const pembinaanStatMismatchGap = Math.abs(totalPentahapanPembinaan - totalPenghuniStatistik);
   const currentYearMonth = `${currentYear}-${currentMonth}`;
