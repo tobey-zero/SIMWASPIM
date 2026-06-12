@@ -1276,7 +1276,7 @@ roleAccess.dev = [...roleAccess.superadmin];
 
 function canAccessKalapasView(user) {
   if (!user || !user.role) return false;
-  return user.role === 'kalapas' || user.role === 'superadmin' || user.role === 'dev';
+  return true;
 }
 
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
@@ -1296,12 +1296,14 @@ function requireAccess(page) {
 
 function requireKalapasLogin(req, res, next) {
   if (!req.session || !req.session.user) {
-    return res.redirect('/kalapas/login');
+    return res.redirect('/admin/login');
   }
   if (!canAccessKalapasView(req.session.user)) {
     const allowed = roleAccess[req.session.user.role] || [];
     return res.status(403).render('admin/403', { user: req.session.user, active: '', allowed });
   }
+  res.locals.user = req.session.user;
+  res.locals.roleAccess = roleAccess[req.session.user.role] || [];
   return next();
 }
 
@@ -4283,10 +4285,10 @@ app.get('/api/public/tables', (req, res) => {
 
 app.get('/admin/login', (req, res) => {
   if (req.session.user) {
-    if (canAccessKalapasView(req.session.user) && req.session.user.role === 'kalapas') {
-      return res.redirect('/kalapas');
+    if (req.session.user.role === 'superadmin' || req.session.user.role === 'dev') {
+      return res.redirect('/admin/dashboard');
     }
-    return res.redirect('/admin/dashboard');
+    return res.redirect('/kalapas');
   }
   res.render('admin/login', { error: null });
 });
@@ -4295,11 +4297,11 @@ app.post('/admin/login', (req, res) => {
   const { username, password } = req.body;
   const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
   if (!user || !bcrypt.compareSync(password, user.password)) {
-    return res.render('admin/login', { error: 'Username atau password salah.' });
+    return res.render('admin/login', { error: 'Username atau password salah.', pageTitle: 'Login Admin – SIMWASPIM', loginSubtitle: 'Login Form', formAction: '/admin/login', helperText: 'Masukkan username dan password.' });
   }
   req.session.user = { id: user.id, username: user.username, role: user.role };
-  if (user.role === 'kalapas') return res.redirect('/kalapas');
-  res.redirect('/admin/dashboard');
+  if (user.role === 'superadmin' || user.role === 'dev') return res.redirect('/admin/dashboard');
+  res.redirect('/kalapas');
 });
 
 app.get('/admin/logout', (req, res) => {
