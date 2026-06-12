@@ -857,33 +857,21 @@
             </div>
         </div>
 
-        <% 
-            const isAllAccess = user.role === 'kalapas' || user.role === 'superadmin' || user.role === 'dev';
-            const canSee = (feature) => isAllAccess || (roleAccess && roleAccess.includes(feature));
-        %>
         <div class="quick-nav">
-            <a href="/kalapas">📊 Dashboard <%= user.role === 'kalapas' ? 'Kalapas' : 'Anda' %></a>
-            <% if (user.role !== 'kalapas') { %>
-                <a href="/admin/dashboard" style="background:#1e3a8a;">📝 Panel Input Data</a>
-            <% } %>
-            <a href="/" class="<%= hasPembinaanStatMismatch ? 'quick-nav-warning' : '' %>">🏢 Krisna Publik
+            <a href="/kalapas">📊 Dashboard Kalapas</a>
+            <a href="/" class="<%= hasPembinaanStatMismatch ? 'quick-nav-warning' : '' %>">🏢 Krisna
                 <% if (hasPembinaanStatMismatch) { %>
                     <span class="quick-nav-alert" title="Data pembinaan dan statistik penghuni belum sinkron">!</span>
                     <span class="quick-nav-tooltip">Pentahapan Pembinaan: <%= totalPentahapanPembinaan %> | Total Penghuni Statistik: <%= totalPenghuniStatistik %> (Selisih <%= pembinaanStatMismatchGap %>)</span>
                 <% } %>
             </a>
-            <% if (canSee('klinik-medis')) { %>
             <a href="/klinik">🏥 Klinik</a>
-            <% } %>
-            <% if (canSee('papan-isi')) { %>
             <a href="/kalapas/papan-isi" class="<%= !hasPapanIsiTodayUpdate ? 'quick-nav-warning' : '' %>">📋 Papan Isi
                 <% if (!hasPapanIsiTodayUpdate) { %>
                     <span class="quick-nav-alert" title="Papan isi belum ada update hari ini">!</span>
                     <span class="quick-nav-tooltip">Papan Isi belum ada update hari ini</span>
                 <% } %>
             </a>
-            <% } %>
-            <% if (canSee('menu')) { %>
             <a href="/kalapas/table/dapur" class="<%= (!hasDapurTodayUpdate || hasDapurDistribusiPending) ? 'quick-nav-warning' : '' %>">🍽️ Dapur
                 <% if (!hasDapurTodayUpdate || hasDapurDistribusiPending) { %>
                     <span class="quick-nav-alert" title="Notifikasi Dapur">!</span>
@@ -894,24 +882,18 @@
                                                 : (`Distribusi makanan hari ini belum lengkap (jam: ${dapurDistribusiMissingJam.join(', ')})`)) %></span>
                 <% } %>
             </a>
-            <% } %>
-            <% if (canSee('kamar-blok') || canSee('luar-tembok') || canSee('pengamanan')) { %>
             <a href="/kalapas/table/kamar-blok" class="<%= !hasLuarTembokToday ? 'quick-nav-warning' : '' %>">🔒 Pengamanan
                 <% if (!hasLuarTembokToday) { %>
                     <span class="quick-nav-alert" title="WBP Luar Tembok Hari ini Kosong">!</span>
                     <span class="quick-nav-tooltip">WBP Luar Tembok Hari ini Kosong</span>
                 <% } %>
             </a>
-            <% } %>
-            <% if (canSee('pengaduan') || canSee('pengawalan') || canSee('kamtib')) { %>
             <a href="/kalapas/table/kamtib" class="<%= (!hasKamtibMonthlyPengawalanUpdate || pengaduanDiterimaCount > 0) ? 'quick-nav-warning' : '' %>">🛡️ Kamtib
                 <% if (!hasKamtibMonthlyPengawalanUpdate || pengaduanDiterimaCount > 0) { %>
                     <span class="quick-nav-alert" title="Notifikasi Kamtib">!</span>
                     <span class="quick-nav-tooltip"><%= !hasKamtibMonthlyPengawalanUpdate ? 'Bulan ini belum ada update Giat Pengawalan' : (`Ada ${pengaduanDiterimaCount} pengaduan berstatus diterima`) %></span>
                 <% } %>
             </a>
-            <% } %>
-            <% if (canSee('giiatja')) { %>
             <a href="/kalapas/table/giiatja" class="<%= (!hasGiiatjaMonthlyUpdate || !hasGiiatjaSaranaTodayUpdate) ? 'quick-nav-warning' : '' %>">🏭 GIIATJA
                 <% if (!hasGiiatjaMonthlyUpdate || !hasGiiatjaSaranaTodayUpdate) { %>
                     <span class="quick-nav-alert" title="Notifikasi GIIATJA">!</span>
@@ -922,35 +904,27 @@
                             : 'Sarana kerja hari ini belum diisi') %></span>
                 <% } %>
             </a>
-            <% } %>
-            <% if (canSee('tu-umum')) { %>
             <a href="/kalapas/table/tu-umum">📑 Tata Usaha</a>
-            <% } %>
         </div>
     </header>
 
-    <% 
-      let summaryRows=[ 
-        { label: 'Remisi' , value: totalBesaranRemisi || 0, link: '/kalapas/table/remisi', id: 'remisi' },
-        { label: 'Pentahapan Pembinaan' , value: totalPentahapanPembinaan || 0, link: '/kalapas/table/pembinaan', id: 'pembinaan-detail' },
-        { label: 'Jadwal Kegiatan Pembinaan' , value: jadwalKegiatan.length, link: '/kalapas/table/jadwal-kegiatan', id: 'jadwal' },
-        { label: 'Warga Binaan Sakit' , value: wbpBerobat.length, link: '/kalapas/table/berobat', id: 'klinik-berobat' },
-        { label: 'Tenaga Medis' , value: tenagaMedis.length, link: '/kalapas/table/tenaga-medis', id: 'klinik-medis' },
-        { label: 'WBP Luar Tembok' , value: luarTembokTodayCount, link: '/kalapas/table/luar-tembok', id: 'luar-tembok' },
-        { label: 'Giat Pengawalan' , value: pengawalanSummary.totalPengawalan, link: '/kalapas/table/pengawalan', id: 'pengawalan' },
-        { label: 'Giat Razia' , value: raziaSummary.totalJadwalRazia, link: '/kalapas/table/razia-jadwal', id: 'razia' },
-        { label: 'Barang Bukti Razia' , value: raziaSummary.totalBarangBukti, link: '/kalapas/table/razia-barang-bukti', id: 'razia' },
-        { label: 'Data Stapsel' , value: securitySummary.totalStrapsel, link: '/kalapas/table/strapsel', id: 'strapsel' },
-        { label: 'Pengaduan Masyarakat', value: totalPengaduanMasyarakat, link: '/kalapas/table/pengaduan', id: 'pengaduan' },
-        { label: 'Laporan BMN' , value: tuUmumSummary.totalTuUmum, link: '/kalapas/table/tu-bmn', id: 'tu-umum' },
-        { label: 'Kepegawaian', value: tuUmumSummary.totalPegawai, link: '/kalapas/table/kepegawaian', id: 'tu-umum' },
-        { label: 'Kegiatan GIIATJA', value: giiatjaSummary.kegiatan, link: '/kalapas/table/giiatja-kegiatan', id: 'giiatja' },
-        { label: 'WBP yang Mendapatkan Pelatihan', value: giiatjaSummary.pelatihan, link: '/kalapas/table/giiatja-pelatihan', id: 'giiatja' },
-        { label: 'WBP Yang Mendapatkan Premi', value: giiatjaSummary.premi, link: '/kalapas/table/giiatja-premi', id: 'giiatja' } 
-      ]; 
-      summaryRows = summaryRows.filter(row => canSee(row.id) || (row.id === 'luar-tembok' && canSee('kamar-blok')) || (row.id === 'klinik-berobat' && canSee('klinik-medis')));
-      
-      const summaryIconFor = (label) => {
+    <% const summaryRows=[ { label: 'Remisi' , value: totalBesaranRemisi || 0, link: '/kalapas/table/remisi' }, {
+        label: 'Pentahapan Pembinaan' , value: totalPentahapanPembinaan || 0, link: '/kalapas/table/pembinaan' }, {
+        label: 'Jadwal Kegiatan Pembinaan' , value: jadwalKegiatan.length, link: '/kalapas/table/jadwal-kegiatan' }, {
+        label: 'Warga Binaan Sakit' , value: wbpBerobat.length, link: '/kalapas/table/berobat' }, {
+        label: 'Tenaga Medis' , value: tenagaMedis.length, link: '/kalapas/table/tenaga-medis' }, {
+        label: 'WBP Luar Tembok' , value: luarTembokTodayCount, link: '/kalapas/table/luar-tembok' }, {
+        label: 'Giat Pengawalan' , value: pengawalanSummary.totalPengawalan, link: '/kalapas/table/pengawalan' }, {
+        label: 'Giat Razia' , value: raziaSummary.totalJadwalRazia, link: '/kalapas/table/razia-jadwal' }, {
+        label: 'Barang Bukti Razia' , value: raziaSummary.totalBarangBukti, link: '/kalapas/table/razia-barang-bukti' },
+        { label: 'Data Stapsel' , value: securitySummary.totalStrapsel, link: '/kalapas/table/strapsel' }, {
+        label: 'Pengaduan Masyarakat', value: totalPengaduanMasyarakat, link: '/kalapas/table/pengaduan' }, {
+        label: 'Laporan BMN' , value: tuUmumSummary.totalTuUmum, link: '/kalapas/table/tu-bmn' }, { label: 'Kepegawaian'
+        , value: tuUmumSummary.totalPegawai, link: '/kalapas/table/kepegawaian' },
+        { label: 'Kegiatan GIIATJA', value: giiatjaSummary.kegiatan, link: '/kalapas/table/giiatja-kegiatan' },
+        { label: 'WBP yang Mendapatkan Pelatihan', value: giiatjaSummary.pelatihan, link: '/kalapas/table/giiatja-pelatihan' },
+        { label: 'WBP Yang Mendapatkan Premi', value: giiatjaSummary.premi, link: '/kalapas/table/giiatja-premi' } ]; const
+        summaryIconFor = (label) => {
         const key = String(label || '').toLowerCase();
         if (key.includes('remisi')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h10l6 6v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"></path><path d="M14 5v6h6"></path></svg>';
         if (key.includes('pengaduan')) return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H7l-3 3z"></path><path d="M8 9h8M8 12h6"></path></svg>';
@@ -999,7 +973,6 @@
 
             <div class="panel-middle-stack">
 
-                <% if (canSee('papan-isi') || canSee('kamar-blok')) { %>
                 <div class="panel panel-kapasitas">
                     <div class="panel-header">GRAFIK KAPASITAS HUNIAN</div>
                     <div class="panel-content">
@@ -1033,9 +1006,6 @@
                         </div>
                     </div>
                 </div>
-                <% } %>
-                
-                <% if (canSee('tu-umum')) { %>
                 <div class="panel panel-barutama">
                     <div class="panel-header">GRAFIK DATA KEUANGAN</div>
                     <div class="panel-content">
@@ -1072,12 +1042,10 @@
                         </div>
                     </div>
                 </div>
-                <% } %>
 
             </div>
 
             <div class="panel-right-stack">
-                <% if (canSee('kamar-blok')) { %>
                 <div class="panel panel-sebaran">
                     <div class="panel-header">SEBARAN PENGHUNI PER GEDUNG</div>
                     <div class="panel-content">
@@ -1101,9 +1069,7 @@
                         </div>
                     </div>
                 </div>
-                <% } %>
 
-                <% if (canSee('giiatja')) { %>
                 <div class="panel panel-giiatja">
                     <div class="panel-header">GRAFIK PENDAPATAN NEGARA BUKAN PAJAK</div>
                     <div class="panel-content">
@@ -1122,11 +1088,9 @@
                         </div>
                     </div>
                 </div>
-                <% } %>
             </div>
         </div>
 
-        <% if (canSee('papan-isi') || canSee('registrasi')) { %>
         <section class="board-section">
             <div class="board-panel">
                 <h3 class="board-panel-header">PAPAN KEADAAN ISI LEMBAGA PEMASYARAKATAN</h3>
@@ -1221,7 +1185,6 @@
                     </div>
             </div>
         </section>
-        <% } %>
 
         <footer class="footer">
             <div class="footer-bottom" style="display:flex;justify-content:space-between;align-items:center;">
