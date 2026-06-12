@@ -1457,12 +1457,10 @@ function getPublicData(includeLargeLists = false) {
     todayMenuLabel,
     todayYmd,
     besaranRemisi,
-    totalBesaranRemisi: Number(db.prepare('SELECT COUNT(*) AS c FROM besaran_remisi WHERE (? = 0 OR batch_id = ?)').get(Number(activeRemisiBatch?.id || 0), Number(activeRemisiBatch?.id || 0))?.c || 0),
     menuMakan,
     menuMakanHistory,
     pentahapanPembinaan,
     pentahapanPembinaanDetail,
-    totalPentahapanPembinaan: Number(db.prepare('SELECT COUNT(*) AS c FROM pentahapan_pembinaan_detail WHERE COALESCE(is_active, 1) = 1').get()?.c || 0),
     jadwalKegiatan,
     dokumentasiMedia,
     dokumentasiVideo,
@@ -2497,7 +2495,9 @@ function getKalapasData() {
   `).get(todayYmd)?.c || 0) > 0;
   const hasGiiatjaMonthlyUpdate = hasGiiatjaPelatihanThisMonth || hasGiiatjaPnbpThisMonth || hasGiiatjaPremiThisMonth || hasGiiatjaSaranaTodayUpdate;
   const totalPenghuniStatistik = Number(umum.totalPenghuni) || 0;
-  const totalPentahapanPembinaan = Number(umum.totalPentahapanPembinaan) || 0;
+  const totalPentahapanPembinaan = Array.isArray(umum.pentahapanPembinaanDetail)
+    ? umum.pentahapanPembinaanDetail.length
+    : 0;
   const hasPembinaanStatMismatch = totalPentahapanPembinaan !== totalPenghuniStatistik;
   const pembinaanStatMismatchGap = Math.abs(totalPentahapanPembinaan - totalPenghuniStatistik);
   const currentYearMonth = `${currentYear}-${currentMonth}`;
@@ -2603,6 +2603,190 @@ app.get('/', (req, res) => {
     clinicSummary: getClinicData({ tanggal: todayYmd }).clinicSummary,
     activePage: 'umum'
   });
+});
+
+[
+    { route: 'registrasi', name: 'REGISTRASI' },
+    { route: 'pembinaan', name: 'PEMBINAAN' },
+    { route: 'giatja', name: 'GIIATJA' },
+    { route: 'dapur', name: 'DAPUR' },
+    { route: 'humas', name: 'HUMAS' },
+    { route: 'pengamanan', name: 'PENGAMANAN' },
+    { route: 'kamtib', name: 'KAMTIB' },
+    { route: 'tatausaha', name: 'TATA USAHA' }
+].forEach(dept => {
+    app.get(`/${dept.route}`, (req, res) => {
+        const panels = [];
+        const kataBijak = getAppSetting('kata_bijak_text', 'KRISNA adalah sistem Keterbukaan Informasi Warga Binaan.');
+        const tanggal = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+
+        if (dept.route === 'registrasi') {
+            const stat = db.prepare('SELECT * FROM statistik WHERE id=1').get() || {};
+            panels.push({
+                title: 'STATISTIK PENGHUNI',
+                type: 'table',
+                headers: ['Total Penghuni', 'Kapasitas', 'Bebas Hari Ini', 'Pengunjung Hari Ini'],
+                rows: [[stat.total_penghuni || '0', stat.kapasitas || '0', stat.bebas_hari_ini || '0', stat.pengunjung_hari_ini || '0']]
+            });
+            
+            const activeRemisiBatch = getActiveRemisiBatch();
+            const remisi = db.prepare('SELECT nama, agama, besaran FROM besaran_remisi WHERE (? = 0 OR batch_id = ?) LIMIT 50').all(Number(activeRemisiBatch?.id || 0), Number(activeRemisiBatch?.id || 0));
+            panels.push({
+                title: 'BESARAN REMISI (50 Teratas)',
+                type: 'table',
+                headers: ['Nama', 'Agama', 'Besaran'],
+                rows: remisi.map(r => [r.nama, r.agama, r.besaran])
+            });
+            
+            const bp = db.prepare('SELECT jenis, jumlah FROM board_pidana LIMIT 20').all();
+            panels.push({
+                title: 'PAPAN ISI (PIDANA)',
+                type: 'table',
+                headers: ['Jenis', 'Jumlah'],
+                rows: bp.map(b => [b.jenis, b.jumlah])
+            });
+        }
+
+        if (dept.route === 'pembinaan') {
+            const jadwal = db.prepare('SELECT hari, waktu, kegiatan, lokasi, penanggung_jawab FROM jadwal_kegiatan LIMIT 50').all();
+            panels.push({
+                title: 'JADWAL KEGIATAN',
+                type: 'table',
+                headers: ['Hari', 'Waktu', 'Kegiatan', 'Lokasi', 'Penanggung Jawab'],
+                rows: jadwal.map(j => [j.hari, j.waktu, j.kegiatan, j.lokasi, j.penanggung_jawab])
+            });
+
+            const detail = db.prepare('SELECT nama_wbp, status_integrasi, keterangan FROM pentahapan_pembinaan_detail WHERE COALESCE(is_active, 1) = 1 ORDER BY id DESC LIMIT 50').all();
+            panels.push({
+                title: 'DETAIL PEMBINAAN',
+                type: 'table',
+                headers: ['Nama WBP', 'Status Integrasi', 'Keterangan'],
+                rows: detail.map(d => [d.nama_wbp, d.status_integrasi, d.keterangan])
+            });
+        }
+
+        if (dept.route === 'giatja') {
+            const k = db.prepare('SELECT gkd.nama_wbp, gkd.materi, gk.kategori FROM giiatja_kegiatan_detail gkd LEFT JOIN giiatja_kegiatan gk ON gkd.kegiatan_id = gk.id LIMIT 50').all();
+            panels.push({
+                title: 'KEGIATAN KERJA',
+                type: 'table',
+                headers: ['Nama WBP', 'Materi', 'Kategori'],
+                rows: k.map(x => [x.nama_wbp, x.materi, x.kategori])
+            });
+
+            const s = db.prepare('SELECT periode_bulan, periode_tahun, jenis_penggunaan, jumlah_hasil FROM giiatja_sarana_penggunaan LIMIT 20').all();
+            panels.push({
+                title: 'SARANA KERJA',
+                type: 'table',
+                headers: ['Bulan', 'Tahun', 'Jenis', 'Hasil'],
+                rows: s.map(x => [x.periode_bulan, x.periode_tahun, x.jenis_penggunaan, x.jumlah_hasil])
+            });
+        }
+
+        if (dept.route === 'dapur') {
+            const m = db.prepare('SELECT tanggal, label_hari FROM menu_harian_set ORDER BY tanggal DESC LIMIT 10').all();
+            panels.push({
+                title: 'JADWAL MENU HARIAN',
+                type: 'table',
+                headers: ['Tanggal', 'Label Hari'],
+                rows: m.map(x => [x.tanggal, x.label_hari])
+            });
+
+            const mh = db.prepare('SELECT waktu, menu FROM menu_master LIMIT 30').all();
+            panels.push({
+                title: 'MASTER MENU',
+                type: 'table',
+                headers: ['Waktu', 'Menu'],
+                rows: mh.map(x => [x.waktu, x.menu])
+            });
+        }
+
+        if (dept.route === 'humas') {
+            const doc = db.prepare('SELECT * FROM dokumentasi_media ORDER BY sort_order ASC').all();
+            let html = '<div style="display:flex; gap:10px; flex-wrap:wrap;">';
+            doc.forEach(d => {
+                if (d.media_type === 'video') {
+                    html += `<video src="${d.media_path}" controls style="width:300px; max-height:200px;"></video>`;
+                } else {
+                    html += `<img src="${d.media_path}" style="width:300px; max-height:200px; object-fit:cover;">`;
+                }
+            });
+            html += '</div>';
+
+            panels.push({
+                title: 'FOTO & VIDEO DOKUMENTASI',
+                type: 'custom',
+                html: html
+            });
+
+            panels.push({
+                title: 'KATA BIJAK AKTIF',
+                type: 'custom',
+                html: `<div style="padding:20px; font-size:24px; font-style:italic; background:#eff6ff; color:#1e3a8a; border-radius:8px;">"${kataBijak}"</div>`
+            });
+        }
+
+        if (dept.route === 'pengamanan') {
+            const rz = db.prepare('SELECT tanggal, petugas FROM razia_jadwal ORDER BY id DESC LIMIT 20').all();
+            panels.push({
+                title: 'JADWAL RAZIA',
+                type: 'table',
+                headers: ['Tanggal', 'Petugas'],
+                rows: rz.map(x => [x.tanggal, x.petugas])
+            });
+
+            const rw = db.prepare('SELECT hari, shift, komandan, anggota_regu FROM giat_pengawalan ORDER BY id DESC LIMIT 20').all();
+            panels.push({
+                title: 'PENGAWALAN',
+                type: 'table',
+                headers: ['Hari', 'Shift', 'Komandan', 'Anggota Regu'],
+                rows: rw.map(x => [x.hari, x.shift, x.komandan, x.anggota_regu])
+            });
+        }
+
+        if (dept.route === 'kamtib') {
+            const pk = db.prepare('SELECT year, month, regu1_name, regu2_name, regu3_name, regu4_name FROM kamtib_piket_jaga ORDER BY updated_at DESC LIMIT 10').all();
+            panels.push({
+                title: 'PIKET JAGA',
+                type: 'table',
+                headers: ['Tahun', 'Bulan', 'Regu 1', 'Regu 2', 'Regu 3', 'Regu 4'],
+                rows: pk.map(x => [x.year, x.month, x.regu1_name, x.regu2_name, x.regu3_name, x.regu4_name])
+            });
+
+            const pm = db.prepare('SELECT tanggal_pengaduan, nama, jenis_pengaduan FROM pengaduan_masyarakat ORDER BY id DESC LIMIT 20').all();
+            panels.push({
+                title: 'PENGADUAN MASYARAKAT MASUK',
+                type: 'table',
+                headers: ['Tanggal', 'Nama', 'Jenis Pengaduan'],
+                rows: pm.map(x => [x.tanggal_pengaduan, x.nama, x.jenis_pengaduan])
+            });
+        }
+
+        if (dept.route === 'tatausaha') {
+            const kb = db.prepare('SELECT kuasa_pengguna_barang, pengurus_barang FROM tu_umum_barang ORDER BY id DESC LIMIT 10').all();
+            panels.push({
+                title: 'UMUM & BMN',
+                type: 'table',
+                headers: ['Kuasa Pengguna Barang', 'Pengurus Barang'],
+                rows: kb.map(x => [x.kuasa_pengguna_barang, x.pengurus_barang])
+            });
+
+            const kp = db.prepare('SELECT nama, nip, golongan, jabatan FROM tu_kepegawaian ORDER BY id DESC LIMIT 20').all();
+            panels.push({
+                title: 'DATA KEPEGAWAIAN',
+                type: 'table',
+                headers: ['Nama', 'NIP', 'Golongan', 'Jabatan'],
+                rows: kp.map(x => [x.nama, x.nip, x.golongan, x.jabatan])
+            });
+        }
+
+        res.render('tv-department', {
+            departmentName: dept.name,
+            panels: panels,
+            kataBijak: kataBijak,
+            tanggal: tanggal
+        });
+    });
 });
 
 app.get('/klinik', (req, res) => {
