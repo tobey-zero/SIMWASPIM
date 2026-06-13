@@ -285,6 +285,17 @@ db.exec(`
     rawat_inap INTEGER NOT NULL DEFAULT 0
   );
 
+  CREATE TABLE IF NOT EXISTS clinic_antrian (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tanggal TEXT NOT NULL,
+    no_antrian INTEGER NOT NULL,
+    nama_pasien TEXT NOT NULL,
+    tujuan TEXT NOT NULL DEFAULT 'Ruang Pemeriksaan Dokter Umum',
+    status TEXT NOT NULL DEFAULT 'menunggu',
+    created_at DATETIME DEFAULT (datetime('now', 'localtime')),
+    called_at DATETIME
+  );
+
   CREATE TABLE IF NOT EXISTS dokumentasi_video (
     id INTEGER PRIMARY KEY,
     video_path TEXT
@@ -939,6 +950,10 @@ if (!pengaduanColumnNames.includes('deskripsi_tindak_lanjut')) db.exec("ALTER TA
 if (!pengaduanColumnNames.includes('lampiran_admin_path')) db.exec('ALTER TABLE pengaduan_masyarakat ADD COLUMN lampiran_admin_path TEXT');
 if (!pengaduanColumnNames.includes('tanggal_pengaduan')) db.exec("ALTER TABLE pengaduan_masyarakat ADD COLUMN tanggal_pengaduan TEXT NOT NULL DEFAULT (date('now','localtime'))");
 if (!pengaduanColumnNames.includes('created_at')) db.exec("ALTER TABLE pengaduan_masyarakat ADD COLUMN created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))");
+
+const clinicAntrianColumns = db.prepare("PRAGMA table_info('clinic_antrian')").all();
+const clinicAntrianColumnNames = clinicAntrianColumns.map(col => col.name);
+if (!clinicAntrianColumnNames.includes('tujuan')) db.exec("ALTER TABLE clinic_antrian ADD COLUMN tujuan TEXT NOT NULL DEFAULT 'Ruang Pemeriksaan Dokter Umum'");
 
 const statistikColumns = db.prepare("PRAGMA table_info('statistik')").all();
 const statistikColumnNames = statistikColumns.map(col => col.name);

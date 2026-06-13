@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antrian Klinik – Admin</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-wrapper" style="<%= typeof user === 'undefined' || !user ? 'display:block; max-width:1200px; margin:0 auto;' : '' %>">
+  <% if (typeof user !== 'undefined' && user) { %>
+    <%- include('admin/_sidebar') %>
+  <% } %>
+  <div class="main-content" style="<%= typeof user === 'undefined' || !user ? 'padding:20px; min-height:100vh;' : '' %>">
+    <div class="topbar">
+      <div class="topbar-title"><h2>🔊 Antrian Klinik</h2><p>Kelola antrian pasien hari ini</p></div>
+      <div class="topbar-actions" style="display:flex; gap:10px;">
+        <a href="/klinik" target="_blank" class="btn-public" style="padding:10px 20px; font-size:16px;">🖥️ Buka TV Antrian Klinik</a>
+      </div>
+    </div>
+    <div class="content-area">
+      <% if (success) { %><div class="alert alert-success">✅ Aksi berhasil.</div><% } %>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header"><h3>🎙️ Akses Cepat Layar Pemanggilan Petugas</h3></div>
+        <div class="card-body" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
+          <a href="/klinik/panggil/dokter-umum" target="_blank" class="btn btn-primary" style="padding:15px; text-align:center; font-size:16px; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">🩺 Dokter Umum</a>
+          <a href="/klinik/panggil/dokter-gigi" target="_blank" class="btn btn-primary" style="padding:15px; text-align:center; font-size:16px; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">🦷 Dokter Gigi</a>
+          <a href="/klinik/panggil/konseling" target="_blank" class="btn btn-primary" style="padding:15px; text-align:center; font-size:16px; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">🗣️ Konseling</a>
+          <a href="/klinik/panggil/tindakan" target="_blank" class="btn btn-primary" style="padding:15px; text-align:center; font-size:16px; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">💉 Tindakan</a>
+          <a href="/klinik/panggil/apotik" target="_blank" class="btn btn-primary" style="padding:15px; text-align:center; font-size:16px; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">💊 Apotik</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 style="display:inline-block;">📅 Tanggal:</h3>
+          <form method="GET" action="/klinik-antrian" style="display:inline-block; margin-left:10px;">
+            <input type="date" name="tanggal" value="<%= selectedTanggal %>" onchange="this.form.submit()" style="padding:4px;">
+          </form>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <div class="card-header"><h3>➕ Daftarkan Pasien Baru (Hari Ini)</h3></div>
+        <div class="card-body">
+          <form method="POST" action="/klinik-antrian/add">
+            <div class="form-group" style="margin-bottom:12px; display:flex; gap:10px;">
+              <input type="text" name="nama_pasien" placeholder="Nama lengkap pasien / WBP" required style="width:300px; padding:8px;">
+              <select name="tujuan" style="padding:8px; border: 1px solid #ccc; border-radius:4px; max-width:250px;">
+                <option value="Ruang Pemeriksaan Dokter Umum">Ruang Pemeriksaan Dokter Umum</option>
+                <option value="Ruang Pemeriksaan Dokter Gigi">Ruang Pemeriksaan Dokter Gigi</option>
+                <option value="Ruang Konseling">Ruang Konseling</option>
+                <option value="Ruang Tindakan">Ruang Tindakan</option>
+                <option value="Apotik">Apotik</option>
+              </select>
+              <button type="submit" class="btn btn-primary" style="padding:8px 16px;">➕ Ambil Antrian</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <div class="card-header"><h3>Daftar Antrian (<%= selectedTanggal %>) - <%= list.length %> Pasien</h3></div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>No Antrian</th>
+                  <th>Nama Pasien</th>
+                  <th>Tujuan</th>
+                  <th>Status</th>
+                  <th>Waktu Panggil</th>
+                  <th>Aksi Panggil</th>
+                  <th>Aksi Lain</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% list.forEach((item) => { %>
+                <tr style="background-color: <%= item.status === 'dipanggil' ? '#fffbeb' : (item.status === 'selesai' ? '#f0fdf4' : 'inherit') %>;">
+                  <td style="font-size:24px; font-weight:bold;"><%= item.no_antrian %></td>
+                  <td style="font-size:18px; font-weight:bold;"><%= item.nama_pasien %></td>
+                  <td style="color:#555;"><%= item.tujuan || 'Ruang Pemeriksaan Dokter Umum' %></td>
+                  <td>
+                    <form method="POST" action="/klinik-antrian/<%= item.id %>/status" style="display:flex; gap:4px; align-items:center;">
+                      <select name="status" onchange="this.form.submit()">
+                        <option value="menunggu" <%= item.status==='menunggu'?'selected':'' %>>Menunggu</option>
+                        <option value="dipanggil" <%= item.status==='dipanggil'?'selected':'' %>>Dipanggil</option>
+                        <option value="selesai" <%= item.status==='selesai'?'selected':'' %>>Selesai</option>
+                        <option value="dilewati" <%= item.status==='dilewati'?'selected':'' %>>Dilewati</option>
+                      </select>
+                    </form>
+                  </td>
+                  <td><%= item.called_at ? item.called_at : '-' %></td>
+                  <td>
+                    <form method="POST" action="/klinik-antrian/<%= item.id %>/panggil">
+                      <button type="submit" class="btn " style="background:#2563eb; color:white; padding:8px 12px; font-size:16px;">🔊 Panggil</button>
+                    </form>
+                  </td>
+                  <td>
+                    <form method="POST" action="/klinik-antrian/<%= item.id %>/delete" onsubmit="return confirm('Hapus antrian nomor <%= item.no_antrian %>?')">
+                      <button type="submit" class="btn btn-danger btn-sm">🗑 Hapus</button>
+                    </form>
+                  </td>
+                </tr>
+                <% }) %>
+                <% if(list.length === 0) { %>
+                  <tr><td colspan="6" style="text-align:center;">Belum ada antrian.</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+    const evtSource = new EventSource("/api/klinik/antrian-stream");
+    evtSource.onmessage = function(event) {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'UPDATE' || msg.type === 'CALL') {
+            window.location.href = window.location.pathname + "?tanggal=<%= selectedTanggal %>";
+        }
+    };
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Panggilan Antrian - <%= tujuanName %></title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; padding: 20px; text-align:center; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left; }
+        h1 { margin-top: 0; color: #1e293b; text-align:center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; }
+        th { background-color: #f8fafc; font-weight: 600; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500; }
+        .btn-call { background-color: #2563eb; color: white; }
+        .btn-call:hover { background-color: #1d4ed8; }
+        .select-status { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Antrian <%= tujuanName %></h1>
+        <p style="text-align:center; color:#64748b;">Antrian khusus klinik di <%= tujuanName %></p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 80px;">No</th>
+                    <th>Nama Pasien</th>
+                    <th>Status</th>
+                    <th style="width: 150px; text-align:center;">Panggil</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (list.length === 0) { %>
+                <tr>
+                    <td colspan="4" style="text-align:center; padding: 20px; color:#64748b;">Tidak ada antrian untuk hari ini.</td>
+                </tr>
+                <% } else { %>
+                    <% list.forEach(item => { %>
+                    <tr style="background-color: <%= item.status === 'dipanggil' ? '#fffbeb' : (item.status === 'selesai' ? '#f0fdf4' : 'inherit') %>;">
+                        <td style="font-size:20px; font-weight:bold;"><%= item.no_antrian %></td>
+                        <td style="font-size:16px; font-weight:bold;"><%= item.nama_pasien %></td>
+                        <td>
+                            <form method="POST" action="/klinik/panggil/<%= jenis %>/<%= item.id %>/status" style="display:flex; align-items:center;">
+                                <select name="status" class="select-status" onchange="this.form.submit()">
+                                    <option value="menunggu" <%= item.status==='menunggu'?'selected':'' %>>Menunggu</option>
+                                    <option value="dipanggil" <%= item.status==='dipanggil'?'selected':'' %>>Dipanggil</option>
+                                    <option value="selesai" <%= item.status==='selesai'?'selected':'' %>>Selesai</option>
+                                    <option value="dilewati" <%= item.status==='dilewati'?'selected':'' %>>Dilewati</option>
+                                </select>
+                            </form>
+                        </td>
+                        <td style="text-align:center;">
+                            <form method="POST" action="/klinik/panggil/<%= jenis %>/<%= item.id %>/panggil">
+                                <button type="submit" class="btn btn-call">🔊 Panggil</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <% }) %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const evtSource = new EventSource("/api/klinik/antrian-stream");
+        evtSource.onmessage = function(event) {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'UPDATE' || msg.type === 'CALL') {
+                window.location.reload();
+            }
+        };
+    </script>
+</body>
+</html>

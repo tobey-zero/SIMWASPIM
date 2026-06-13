@@ -402,7 +402,7 @@ body.page-klinik .stat-value {
 body.page-klinik .main-container {
     flex: 1;
     align-items: stretch;
-    grid-template-columns: 1fr 1.9fr;
+    grid-template-columns: 1fr 2fr;
     height: calc(100vh - 220px);
     min-height: 520px;
     margin: 12px auto;
@@ -426,7 +426,7 @@ body.page-klinik .panel-clinic-summary {
 }
 
 body.page-klinik .right-column > .panel.panel-clinic-berobat:not(.bottom-panels) {
-    flex: 65 1 0;
+    flex: 35 1 0;
     max-height: none;
     overflow: hidden;
 }
@@ -436,8 +436,11 @@ body.page-klinik .right-column > .panel.panel-clinic-berobat:not(.bottom-panels)
 }
 
 body.page-klinik .right-column > .bottom-panels.clinic-bottom-panels {
-    flex: 35 1 0;
+    flex: 65 1 0;
     max-height: none;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 body.page-klinik .right-column {
@@ -457,10 +460,6 @@ body.page-klinik .clinic-bottom-panels {
 body.page-klinik .panel-clinic-berobat .panel-content,
 body.page-klinik .clinic-bottom-panels .panel-content {
     overflow-y: auto;
-}
-
-body.page-klinik .clinic-bottom-panels {
-    grid-template-columns: 1fr 1fr;
 }
 
 body.page-klinik .clinic-bottom-panels .sub-panel {

@@ -132,55 +132,77 @@
             </div>
 
             <div class="bottom-panels clinic-bottom-panels">
-                <div class="panel sub-panel">
-                    <div class="panel-header red">JADWAL ON CALL PETUGAS</div>
-                    <div class="panel-content">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>HARI</th>
-                                    <th>SHIFT</th>
-                                    <th>PETUGAS</th>
-                                    <th>PROFESI</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% jadwalOnCall.forEach(item => { %>
-                                <tr>
-                                    <td><%= item.hari %></td>
-                                    <td><%= item.shift %></td>
-                                    <td><%= item.petugas %></td>
-                                    <td><%= item.profesi %></td>
-                                </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
+                <!-- Atas: Jadwal On Call dan Kontrol -->
+                <div class="clinic-schedule-stack" style="display: flex; flex-direction: row; gap: 15px; flex: 1; min-height: 0;">
+                    <div class="panel sub-panel" style="flex: 1; display:flex; flex-direction:column; min-height:0;">
+                        <div class="panel-header red">JADWAL ON CALL PETUGAS</div>
+                        <div class="panel-content" style="flex:1; overflow-y:auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>HARI</th>
+                                        <th>SHIFT</th>
+                                        <th>PETUGAS</th>
+                                        <th>PROFESI</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% jadwalOnCall.forEach(item => { %>
+                                    <tr>
+                                        <td><%= item.hari %></td>
+                                        <td><%= item.shift %></td>
+                                        <td><%= item.petugas %></td>
+                                        <td><%= item.profesi %></td>
+                                    </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="panel sub-panel" style="flex: 1; display:flex; flex-direction:column; min-height:0;">
+                        <div class="panel-header red">JADWAL KONTROL KESEHATAN KE BLOK</div>
+                        <div class="panel-content" style="flex:1; overflow-y:auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>HARI</th>
+                                        <th>WAKTU</th>
+                                        <th>BLOK/KAMAR</th>
+                                        <th>PETUGAS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% jadwalKontrol.forEach(item => { %>
+                                    <tr>
+                                        <td><%= item.hari %></td>
+                                        <td><%= item.waktu %></td>
+                                        <td><%= item.lokasiBlok %></td>
+                                        <td><%= item.petugas %></td>
+                                    </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <div class="panel sub-panel">
-                    <div class="panel-header red">JADWAL KONTROL KESEHATAN KE BLOK</div>
-                    <div class="panel-content">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>HARI</th>
-                                    <th>WAKTU</th>
-                                    <th>BLOK/KAMAR</th>
-                                    <th>PETUGAS</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% jadwalKontrol.forEach(item => { %>
-                                <tr>
-                                    <td><%= item.hari %></td>
-                                    <td><%= item.waktu %></td>
-                                    <td><%= item.lokasiBlok %></td>
-                                    <td><%= item.petugas %></td>
-                                </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
+                <!-- Bawah: Antrian Klinik -->
+                <div class="panel sub-panel" style="display:flex; flex-direction:column; flex: 1; min-height:0;">
+                    <div class="panel-header red">ANTRIAN KLINIK HARI INI</div>
+                    <div class="panel-content clinic-summary-content" style="display:flex; flex-direction:row; gap:15px; flex: 1; overflow:hidden; padding: 15px;">
+                        <div style="background:#fffbeb; border:2px solid #fbbf24; border-radius:8px; padding:15px; text-align:center; flex:1; display:flex; flex-direction:column; overflow:hidden;">
+                            <h3 style="margin:0 0 10px 0; font-size:20px; color:#d97706;">SEDANG DIPANGGIL</h3>
+                            <div id="dipanggil-grid" style="display:flex; flex-direction:column; gap:10px; overflow-y:auto; flex:1; align-content:start;">
+                                <div style="display:flex; justify-content:center; align-items:center; color:#b45309; height:100%;">Belum ada antrian dipanggil</div>
+                            </div>
+                        </div>
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:15px; flex: 1.5; display:flex; flex-direction:column; min-height:0;">
+                            <h4 style="margin:0 0 10px 0; font-size:18px; color:#334155;">Daftar Antrian Selanjutnya</h4>
+                            <div id="antrian-list" style="display:flex; flex-direction:column; gap:8px; overflow-y:auto; flex:1; padding-right:5px;">
+                                <!-- List antrian akan dimuat disini -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -209,5 +231,138 @@
         })();
     </script>
     <script src="/js/display-mode.js?v=<%= Date.now() %>"></script>
+    <script>
+        // Attempt automatic voice initialization (works in kiosk mode / allowed autoplay)
+        try {
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+        } catch(e) {}
+        
+        // Also unlock on first user interaction anywhere on the page
+        const unlockAudio = () => {
+             window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+             document.removeEventListener('click', unlockAudio);
+             document.removeEventListener('touchstart', unlockAudio);
+        };
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('touchstart', unlockAudio);
+
+        // Auto Scroll for TV display
+        function startAutoScroll() {
+            ['dipanggil-grid', 'antrian-list'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                
+                // Hide scrollbar aesthetically
+                el.style.scrollbarWidth = 'none';
+                el.style.msOverflowStyle = 'none';
+                
+                let isPaused = false;
+                setInterval(() => {
+                    if (isPaused || el.scrollHeight <= el.clientHeight) return;
+                    
+                    let prevScroll = el.scrollTop;
+                    el.scrollTop += 1;
+                    
+                    if (el.scrollTop === prevScroll) {
+                        isPaused = true;
+                        setTimeout(() => {
+                            el.scrollTop = 0;
+                            setTimeout(() => {
+                                isPaused = false;
+                            }, 2000);
+                        }, 3000);
+                    }
+                }, 40);
+            });
+        }
+        
+        // Start auto-scroll after a short delay to ensure rendering
+        setTimeout(startAutoScroll, 1000);
+
+        // Memuat daftar antrian
+        function loadAntrian() {
+            fetch('/api/klinik/antrian-list')
+                .then(res => res.json())
+                .then(data => {
+                    const listContainer = document.getElementById('antrian-list');
+                    listContainer.innerHTML = '';
+                    
+                    const dipanggilList = data.filter(item => item.status === 'dipanggil');
+                    dipanggilList.sort((a, b) => new Date(b.called_at || 0) - new Date(a.called_at || 0));
+                    
+                    const dipanggilGrid = document.getElementById('dipanggil-grid');
+                    dipanggilGrid.innerHTML = '';
+                    
+                    if (dipanggilList.length > 0) {
+                        // Group by tujuan to display the most recently called per room
+                        const roomMap = new Map();
+                        dipanggilList.forEach(item => {
+                            const tujuan = item.tujuan || 'Ruang Pemeriksaan Dokter Umum';
+                            if (!roomMap.has(tujuan)) {
+                                roomMap.set(tujuan, item);
+                            }
+                        });
+                        
+                        roomMap.forEach((item, tujuan) => {
+                            dipanggilGrid.innerHTML += `
+                                <div style="background:white; border:1px solid #fcd34d; border-radius:6px; padding:10px 15px; display:flex; justify-content:space-between; align-items:center;">
+                                    <div style="display:flex; flex-direction:column; text-align:left;">
+                                        <div style="font-size:12px; font-weight:bold; color:#64748b; margin-bottom:4px; text-transform:uppercase;">${tujuan}</div>
+                                        <div style="font-size:22px; font-weight:800; color:#1f2937; line-height:1;">${item.nama_pasien}</div>
+                                    </div>
+                                    <div style="font-size:32px; font-weight:900; color:#b45309;">No. ${item.no_antrian}</div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        dipanggilGrid.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; color:#b45309; height:100%;">Belum ada antrian dipanggil</div>';
+                    }
+
+                    data.forEach(item => {
+                        if (item.status === 'menunggu') {
+                            listContainer.innerHTML += `
+                                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; background:white; border:1px solid #cbd5e1; border-radius:4px;">
+                                    <div>
+                                        <div style="font-weight:bold; font-size:18px;">No. ${item.no_antrian}</div>
+                                        <div style="font-size:12px; color:#64748b;">${item.tujuan || 'Ruang Pemeriksaan Dokter Umum'}</div>
+                                    </div>
+                                    <span style="font-size:18px; text-align:right;">${item.nama_pasien}</span>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    if (listContainer.innerHTML === '') {
+                        listContainer.innerHTML = '<div style="text-align:center; padding:10px; color:#64748b;">Belum ada antrian menunggu</div>';
+                    }
+                });
+        }
+        
+        loadAntrian();
+
+        // SSE Connection
+        const evtSource = new EventSource("/api/klinik/antrian-stream");
+        evtSource.onmessage = function(event) {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'UPDATE') {
+                loadAntrian();
+            } else if (msg.type === 'CALL') {
+                loadAntrian();
+                // Play sound
+                playCallSound(msg.data.no_antrian, msg.data.nama_pasien, msg.data.tujuan);
+            }
+        };
+
+        let voiceSynth = window.speechSynthesis;
+        function playCallSound(no_antrian, nama_pasien, tujuan) {
+            if (!voiceSynth) return;
+            const target = tujuan || 'ruang periksa';
+            const text = `Nomor antrian. ${no_antrian}. atas nama. ${nama_pasien}. silahkan menuju ${target}.`;
+            const utterThis = new SpeechSynthesisUtterance(text);
+            utterThis.lang = 'id-ID';
+            utterThis.rate = 0.9;
+            voiceSynth.speak(utterThis);
+        }
+    </script>
 </body>
 </html>
