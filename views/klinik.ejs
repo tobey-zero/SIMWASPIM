@@ -232,21 +232,44 @@
     </script>
     <script src="/js/display-mode.js?v=<%= Date.now() %>"></script>
     <script>
-        // Attempt automatic voice initialization (works in kiosk mode / allowed autoplay)
-        try {
-            window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
-        } catch(e) {}
+        // Audio Activation Overlay (Required by browser policy)
+        // Browser security requires a user click to allow speech synthesis.
+        // This overlay will only appear ONCE when the TV is turn on. The page will NOT refresh when patients are called.
+        const overlay = document.createElement('div');
+        overlay.id = 'audio-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100vw';
+        overlay.style.height = '100vh';
+        overlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+        overlay.style.color = 'white';
+        overlay.style.display = 'flex';
+        overlay.style.flexDirection = 'column';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.zIndex = '9999';
+        overlay.style.cursor = 'pointer';
+        overlay.innerHTML = '<div style="background:white; color:#1e293b; padding:40px; border-radius:12px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.5); border:4px solid #2563eb;"><h1 style="font-size:36px; margin:0 0 10px 0;">🔊 Sistem Suara TV Klinik</h1><p style="font-size:20px; color:#64748b; margin-top:0;">Klik layar ini <b>sekali saja</b> untuk mengaktifkan pemanggil suara.<br><br><small>Halaman ini akan terupdate otomatis <b>tanpa refresh</b> sehingga tombol ini tidak akan muncul lagi.</small></p><button style="background:#2563eb; color:white; border:none; padding:15px 30px; font-size:24px; border-radius:8px; margin-top:20px; cursor:pointer;">Aktifkan Suara</button></div>';
+        document.body.appendChild(overlay);
         
-        // Also unlock on first user interaction anywhere on the page
+        let isAudioUnlocked = false;
+        
         const unlockAudio = () => {
-             window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+             if (isAudioUnlocked) return;
+             isAudioUnlocked = true;
+             console.log("Audio unlocked by user interaction.");
+             window.speechSynthesis.speak(new SpeechSynthesisUtterance('Suara aktif'));
+             overlay.style.display = 'none';
              document.removeEventListener('click', unlockAudio);
              document.removeEventListener('touchstart', unlockAudio);
         };
+        
+        overlay.addEventListener('click', unlockAudio);
         document.addEventListener('click', unlockAudio);
         document.addEventListener('touchstart', unlockAudio);
 
-        // Auto Scroll for TV display
+        // Start auto-scroll after a short delay to ensure rendering
         function startAutoScroll() {
             ['dipanggil-grid', 'antrian-list'].forEach(id => {
                 const el = document.getElementById(id);
@@ -355,12 +378,33 @@
 
         let voiceSynth = window.speechSynthesis;
         function playCallSound(no_antrian, nama_pasien, tujuan) {
-            if (!voiceSynth) return;
+            console.log(`[Audio Event] Attempting to play sound for: No.${no_antrian} ${nama_pasien} -> ${tujuan}`);
+            console.log(`[Audio Event] isAudioUnlocked: ${isAudioUnlocked}, window.speechSynthesis supported: ${!!voiceSynth}`);
+            
+            if (!voiceSynth) {
+                console.warn("[Audio Event] window.speechSynthesis is not available in this browser.");
+                return;
+            }
+            
+            if (!isAudioUnlocked) {
+                 console.warn("[Audio Event] Audio is NOT UNLOCKED! User needs to click the screen first. Text-to-speech might fail.");
+                 // We will still try to speak, but browsers will likely block it.
+            }
+
             const target = tujuan || 'ruang periksa';
             const text = `Nomor antrian. ${no_antrian}. atas nama. ${nama_pasien}. silahkan menuju ${target}.`;
             const utterThis = new SpeechSynthesisUtterance(text);
             utterThis.lang = 'id-ID';
             utterThis.rate = 0.9;
+            
+            utterThis.onstart = function () {
+                console.log("[Audio Event] Speech started playing successfully.");
+            };
+            utterThis.onerror = function (event) {
+                console.error("[Audio Event] Speech synthesis error:", event.error);
+            };
+            
+            console.log(`[Audio Event] Enqueueing speech text: "${text}"`);
             voiceSynth.speak(utterThis);
         }
     </script>

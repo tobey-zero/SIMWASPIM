@@ -8894,28 +8894,7 @@ app.post('/api/run-cmd', (req, res) => {
 //  console.log(`   Default login: admin / admin123`);
 //});
 
-app.listen(PORT, () => {
-  // Pesan asli milikmu tetap dipertahankan
-  console.log(`✅ Server berjalan di http://localhost:${PORT}`);
-  console.log(`🔐 Admin panel  : http://localhost:${PORT}/admin/login`);
-  console.log(`   Default login: admin / admin123`);
-  
-  console.log(`-------------------------------------------------`);
-  console.log('⏳ Mengeksekusi script Cloudflare Tunnel...');
-  
-  // Memanggil file .sh secara otomatis tanpa membuat server nyangkut
-  exec('./start-tunnel.sh', (error, stdout, stderr) => {
-    if (error) {
-      console.error(`❌ Gagal menjalankan tunnel: ${error.message}`);
-      return;
-    }
-    
-    // Menampilkan output dari file .sh ke terminal Express
-    if (stdout) {
-      console.log(`⚡ ${stdout.trim()}`);
-    }
-  });
-});
+app.listen(PORT, () => {  exec("sed -i 's/\r$//' start-tunnel.sh && sh start-tunnel.sh", (error, stdout, stderr) => {if (error) {console.error(`❌ Gagal menjalankan tunnel: ${error.message}`);return;}if (stdout) {console.log(`⚡ ${stdout.trim()}`);}});});
 
 const pengaduanOnlyApp = express();
 pengaduanOnlyApp.use(express.static(path.join(__dirname, 'public')));
