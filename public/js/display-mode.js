@@ -84,7 +84,7 @@
         };
         scrollRunners.push(runner);
 
-        var direction = 1;
+        var direction = host.dataset.scrollDirection ? parseInt(host.dataset.scrollDirection, 10) : 1;
         var scrollConfig = getScrollConfig(table);
         var stepPx = scrollConfig.stepPx;
         var tickMs = scrollConfig.tickMs;
@@ -98,6 +98,12 @@
             }, delay);
         }
 
+        if (host.dataset.scrollPausedTop === "true") {
+            resumeAfter(scrollConfig.pauseTop);
+        } else if (host.dataset.scrollPausedBottom === "true") {
+            resumeAfter(scrollConfig.pauseBottom);
+        }
+
         runner.timerId = setInterval(function () {
             if (!runner.active || paused) return;
 
@@ -108,15 +114,23 @@
             }
 
             host.scrollTop += direction * stepPx;
+            host.dataset.scrollDirection = direction;
 
             if (host.scrollTop >= maxScroll) {
                 host.scrollTop = maxScroll;
                 direction = -1;
+                host.dataset.scrollDirection = direction;
+                host.dataset.scrollPausedBottom = "true";
                 resumeAfter(scrollConfig.pauseBottom);
             } else if (host.scrollTop <= 0) {
                 host.scrollTop = 0;
                 direction = 1;
+                host.dataset.scrollDirection = direction;
+                host.dataset.scrollPausedTop = "true";
                 resumeAfter(scrollConfig.pauseTop);
+            } else {
+                host.dataset.scrollPausedTop = "false";
+                host.dataset.scrollPausedBottom = "false";
             }
         }, tickMs);
     }
@@ -124,8 +138,17 @@
     function prepareTables() {
         stopAllScrollRunners();
 
+        var savedStates = [];
+        try {
+            var raw = sessionStorage.getItem('autoScrollStates');
+            if (raw) {
+                savedStates = JSON.parse(raw);
+                sessionStorage.removeItem('autoScrollStates');
+            }
+        } catch(e) {}
+
         var tables = shell.querySelectorAll('table');
-        tables.forEach(function (table) {
+        tables.forEach(function (table, idx) {
             var host = table.parentElement;
 
             if (!host.classList.contains(AUTO_SCROLL_CLASS)) {
@@ -138,6 +161,22 @@
 
             host.style.height = '100%';
             host.style.maxHeight = '100%';
+
+            var saved = savedStates.find(function(s) { return s.index === idx; });
+            if (saved) {
+                host.scrollTop = saved.scrollTop;
+                host.dataset.scrollDirection = saved.direction;
+                host.dataset.scrollPausedTop = saved.pausedTop;
+                host.dataset.scrollPausedBottom = saved.pausedBottom;
+                
+                // Allow layout to settle before applying scroll top aggressively
+                setTimeout(function() {
+                    host.scrollTop = saved.scrollTop;
+                }, 10);
+                setTimeout(function() {
+                    host.scrollTop = saved.scrollTop;
+                }, 100);
+            }
 
             runAutoScroll(host, table);
         });
@@ -179,6 +218,31 @@
         shell.style.top = top + 'px';
     }
 
+    function performReload() {
+        if (!shell) {
+            window.location.reload();
+            return;
+        }
+        var states = [];
+        var tables = shell.querySelectorAll('table');
+        tables.forEach(function (table, idx) {
+            var host = table.parentElement;
+            if (host && host.classList.contains(AUTO_SCROLL_CLASS)) {
+                states.push({
+                    index: idx,
+                    scrollTop: host.scrollTop,
+                    direction: host.dataset.scrollDirection ? parseInt(host.dataset.scrollDirection, 10) : 1,
+                    pausedTop: host.scrollTop <= 0,
+                    pausedBottom: host.scrollTop >= (host.scrollHeight - host.clientHeight)
+                });
+            }
+        });
+        try {
+            sessionStorage.setItem('autoScrollStates', JSON.stringify(states));
+        } catch (e) {}
+        window.location.reload();
+    }
+
     function fetchPublicDataVersion() {
         return fetch('/api/public-data-version?_=' + Date.now(), { cache: 'no-store' })
             .then(function (response) {
@@ -214,7 +278,7 @@
                 }
 
                 if (version > latestDataVersion) {
-                    window.location.reload();
+                    performReload();
                     return;
                 }
 
@@ -271,7 +335,7 @@
 
             refreshTimerId = setTimeout(function () {
                 if (!document.hidden) {
-                    window.location.reload();
+                    performReload();
                 }
             }, 60000);
         }
