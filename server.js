@@ -8376,8 +8376,14 @@ app.get('/api/klinik/antrian-stream', (req, res) => {
   res.write(': connected\n\n');
   if (res.flush) res.flush();
 
+  const keepAlive = setInterval(() => {
+    res.write(':\n\n');
+    if (res.flush) res.flush();
+  }, 30000); // 30 seconds keepalive to prevent timeout
+
   antrianKlinikClients.add(res);
   req.on('close', () => {
+    clearInterval(keepAlive);
     antrianKlinikClients.delete(res);
   });
 });

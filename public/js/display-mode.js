@@ -195,6 +195,7 @@
     }
 
     function startDataVersionWatcher() {
+        if (window.DISABLE_DATA_WATCHER) return;
         fetchPublicDataVersion().then(function (version) {
             if (version !== null) {
                 latestDataVersion = version;
