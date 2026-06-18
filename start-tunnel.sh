@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Mengecek apakah file cloudflared ada dan bisa dieksekusi
+if [ ! -x "./cloudflared" ]; then
+    echo "🔍 File cloudflared tidak ditemukan atau belum bisa dieksekusi."
+    echo "⬇️ Mengunduh cloudflared versi terbaru..."
+    curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+    chmod +x cloudflared
+    echo "✅ Berhasil mengunduh dan mengatur izin cloudflared!"
+else
+    echo "👍 File cloudflared sudah tersedia."
+fi
+
 # Mematikan proses lama jika ada agar tidak bentrok
 killall cloudflared 2>/dev/null
 

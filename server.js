@@ -7,6 +7,7 @@ const multer = require('multer');
 const XLSX = require('xlsx');
 const db = require('./db');
 
+
 const antrianKlinikClients = new Set();
 function broadcastAntrianKlinik(eventData) {
   console.log('Broadcasting Antrian Klinik Update:', eventData.type, 'to', antrianKlinikClients.size, 'clients');
@@ -1491,8 +1492,8 @@ function getClinicData(filter = {}) {
                      status_perawatan AS statusPerawatan, tanggal
               FROM clinic_wbp_berobat`;
   const wbpBerobat = selectedTanggal
-    ? db.prepare(`${wbpBerobatSql} WHERE tanggal = ? ORDER BY id DESC`).all(selectedTanggal)
-    : db.prepare(`${wbpBerobatSql} ORDER BY id DESC`).all();
+    ? db.prepare(`${wbpBerobatSql} WHERE tanggal = ? OR status_perawatan = 'Rawat Inap' ORDER BY CASE WHEN status_perawatan = 'Rawat Inap' THEN 0 ELSE 1 END, id DESC`).all(selectedTanggal)
+    : db.prepare(`${wbpBerobatSql} ORDER BY CASE WHEN status_perawatan = 'Rawat Inap' THEN 0 ELSE 1 END, id DESC`).all();
 
   const jadwalOnCall = db
     .prepare('SELECT hari, shift, petugas, profesi, kontak FROM clinic_jadwal_on_call ORDER BY id')
@@ -8500,7 +8501,11 @@ app.get('/admin/klinik-berobat', requireAccess('klinik-berobat'), (req, res) => 
                      OR tanggal LIKE ?
                   ORDER BY tanggal DESC, id DESC`)
         .all(...Array(7).fill(`%${searchKeyword}%`))
-    : db.prepare('SELECT * FROM clinic_wbp_berobat WHERE tanggal = ? ORDER BY id DESC').all(selectedTanggal);
+    : db.prepare(`
+        SELECT * FROM clinic_wbp_berobat 
+        WHERE tanggal = ? OR status_perawatan = 'Rawat Inap' 
+        ORDER BY CASE WHEN status_perawatan = 'Rawat Inap' THEN 0 ELSE 1 END, id DESC
+      `).all(selectedTanggal);
   const totalHistory = db.prepare('SELECT COUNT(*) AS c FROM clinic_wbp_berobat').get().c;
   const edit = req.query.edit ? db.prepare('SELECT * FROM clinic_wbp_berobat WHERE id=?').get(Number(req.query.edit)) : null;
   const filterParams = new URLSearchParams({ tanggal: selectedTanggal });
@@ -8540,6 +8545,17 @@ app.post('/admin/klinik-berobat/:id/update', requireAccess('klinik-berobat'), (r
   const searchKeyword = String(req.query.search || '').trim();
   const { no_reg, nama_wbp, layanan, diagnosa, blok, status_perawatan, tanggal } = req.body;
   db.prepare('UPDATE clinic_wbp_berobat SET no_reg=?, nama_wbp=?, layanan=?, diagnosa=?, blok=?, status_perawatan=?, tanggal=? WHERE id=?').run(no_reg, nama_wbp, layanan, diagnosa, blok, status_perawatan, tanggal || getTodayYmd(), Number(req.params.id));
+  const redirectParams = new URLSearchParams({ tanggal: selectedTanggal, success: '1' });
+  if (searchKeyword) redirectParams.set('search', searchKeyword);
+  res.redirect(`/admin/klinik-berobat?${redirectParams.toString()}`);
+});
+
+app.post('/admin/klinik-berobat/:id/pulang', requireAccess('klinik-berobat'), (req, res) => {
+  const selectedTanggal = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.tanggal || ''))
+    ? String(req.query.tanggal)
+    : getTodayYmd();
+  const searchKeyword = String(req.query.search || '').trim();
+  db.prepare('UPDATE clinic_wbp_berobat SET status_perawatan=? WHERE id=?').run('Pulang', Number(req.params.id));
   const redirectParams = new URLSearchParams({ tanggal: selectedTanggal, success: '1' });
   if (searchKeyword) redirectParams.set('search', searchKeyword);
   res.redirect(`/admin/klinik-berobat?${redirectParams.toString()}`);

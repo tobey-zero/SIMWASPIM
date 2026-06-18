@@ -94,6 +94,7 @@
                   <option value="Rawat Jalan">Rawat Jalan</option>
                   <option value="Rawat Inap">Rawat Inap</option>
                   <option value="Selesai">Selesai</option>
+                  <option value="Pulang">Pulang</option>
                 </select>
               </div>
               <div class="form-group">
@@ -137,6 +138,7 @@
                 <option value="Rawat Jalan" <%= edit.status_perawatan==='Rawat Jalan'?'selected':'' %>>Rawat Jalan</option>
                 <option value="Rawat Inap" <%= edit.status_perawatan==='Rawat Inap'?'selected':'' %>>Rawat Inap</option>
                 <option value="Selesai" <%= edit.status_perawatan==='Selesai'?'selected':'' %>>Selesai</option>
+                <option value="Pulang" <%= edit.status_perawatan==='Pulang'?'selected':'' %>>Pulang</option>
               </select>
             </div>
             <div class="form-group">
@@ -207,6 +209,11 @@
                   <td><%= formatDateIndo(item.tanggal) %></td>
                   <td>
                     <div class="actions">
+                      <% if (item.status_perawatan === 'Rawat Inap') { %>
+                        <form method="POST" action="/admin/klinik-berobat/<%= item.id %>/pulang<%= filterQuery %>" style="display:inline" onsubmit="return confirm('Tandai pasien ini sebagai Pulang?')">
+                          <button type="submit" class="btn btn-success btn-xs" style="background:#10b981; color:white;">🏠 Pulang</button>
+                        </form>
+                      <% } %>
                       <a href="/admin/klinik-berobat?edit=<%= item.id %><%= filterQueryWithAmp %>" class="btn btn-warning btn-xs">✏️ Edit</a>
                       <form method="POST" action="/admin/klinik-berobat/<%= item.id %>/delete<%= filterQuery %>" style="display:inline" onsubmit="return confirm('Hapus data ini?')">
                         <button type="submit" class="btn btn-danger btn-xs">🗑 Hapus</button>
