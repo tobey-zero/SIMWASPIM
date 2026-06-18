@@ -1339,7 +1339,7 @@ function getPublicData(includeLargeLists = false) {
       SELECT jenis, nama, agama, besaran, remisi_bulan AS remisiBulan, remisi_hari AS remisiHari, keterangan
       FROM besaran_remisi
       WHERE (? = 0 OR batch_id = ?)
-      ORDER BY nama COLLATE NOCASE ASC
+      ORDER BY TRIM(nama) COLLATE NOCASE ASC
     `)
     .all(Number(activeRemisiBatch?.id || 0), Number(activeRemisiBatch?.id || 0)) : [];
 
@@ -1347,7 +1347,7 @@ function getPublicData(includeLargeLists = false) {
   const menuMakanHistory = getDailyMenuHistoryRows();
 
   const rawPembinaan = includeLargeLists ? db
-    .prepare('SELECT nama_wbp, status_integrasi FROM pentahapan_pembinaan ORDER BY nama_wbp COLLATE NOCASE ASC')
+    .prepare('SELECT nama_wbp, status_integrasi FROM pentahapan_pembinaan ORDER BY TRIM(nama_wbp) COLLATE NOCASE ASC')
     .all() : [];
   const pentahapanPembinaan = [];
   for (let i = 0; i < rawPembinaan.length; i += 2) {
@@ -1382,7 +1382,7 @@ function getPublicData(includeLargeLists = false) {
         TRIM(d.status_integrasi) AS statusIntegrasiD
       FROM pentahapan_pembinaan_detail d
       WHERE COALESCE(d.is_active, 1) = 1
-      ORDER BY d.nama_wbp COLLATE NOCASE ASC`)
+      ORDER BY TRIM(d.nama_wbp) COLLATE NOCASE ASC`)
     .all()
     .map((item) => {
        const statusIntegrasiD = item.statusIntegrasiD;
@@ -8420,7 +8420,7 @@ app.post('/klinik-antrian/:id/panggil', (req, res) => {
     db.prepare("UPDATE clinic_antrian SET status=?, called_at=datetime('now', 'localtime') WHERE id=?").run('dipanggil', antrian.id);
     broadcastAntrianKlinik({ 
       type: 'CALL', 
-      data: { no_antrian: antrian.no_antrian, nama_pasien: antrian.nama_pasien } 
+      data: { no_antrian: antrian.no_antrian, nama_pasien: antrian.nama_pasien, tujuan: antrian.tujuan } 
     });
   }
   res.redirect('/klinik-antrian?success=1');

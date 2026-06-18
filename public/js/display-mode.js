@@ -218,11 +218,8 @@
         shell.style.top = top + 'px';
     }
 
-    function performReload() {
-        if (!shell) {
-            window.location.reload();
-            return;
-        }
+    function saveScrollStates() {
+        if (!shell) return;
         var states = [];
         var tables = shell.querySelectorAll('table');
         tables.forEach(function (table, idx) {
@@ -232,14 +229,18 @@
                     index: idx,
                     scrollTop: host.scrollTop,
                     direction: host.dataset.scrollDirection ? parseInt(host.dataset.scrollDirection, 10) : 1,
-                    pausedTop: host.scrollTop <= 0,
-                    pausedBottom: host.scrollTop >= (host.scrollHeight - host.clientHeight)
+                    pausedTop: host.dataset.scrollPausedTop === "true" || host.scrollTop <= 0,
+                    pausedBottom: host.dataset.scrollPausedBottom === "true" || host.scrollTop >= (host.scrollHeight - host.clientHeight)
                 });
             }
         });
         try {
             sessionStorage.setItem('autoScrollStates', JSON.stringify(states));
         } catch (e) {}
+    }
+
+    function performReload() {
+        saveScrollStates();
         window.location.reload();
     }
 
@@ -352,6 +353,7 @@
 
         setInterval(function () {
             fitToScreen();
+            saveScrollStates();
         }, 5000);
     }
 
