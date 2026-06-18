@@ -8418,6 +8418,7 @@ app.post('/klinik-antrian/:id/panggil', (req, res) => {
   const antrian = db.prepare('SELECT * FROM clinic_antrian WHERE id=?').get(Number(req.params.id));
   if (antrian) {
     db.prepare("UPDATE clinic_antrian SET status=?, called_at=datetime('now', 'localtime') WHERE id=?").run('dipanggil', antrian.id);
+    console.log('[DEBUG-CALL] Broadcasting antrian (admin):', antrian.id, antrian.tujuan);
     broadcastAntrianKlinik({ 
       type: 'CALL', 
       data: { no_antrian: antrian.no_antrian, nama_pasien: antrian.nama_pasien, tujuan: antrian.tujuan } 
@@ -8470,6 +8471,7 @@ app.post('/klinik/panggil/:jenis/:id/panggil', (req, res) => {
   const antrian = db.prepare('SELECT * FROM clinic_antrian WHERE id=?').get(Number(req.params.id));
   if (antrian) {
     db.prepare("UPDATE clinic_antrian SET status=?, called_at=datetime('now', 'localtime') WHERE id=?").run('dipanggil', antrian.id);
+    console.log('[DEBUG-CALL] Broadcasting antrian (tujuan):', antrian.id, antrian.tujuan);
     broadcastAntrianKlinik({ 
       type: 'CALL', 
       data: { no_antrian: antrian.no_antrian, nama_pasien: antrian.nama_pasien, tujuan: antrian.tujuan } 

@@ -1,46 +1,14 @@
-2026-06-13T08:39:16Z INF Starting tunnel tunnelID=ffcd6937-a0c8-475b-b38e-21e77a8c02c2
-2026-06-13T08:39:16Z INF Version 2026.6.0 (Checksum 08d27c4c5d3ed73ee3e98ef2ddceb4ad09fd4cfc28e243565a189538e8ccd706)
-2026-06-13T08:39:16Z INF GOOS: linux, GOVersion: go1.26.4, GoArch: amd64
-2026-06-13T08:39:16Z INF Settings: map[p:http2 protocol:http2 token:*****]
-2026-06-13T08:39:16Z INF Autoupdate frequency is set autoupdateFreq=86400000
-2026-06-13T08:39:16Z INF Generated Connector ID: 68599053-de4e-495c-b680-65c55e16c7f5
-2026-06-13T08:39:16Z INF Initial protocol http2
-2026-06-13T08:39:17Z INF ICMP proxy will use 169.254.8.1 as source for IPv4
-2026-06-13T08:39:17Z INF ICMP proxy will use fddf:3978:feb1:d745::c001 in zone eth1 as source for IPv6
-2026-06-13T08:39:17Z WRN The user running cloudflared process has a GID (group ID) that is not within ping_group_range. You might need to add that user to a group within that range, or instead update the range to encompass a group the user is already in by modifying /proc/sys/net/ipv4/ping_group_range. Otherwise cloudflared will not be able to ping this network error="open /proc/sys/net/ipv4/ping_group_range: no such file or directory"
-2026-06-13T08:39:17Z INF ICMP proxy will use 169.254.8.1 as source for IPv4
-2026-06-13T08:39:17Z INF ICMP proxy will use fddf:3978:feb1:d745::c001 in zone eth1 as source for IPv6
-2026-06-13T08:39:17Z INF Starting metrics server on 127.0.0.1:20241/metrics
-2026-06-13T08:39:17Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256] connIndex=0 event=0 ip=2606:4700:a8::10
-2026-06-13T08:39:17Z INF Registered tunnel connection connIndex=0 connection=22e91f39-18e4-48da-9da6-8400a79c5c9e event=0 ip=2606:4700:a8::10 location=tpe01 protocol=http2
-2026-06-13T08:39:17Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256] connIndex=1 event=0 ip=2606:4700:a0::5
-2026-06-13T08:39:17Z INF Updated to new configuration config="{\"ingress\":[{\"hostname\":\"simwaspim.dite.my.id\",\"originRequest\":{},\"service\":\"http://localhost:3000\"},{\"service\":\"http_status:404\"}],\"warp-routing\":{\"enabled\":false}}" version=1
-2026-06-13T08:39:17Z INF Registered tunnel connection connIndex=1 connection=308171c8-22ee-40da-a8d2-2aad9bf48aa2 event=0 ip=2606:4700:a0::5 location=hkg09 protocol=http2
-2026-06-13T08:39:18Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256] connIndex=2 event=0 ip=2606:4700:a0::1
-2026-06-13T08:39:18Z INF Registered tunnel connection connIndex=2 connection=9a17ecae-beb8-485a-9ec7-7f1d0f4039a6 event=0 ip=2606:4700:a0::1 location=hkg09 protocol=http2
-2026-06-13T08:39:19Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256] connIndex=3 event=0 ip=2606:4700:a8::6
-2026-06-13T08:39:19Z INF Registered tunnel connection connIndex=3 connection=4d970205-a2b0-4fe0-b21c-fbe06a967f26 event=0 ip=2606:4700:a8::6 location=tpe01 protocol=http2
-2026-06-13T08:39:27Z INF +-----------------------------------------------------------------------------------------------+
-2026-06-13T08:39:27Z INF |                                    CONNECTIVITY PRE-CHECKS                                    |
-2026-06-13T08:39:27Z INF +-----------------------------------------------------------------------------------------------+
-2026-06-13T08:39:27Z INF |  COMPONENT         TARGET                     STATUS  DETAILS                                 |
-2026-06-13T08:39:27Z INF |  DNS Resolution    region1.v2.argotunnel.com  PASS    DNS Resolved successfully               |
-2026-06-13T08:39:27Z INF |  DNS Resolution    region2.v2.argotunnel.com  PASS    DNS Resolved successfully               |
-2026-06-13T08:39:27Z INF |  UDP Connectivity  region1.v2.argotunnel.com  FAIL    QUIC connection failed                  |
-2026-06-13T08:39:27Z INF |  UDP Connectivity  region2.v2.argotunnel.com  FAIL    QUIC connection failed                  |
-2026-06-13T08:39:27Z INF |  TCP Connectivity  region1.v2.argotunnel.com  PASS    HTTP/2 connection successful            |
-2026-06-13T08:39:27Z INF |  TCP Connectivity  region2.v2.argotunnel.com  PASS    HTTP/2 connection successful            |
-2026-06-13T08:39:27Z INF |  Cloudflare API    api.cloudflare.com:443     PASS    API is reachable                        |
-2026-06-13T08:39:27Z INF |  WARNING: Allow outbound QUIC traffic on port 7844 or use HTTP2.                              |
-2026-06-13T08:39:27Z INF |  WARNING: Allow outbound QUIC traffic on port 7844 or use HTTP2.                              |
-2026-06-13T08:39:27Z INF |                                                                                               |
-2026-06-13T08:39:27Z INF |  SUMMARY: Environment ready with degraded transport. cloudflared will proceed using 'http2'.  |
-2026-06-13T08:39:27Z INF +-----------------------------------------------------------------------------------------------+
-2026-06-13T08:39:27Z INF precheck component="DNS Resolution" details="DNS Resolved successfully" run_id=1fae303b-4328-42d6-a4d9-920c1b409880 status=pass target=region1.v2.argotunnel.com
-2026-06-13T08:39:27Z INF precheck component="DNS Resolution" details="DNS Resolved successfully" run_id=1fae303b-4328-42d6-a4d9-920c1b409880 status=pass target=region2.v2.argotunnel.com
-2026-06-13T08:39:27Z INF precheck component="UDP Connectivity" details="QUIC connection failed" run_id=1fae303b-4328-42d6-a4d9-920c1b409880 status=fail target=region1.v2.argotunnel.com
-2026-06-13T08:39:27Z INF precheck component="UDP Connectivity" details="QUIC connection failed" run_id=1fae303b-4328-42d6-a4d9-920c1b409880 status=fail target=region2.v2.argotunnel.com
-2026-06-13T08:39:27Z INF precheck component="TCP Connectivity" details="HTTP/2 connection successful" run_id=1fae303b-4328-42d6-a4d9-920c1b409880 status=pass target=region1.v2.argotunnel.com
-2026-06-13T08:39:27Z INF precheck component="TCP Connectivity" details="HTTP/2 connection successful" run_id=1fae303b-4328-42d6-a4d9-920c1b409880 status=pass target=region2.v2.argotunnel.com
-2026-06-13T08:39:27Z INF precheck component="Cloudflare API" details="API is reachable" run_id=1fae303b-4328-42d6-a4d9-920c1b409880 status=pass target=api.cloudflare.com:443
-2026-06-13T08:39:27Z INF precheck complete hard_fail=false run_id=1fae303b-4328-42d6-a4d9-920c1b409880 suggested_protocol=http2
+2026-06-18T02:35:26Z INF Starting tunnel tunnelID=ffcd6937-a0c8-475b-b38e-21e77a8c02c2
+2026-06-18T02:35:26Z INF Version 2026.6.0 (Checksum 08d27c4c5d3ed73ee3e98ef2ddceb4ad09fd4cfc28e243565a189538e8ccd706)
+2026-06-18T02:35:26Z INF GOOS: linux, GOVersion: go1.26.4, GoArch: amd64
+2026-06-18T02:35:26Z INF Settings: map[p:http2 protocol:http2 token:*****]
+2026-06-18T02:35:26Z INF Autoupdate frequency is set autoupdateFreq=86400000
+2026-06-18T02:35:26Z INF Generated Connector ID: 95718964-5c1e-49da-855e-4317c00e8c2a
+2026-06-18T02:35:26Z INF Initial protocol http2
+2026-06-18T02:35:27Z INF ICMP proxy will use 169.254.8.1 as source for IPv4
+2026-06-18T02:35:27Z INF ICMP proxy will use fddf:3978:feb1:d745::c001 in zone eth1 as source for IPv6
+2026-06-18T02:35:27Z WRN The user running cloudflared process has a GID (group ID) that is not within ping_group_range. You might need to add that user to a group within that range, or instead update the range to encompass a group the user is already in by modifying /proc/sys/net/ipv4/ping_group_range. Otherwise cloudflared will not be able to ping this network error="open /proc/sys/net/ipv4/ping_group_range: no such file or directory"
+2026-06-18T02:35:27Z INF ICMP proxy will use 169.254.8.1 as source for IPv4
+2026-06-18T02:35:27Z INF ICMP proxy will use fddf:3978:feb1:d745::c001 in zone eth1 as source for IPv6
+2026-06-18T02:35:27Z INF Starting metrics server on 127.0.0.1:20244/metrics
+2026-06-18T02:35:27Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256] connIndex=0 event=0 ip=2606:4700:a8::1
