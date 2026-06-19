@@ -28,13 +28,14 @@
                     <th style="width: 80px;">No</th>
                     <th>Nama Pasien</th>
                     <th>Status</th>
+                    <th>Tindakan Lanjutan</th>
                     <th style="width: 150px; text-align:center;">Panggil</th>
                 </tr>
             </thead>
             <tbody>
                 <% if (list.length === 0) { %>
                 <tr>
-                    <td colspan="4" style="text-align:center; padding: 20px; color:#64748b;">Tidak ada antrian untuk hari ini.</td>
+                    <td colspan="5" style="text-align:center; padding: 20px; color:#64748b;">Tidak ada antrian untuk hari ini.</td>
                 </tr>
                 <% } else { %>
                     <% list.forEach(item => { %>
@@ -50,6 +51,22 @@
                                     <option value="dilewati" <%= item.status==='dilewati'?'selected':'' %>>Dilewati</option>
                                 </select>
                             </form>
+                        </td>
+                        <td>
+                            <% if (item.status !== 'selesai' && item.status !== 'dilewati') { %>
+                            <form method="POST" action="/klinik/panggil/<%= jenis %>/<%= item.id %>/rujuk" style="display:flex; align-items:center;">
+                                <select name="tujuan_baru" class="select-status" onchange="if(this.value && confirm('Apakah Anda yakin ingin merujuk pasien ini?')) this.form.submit(); else this.value='';">
+                                    <option value="">Rujuk Ke Poli Lain...</option>
+                                    <% 
+                                      const tujuans = ['Ruang Pemeriksaan Dokter Gigi', 'Ruang Pemeriksaan Dokter Umum', 'Ruang Konseling', 'Ruang Tindakan', 'Apotik']; 
+                                      tujuans.forEach(t => { 
+                                          if (t !== tujuanName) {
+                                    %>
+                                      <option value="<%= t %>"><%= t.replace('Ruang Pemeriksaan ', '').replace('Ruang ', '') %></option>
+                                    <% } }) %>
+                                </select>
+                            </form>
+                            <% } %>
                         </td>
                         <td style="text-align:center;">
                             <form method="POST" action="/klinik/panggil/<%= jenis %>/<%= item.id %>/panggil">

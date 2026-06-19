@@ -8406,7 +8406,7 @@ app.post('/klinik-antrian/add', (req, res) => {
   const { nama_pasien, tujuan } = req.body;
   const targetTujuan = tujuan || 'Ruang Pemeriksaan Dokter Umum';
   const todayYmd = getTodayYmd();
-  const latestAntrian = db.prepare('SELECT MAX(no_antrian) as max_no FROM clinic_antrian WHERE tanggal = ?').get(todayYmd);
+  const latestAntrian = db.prepare('SELECT MAX(no_antrian) as max_no FROM clinic_antrian WHERE tanggal = ? AND tujuan = ?').get(todayYmd, targetTujuan);
   const nextNo = (latestAntrian?.max_no || 0) + 1;
   const result = db.prepare('INSERT INTO clinic_antrian (tanggal, no_antrian, nama_pasien, tujuan, status) VALUES (?, ?, ?, ?, ?)').run(todayYmd, nextNo, nama_pasien, targetTujuan, 'menunggu');
   
@@ -8431,6 +8431,27 @@ app.post('/klinik-antrian/:id/status', (req, res) => {
   const { status } = req.body;
   db.prepare('UPDATE clinic_antrian SET status=? WHERE id=?').run(status, Number(req.params.id));
   broadcastAntrianKlinik({ type: 'UPDATE' });
+  res.redirect('/klinik-antrian?success=1');
+});
+
+app.post('/klinik-antrian/:id/rujuk', (req, res) => {
+  const { tujuan_baru } = req.body;
+  const antrianLama = db.prepare('SELECT * FROM clinic_antrian WHERE id=?').get(Number(req.params.id));
+  
+  if (antrianLama && tujuan_baru && tujuan_baru !== antrianLama.tujuan) {
+    // Selesaikan antrian saat ini
+    db.prepare('UPDATE clinic_antrian SET status=? WHERE id=?').run('selesai', antrianLama.id);
+    
+    // Buat antrian baru
+    const todayYmd = getTodayYmd();
+    const latestAntrian = db.prepare('SELECT MAX(no_antrian) as max_no FROM clinic_antrian WHERE tanggal = ? AND tujuan = ?').get(todayYmd, tujuan_baru);
+    const nextNo = (latestAntrian?.max_no || 0) + 1;
+    
+    db.prepare('INSERT INTO clinic_antrian (tanggal, no_antrian, nama_pasien, tujuan, status) VALUES (?, ?, ?, ?, ?)').run(todayYmd, nextNo, antrianLama.nama_pasien, tujuan_baru, 'menunggu');
+    
+    broadcastAntrianKlinik({ type: 'UPDATE' });
+  }
+  
   res.redirect('/klinik-antrian?success=1');
 });
 
@@ -8489,6 +8510,30 @@ app.post('/klinik/panggil/:jenis/:id/status', (req, res) => {
     db.prepare('UPDATE clinic_antrian SET status=? WHERE id=?').run(status, Number(req.params.id));
     broadcastAntrianKlinik({ type: 'UPDATE' });
   }
+  res.redirect(`/klinik/panggil/${req.params.jenis}`);
+});
+
+app.post('/klinik/panggil/:jenis/:id/rujuk', (req, res) => {
+  const tujuanName = TUJUAN_MAP[req.params.jenis];
+  if (!tujuanName) return res.status(404).send('Tujuan tidak ditemukan');
+
+  const { tujuan_baru } = req.body;
+  const antrianLama = db.prepare('SELECT * FROM clinic_antrian WHERE id=?').get(Number(req.params.id));
+  
+  if (antrianLama && tujuan_baru && tujuan_baru !== antrianLama.tujuan) {
+    // 1. Selesaikan antrian saat ini
+    db.prepare('UPDATE clinic_antrian SET status=? WHERE id=?').run('selesai', antrianLama.id);
+    
+    // 2. Buat antrian baru di tujuan baru
+    const todayYmd = getTodayYmd();
+    const latestAntrian = db.prepare('SELECT MAX(no_antrian) as max_no FROM clinic_antrian WHERE tanggal = ? AND tujuan = ?').get(todayYmd, tujuan_baru);
+    const nextNo = (latestAntrian?.max_no || 0) + 1;
+    
+    db.prepare('INSERT INTO clinic_antrian (tanggal, no_antrian, nama_pasien, tujuan, status) VALUES (?, ?, ?, ?, ?)').run(todayYmd, nextNo, antrianLama.nama_pasien, tujuan_baru, 'menunggu');
+    
+    broadcastAntrianKlinik({ type: 'UPDATE' });
+  }
+  
   res.redirect(`/klinik/panggil/${req.params.jenis}`);
 });
 

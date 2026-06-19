@@ -70,6 +70,7 @@
                   <th>Nama Pasien</th>
                   <th>Tujuan</th>
                   <th>Status</th>
+                  <th>Tindakan Lanjutan</th>
                   <th>Waktu Panggil</th>
                   <th>Aksi Panggil</th>
                   <th>Aksi Lain</th>
@@ -91,6 +92,22 @@
                       </select>
                     </form>
                   </td>
+                  <td>
+                    <% if (item.status !== 'selesai' && item.status !== 'dilewati') { %>
+                    <form method="POST" action="/klinik-antrian/<%= item.id %>/rujuk" style="display:flex; gap:4px; align-items:center;">
+                      <select name="tujuan_baru" onchange="if(this.value && confirm('Apakah Anda yakin ingin merujuk pasien ini?')) this.form.submit(); else this.value='';">
+                          <option value="">Rujuk Ke Poli Lain...</option>
+                          <% 
+                            const tujuans = ['Ruang Pemeriksaan Dokter Gigi', 'Ruang Pemeriksaan Dokter Umum', 'Ruang Konseling', 'Ruang Tindakan', 'Apotik']; 
+                            tujuans.forEach(t => { 
+                                if (t !== (item.tujuan || 'Ruang Pemeriksaan Dokter Umum')) {
+                          %>
+                            <option value="<%= t %>"><%= t.replace('Ruang Pemeriksaan ', '').replace('Ruang ', '') %></option>
+                          <% } }) %>
+                      </select>
+                    </form>
+                    <% } %>
+                  </td>
                   <td><%= item.called_at ? item.called_at : '-' %></td>
                   <td>
                     <form method="POST" action="/klinik-antrian/<%= item.id %>/panggil">
@@ -105,7 +122,7 @@
                 </tr>
                 <% }) %>
                 <% if(list.length === 0) { %>
-                  <tr><td colspan="6" style="text-align:center;">Belum ada antrian.</td></tr>
+                  <tr><td colspan="8" style="text-align:center;">Belum ada antrian.</td></tr>
                 <% } %>
               </tbody>
             </table>
