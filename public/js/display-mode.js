@@ -326,6 +326,7 @@
         });
 
         function scheduleAutoRefresh() {
+            if (window.DISABLE_AUTO_REFRESH) return;
             if (refreshTimerId) {
                 clearTimeout(refreshTimerId);
             }
