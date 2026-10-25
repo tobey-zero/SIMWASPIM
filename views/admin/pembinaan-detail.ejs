@@ -107,6 +107,8 @@
                   <option value="Tidak ada penjamin">Tidak ada penjamin</option>
                   <option value="Tidak mengusulkan PB">Tidak mengusulkan PB</option>
                   <option value="Tidak mengusulkan CB">Tidak mengusulkan CB</option>
+                  <option value="Proses Litmas">Proses Litmas</option>
+                  <option value="Berkas Jaminan belum dikembalikan">Berkas Jaminan belum dikembalikan</option>
                 </select>
               </div>
             </div>
@@ -169,7 +171,7 @@
             <div class="form-group">
               <label>Status Integrasi</label>
               <select name="status_integrasi" required>
-                <% ['-','Menunggu SK','Sudah ada hasil SK','Ditolak','Proses Verifikasi','Tidak mengusulkan PB/CB','Ditjen','UPT','Tidak ada penjamin','Tidak mengusulkan PB','Tidak mengusulkan CB'].forEach(s => { %>
+                <% ['-','Menunggu SK','Sudah ada hasil SK','Ditolak','Proses Verifikasi','Tidak mengusulkan PB/CB','Ditjen','UPT','Tidak ada penjamin','Tidak mengusulkan PB','Tidak mengusulkan CB','Proses Litmas','Berkas Jaminan belum dikembalikan'].forEach(s => { %>
                 <option value="<%= s %>" <%= edit.status_integrasi===s?'selected':'' %>><%= s %></option>
                 <% }) %>
               </select>
