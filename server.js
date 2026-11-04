@@ -5755,6 +5755,10 @@ app.post('/admin/pembinaan/:id/delete', requireAccess('pembinaan'), (req, res) =
 app.get('/admin/pembinaan-detail', requireAccess('pembinaan-detail'), (req, res) => {
   const searchKeyword = String(req.query.search || '').trim();
   const statusFilter = String(req.query.status || 'semua').trim().toLowerCase();
+  const rawPage = parseInt(req.query.page, 10);
+  const rawLimit = parseInt(req.query.perPage || req.query.limit, 10);
+  const perPage = [25, 50, 100, 200].includes(rawLimit) ? rawLimit : 50;
+
   const whereClauses = [];
   const params = [];
 
@@ -5781,14 +5785,25 @@ app.get('/admin/pembinaan-detail', requireAccess('pembinaan-detail'), (req, res)
     for (let i = 0; i < 10; i += 1) params.push(likeKeyword);
   }
 
+  const whereSql = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+  const totalFiltered = Number(
+    db.prepare(`SELECT COUNT(*) AS c FROM pentahapan_pembinaan_detail ${whereSql}`).get(...params)?.c || 0
+  );
+
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / perPage));
+  const currentPage = Math.min(Math.max(1, isNaN(rawPage) ? 1 : rawPage), totalPages);
+  const offset = (currentPage - 1) * perPage;
+
   const sql = `
     SELECT *
     FROM pentahapan_pembinaan_detail
-    ${whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : ''}
+    ${whereSql}
     ORDER BY COALESCE(is_active, 1) DESC, id DESC
+    LIMIT ? OFFSET ?
   `;
 
-  const list = db.prepare(sql).all(...params).map((item) => ({
+  const list = db.prepare(sql).all(...params, perPage, offset).map((item) => ({
     ...item,
     is_status_overdue: isIntegrationOverdue(item.tanggal2, item.status_integrasi),
   }));
@@ -5796,6 +5811,8 @@ app.get('/admin/pembinaan-detail', requireAccess('pembinaan-detail'), (req, res)
   const edit = req.query.edit ? db.prepare('SELECT * FROM pentahapan_pembinaan_detail WHERE id=?').get(Number(req.query.edit)) : null;
   const activeCount = Number(db.prepare('SELECT COUNT(*) AS c FROM pentahapan_pembinaan_detail WHERE COALESCE(is_active, 1) = 1').get()?.c || 0);
   const inactiveCount = Number(db.prepare('SELECT COUNT(*) AS c FROM pentahapan_pembinaan_detail WHERE COALESCE(is_active, 1) = 0').get()?.c || 0);
+  const totalAllCount = activeCount + inactiveCount;
+
   res.render('admin/pembinaan-detail', {
     user: req.session.user,
     list,
@@ -5809,6 +5826,11 @@ app.get('/admin/pembinaan-detail', requireAccess('pembinaan-detail'), (req, res)
     statusFilter,
     activeCount,
     inactiveCount,
+    totalAllCount,
+    totalFiltered,
+    currentPage,
+    totalPages,
+    perPage,
   });
 });
 
@@ -6113,7 +6135,12 @@ app.post('/admin/pembinaan-detail/:id/update', requireAccess('pembinaan-detail')
   db.prepare(`UPDATE pentahapan_pembinaan_detail SET no_reg=?, nama_wbp=?, jenis_kejahatan=?, blok_kamar=?, tanggal1=?, tanggal2=?, tanggal3=?, tanggal4=?, keterangan=?, status_integrasi=? WHERE id=?`)
     .run(no_reg, nama_wbp, jenis_kejahatan, blok_kamar, tanggal1, tanggal2, tanggal3, tanggal4, keterangan, statusIntegrasi, Number(req.params.id));
   syncPembinaanMasterByName(nama_wbp, statusIntegrasi);
-  res.redirect('/admin/pembinaan-detail?success=1');
+  const query = new URLSearchParams({ success: '1' });
+  if (req.body.search) query.set('search', String(req.body.search));
+  if (req.body.status) query.set('status', String(req.body.status));
+  if (req.body.page) query.set('page', String(req.body.page));
+  if (req.body.perPage) query.set('perPage', String(req.body.perPage));
+  res.redirect(`/admin/pembinaan-detail?${query.toString()}`);
 });
 
 app.post('/admin/pembinaan-detail/:id/delete', requireAccess('pembinaan-detail'), (req, res) => {
@@ -6123,6 +6150,8 @@ app.post('/admin/pembinaan-detail/:id/delete', requireAccess('pembinaan-detail')
   const query = new URLSearchParams({ success: '1' });
   if (req.body.search) query.set('search', String(req.body.search));
   if (req.body.status) query.set('status', String(req.body.status));
+  if (req.body.page) query.set('page', String(req.body.page));
+  if (req.body.perPage) query.set('perPage', String(req.body.perPage));
   res.redirect(`/admin/pembinaan-detail?${query.toString()}`);
 });
 
@@ -6133,6 +6162,8 @@ app.post('/admin/pembinaan-detail/:id/activate', requireAccess('pembinaan-detail
   const query = new URLSearchParams({ success: '1' });
   if (req.body.search) query.set('search', String(req.body.search));
   if (req.body.status) query.set('status', String(req.body.status));
+  if (req.body.page) query.set('page', String(req.body.page));
+  if (req.body.perPage) query.set('perPage', String(req.body.perPage));
   res.redirect(`/admin/pembinaan-detail?${query.toString()}`);
 });
 
@@ -6143,6 +6174,8 @@ app.post('/admin/pembinaan-detail/:id/delete-permanent', requireAccess('pembinaa
   const query = new URLSearchParams({ success: '1' });
   if (req.body.search) query.set('search', String(req.body.search));
   if (req.body.status) query.set('status', String(req.body.status));
+  if (req.body.page) query.set('page', String(req.body.page));
+  if (req.body.perPage) query.set('perPage', String(req.body.perPage));
   res.redirect(`/admin/pembinaan-detail?${query.toString()}`);
 });
 

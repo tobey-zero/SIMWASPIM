@@ -219,6 +219,8 @@ db.exec(`
     is_active INTEGER NOT NULL DEFAULT 1
   );
 
+  CREATE INDEX IF NOT EXISTS idx_pembinaan_detail_active_id ON pentahapan_pembinaan_detail (is_active, id DESC);
+
   CREATE TABLE IF NOT EXISTS jadwal_kegiatan (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     hari TEXT NOT NULL DEFAULT '',
