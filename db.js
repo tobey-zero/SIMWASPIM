@@ -1687,4 +1687,215 @@ db.prepare('INSERT OR IGNORE INTO app_settings (key, value) VALUES (?, ?)').run(
 db.prepare('INSERT OR IGNORE INTO app_settings (key, value) VALUES (?, ?)').run('keuangan_realisasi_modal', '0');
 db.prepare('INSERT OR IGNORE INTO app_settings (key, value) VALUES (?, ?)').run('keuangan_updated_at', '2026-04-16T13:39');
 
+// ─── Tabel Rencana Kerja & Realisasi Bulanan (Tata Usaha) ──────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS rencana_kerja (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tahun INTEGER NOT NULL DEFAULT 2026,
+    jenis_belanja TEXT NOT NULL,
+    sub_kategori TEXT NOT NULL DEFAULT '',
+    sub_kategori_warna TEXT NOT NULL DEFAULT '',
+    nama_kegiatan TEXT NOT NULL,
+    anggaran REAL NOT NULL DEFAULT 0,
+    jan REAL NOT NULL DEFAULT 0,
+    feb REAL NOT NULL DEFAULT 0,
+    mar REAL NOT NULL DEFAULT 0,
+    apr REAL NOT NULL DEFAULT 0,
+    mei REAL NOT NULL DEFAULT 0,
+    jun REAL NOT NULL DEFAULT 0,
+    jul REAL NOT NULL DEFAULT 0,
+    agt REAL NOT NULL DEFAULT 0,
+    sep REAL NOT NULL DEFAULT 0,
+    okt REAL NOT NULL DEFAULT 0,
+    nov REAL NOT NULL DEFAULT 0,
+    des REAL NOT NULL DEFAULT 0,
+    highlight_red INTEGER NOT NULL DEFAULT 0,
+    urutan INTEGER NOT NULL DEFAULT 0,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+  );
+
+  CREATE TABLE IF NOT EXISTS rencana_kerja_target (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tahun INTEGER NOT NULL DEFAULT 2026,
+    jenis_belanja TEXT NOT NULL,
+    target_tw1 REAL NOT NULL DEFAULT 20,
+    target_tw2 REAL NOT NULL DEFAULT 50,
+    target_tw3 REAL NOT NULL DEFAULT 75,
+    target_tw4 REAL NOT NULL DEFAULT 95,
+    created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+  );
+`);
+
+seedIfEmpty('rencana_kerja_target', () => {
+  const insertTarget = db.prepare(`
+    INSERT INTO rencana_kerja_target (tahun, jenis_belanja, target_tw1, target_tw2, target_tw3, target_tw4)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  insertTarget.run(2026, 'BELANJA PEGAWAI', 20, 50, 75, 95);
+  insertTarget.run(2026, 'BELANJA BARANG (52)', 15, 50, 70, 90);
+});
+
+seedIfEmpty('rencana_kerja', () => {
+  const insertItem = db.prepare(`
+    INSERT INTO rencana_kerja (
+      tahun, jenis_belanja, sub_kategori, sub_kategori_warna, nama_kegiatan, anggaran,
+      jan, feb, mar, apr, mei, jun, jul, agt, sep, okt, nov, des,
+      highlight_red, urutan
+    ) VALUES (
+      ?, ?, ?, ?, ?, ?,
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+      ?, ?
+    )
+  `);
+
+  const seedRows = [
+    // BELANJA PEGAWAI
+    [
+      2026, 'BELANJA PEGAWAI', 'Gaji dan Tunjangan', '#fef08a', 'Pembayaran Gaji dan Tunjangan', 13024521000,
+      1838386460, 1130344380, 2072291786, 1134639331, 2155648721, 1136134330, 1149267013, 1172419603, 1172419603, 1172419603, 1172419603, 1378658603,
+      1, 1
+    ],
+    [
+      2026, 'BELANJA PEGAWAI', 'Gaji dan Tunjangan', '#fef08a', 'Uang Lembur', 32976000,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32976000,
+      0, 2
+    ],
+    [
+      2026, 'BELANJA PEGAWAI', 'Gaji dan Tunjangan', '#fef08a', 'Tunjangan Kinerja', 13122202000,
+      865677054, 882744346, 1922737261, 885383367, 891280674, 1948452613, 929547861, 927705679, 927705679, 927705679, 927705679, 927705679,
+      0, 3
+    ],
+
+    // BELANJA BARANG (52)
+    // Sub: Dukungan Penyelenggaraan Tugas dan Fungsi Unit
+    [
+      2026, 'BELANJA BARANG (52)', 'Dukungan Penyelenggaraan Tugas dan Fungsi Unit', '#fef08a', 'Pengadaan Bahan Makanan Warga Binaan Pemasyarakatan', 24146210000,
+      0, 1437549367, 2090056728, 3735177448, 1881363805, 1923540095, 1829014563, 1880752174, 1880752174, 1829014563, 1880752174, 2551362425,
+      0, 4
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Dukungan Penyelenggaraan Tugas dan Fungsi Unit', '#fef08a', 'Kebutuhan Sandang', 911370000,
+      0, 0, 420559020, 0, 0, 0, 0, 0, 480390000, 0, 0, 0,
+      0, 5
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Dukungan Penyelenggaraan Tugas dan Fungsi Unit', '#fef08a', 'Pemenuhan Sarana Makan Minum', 783140000,
+      0, 0, 139640000, 0, 0, 0, 327306168, 0, 312451125, 0, 0, 0,
+      0, 6
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Dukungan Penyelenggaraan Tugas dan Fungsi Unit', '#fef08a', 'Pemenuhan Perlengkapan Mandi', 225525000,
+      0, 105139755, 0, 0, 0, 0, 45000000, 0, 0, 0, 0, 0,
+      1, 7
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Dukungan Penyelenggaraan Tugas dan Fungsi Unit', '#fef08a', 'Extra Fooding', 270360000,
+      0, 270359370, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 8
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Dukungan Penyelenggaraan Tugas dan Fungsi Unit', '#fef08a', 'Pemulasaran', 30000000,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 9
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Dukungan Penyelenggaraan Tugas dan Fungsi Unit', '#fef08a', 'Perawatan Kesehatan Tahanan/Narapidana/Anak', 189953000,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 10
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Dukungan Penyelenggaraan Tugas dan Fungsi Unit', '#fef08a', 'Perlengkapan Medis Poliklinik', 551260000,
+      0, 0, 99435600, 0, 0, 99501600, 0, 0, 99373200, 0, 0, 0,
+      1, 11
+    ],
+
+    // Sub: Operasional dan Pemeliharaan Kantor
+    [
+      2026, 'BELANJA BARANG (52)', 'Operasional dan Pemeliharaan Kantor', '#fef08a', 'Kesehatan Pegawai', 136998000,
+      0, 0, 136996200, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 12
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Operasional dan Pemeliharaan Kantor', '#fef08a', 'Pemeliharaan Gedung dan Halaman', 671805000,
+      0, 417612924, 0, 0, 0, 231795639, 20934310, 0, 365500, 365500, 365500, 365500,
+      0, 13
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Operasional dan Pemeliharaan Kantor', '#fef08a', 'Pemeliharaan Peralatan Perkantoran', 90198000,
+      0, 0, 0, 0, 0, 44455500, 38250000, 0, 1873000, 1873000, 1873000, 1873000,
+      0, 14
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Operasional dan Pemeliharaan Kantor', '#fef08a', 'Pemeliharaan Kendaraan', 76500000,
+      0, 28691280, 0, 0, 0, 0, 0, 0, 11952000, 11952000, 11952000, 11952000,
+      0, 15
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Operasional dan Pemeliharaan Kantor', '#fef08a', 'Langganan Daya dan Jasa', 2715360000,
+      225677177, 226974446, 209278924, 239170072, 227008787, 232573740, 222792545, 241770618, 241770618, 241770618, 241770618, 241770618,
+      1, 16
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Operasional dan Pemeliharaan Kantor', '#fef08a', 'Jasa Pos', 5400000,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 17
+    ],
+
+    // Sub: Keperluan Perkantoran
+    [
+      2026, 'BELANJA BARANG (52)', 'Keperluan Perkantoran', '#f97316', 'Pakaian Petugas Kebersihan', 1350000,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 1350000, 0, 0,
+      0, 18
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Keperluan Perkantoran', '#f97316', 'Keperluan Pokok', 133100000,
+      0, 0, 0, 0, 49827000, 40410000, 0, 10396000, 8116000, 8116000, 8116000, 8116000,
+      0, 19
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Keperluan Perkantoran', '#f97316', 'Honor Pramubakti', 124800000,
+      0, 0, 0, 0, 0, 57600000, 0, 0, 38400000, 9600000, 9600000, 9600000,
+      0, 20
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Keperluan Perkantoran', '#f97316', 'ATK Rutin', 80738000,
+      0, 35992000, 0, 0, 36998000, 0, 0, 0, 0, 7748000, 0, 0,
+      0, 21
+    ],
+
+    // Sub: Lain-lain
+    [
+      2026, 'BELANJA BARANG (52)', 'Konsultasi dan Koordinasi', '', 'Konsultasi dan Koordinasi', 10129000,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 22
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Jamuan Tamu', '', 'Jamuan Tamu', 39402000,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 23
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Honor Operasional Satuan Kerja', '', 'Honor Operasional Satuan Kerja', 85440000,
+      0, 0, 0, 0, 0, 0, 37140000, 6240000, 6090000, 11990000, 11990000, 11990000,
+      0, 24
+    ],
+
+    // Sub: Sewa Kendaraan Operasional
+    [
+      2026, 'BELANJA BARANG (52)', 'Sewa Kendaraan Operasional', '#ea580c', 'Belanja Sewa', 204193000,
+      0, 203830000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 25
+    ],
+    [
+      2026, 'BELANJA BARANG (52)', 'Sewa Kendaraan Operasional', '#ea580c', 'Bahan Bakar Kendaraan Dinas', 30420000,
+      0, 0, 0, 0, 0, 0, 0, 0, 7605000, 7605000, 7605000, 7605000,
+      0, 26
+    ]
+  ];
+
+  seedRows.forEach(row => insertItem.run(...row));
+});
+
 module.exports = db;

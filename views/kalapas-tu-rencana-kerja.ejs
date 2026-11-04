@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= pageTitle %> - Kalapas</title>
+  <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
+  <style>
+    .kalapas-table-wrap { padding: 14px 15px; }
+    .kalapas-table-toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .kalapas-toolbar-left {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .kalapas-toolbar-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .kalapas-btn {
+      text-decoration: none;
+      color: #fff;
+      background: #1a4bb8;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 6px;
+      padding: 7px 13px;
+      font-size: 12px;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .kalapas-btn:hover {
+      background: #153e98;
+    }
+    .kalapas-btn-secondary {
+      background: #334155;
+      border-color: #475569;
+    }
+    .kalapas-btn-secondary:hover {
+      background: #1e293b;
+    }
+    .kalapas-submenu {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .kalapas-submenu a {
+      text-decoration: none;
+      border: 1px solid #93c5fd;
+      color: #1e3a8a;
+      background: #eff6ff;
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: bold;
+      transition: all 0.15s ease;
+    }
+    .kalapas-submenu a:hover {
+      background: #dbeafe;
+    }
+    .kalapas-submenu a.active {
+      color: #fff;
+      background: #1a4bb8;
+      border-color: rgba(255,255,255,.3);
+    }
+
+    /* Executive KPI Cards */
+    .rk-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .rk-kpi-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    .rk-kpi-card.blue {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      border-color: #3b82f6;
+    }
+    .rk-kpi-card.green {
+      background: linear-gradient(135deg, #14532d 0%, #16a34a 100%);
+      border-color: #22c55e;
+    }
+    .rk-kpi-card.red {
+      background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);
+      border-color: #ef4444;
+    }
+    .rk-kpi-card.amber {
+      background: linear-gradient(135deg, #78350f 0%, #d97706 100%);
+      border-color: #f59e0b;
+    }
+    .rk-kpi-card.purple {
+      background: linear-gradient(135deg, #581c87 0%, #9333ea 100%);
+      border-color: #a855f7;
+    }
+    .rk-kpi-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+    .rk-kpi-val {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 3px;
+    }
+    .rk-kpi-sub {
+      font-size: 11px;
+      opacity: 0.85;
+    }
+
+    /* Target vs Realisasi Progress Bar */
+    .rk-progress-wrap {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      color: #f8fafc;
+    }
+    .rk-progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .rk-progress-bar-bg {
+      width: 100%;
+      height: 22px;
+      background: #1e293b;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #475569;
+      display: flex;
+    }
+    .rk-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6 0%, #10b981 70%, #f59e0b 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: #0f172a;
+      transition: width 0.6s ease;
+      min-width: 38px;
+    }
+
+    /* Matrix Table Container & Styling */
+    .rk-matrix-card {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+      overflow: hidden;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 20px;
+    }
+    .rk-matrix-toolbar {
+      background: #f8fafc;
+      padding: 10px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .rk-matrix-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      max-height: 75vh;
+      -webkit-overflow-scrolling: touch;
+    }
+    .rk-matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 11px;
+      line-height: 1.25;
+      color: #0f172a;
+    }
+    .rk-matrix-table th,
+    .rk-matrix-table td {
+      border: 1px solid #94a3b8;
+      padding: 5px 6px;
+      white-space: nowrap;
+    }
+
+    /* Table Header colors matching spreadsheet photo */
+    .rk-matrix-table thead th {
+      text-align: center;
+      vertical-align: middle;
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .rk-th-blue {
+      background-color: #bbf2f6 !important;
+      color: #0f172a;
+    }
+    .rk-th-subblue {
+      background-color: #c7d2fe !important;
+      color: #1e1b4b;
+      font-weight: 700;
+    }
+    .rk-th-month {
+      background-color: #e0e7ff !important;
+      color: #1e1b4b;
+      font-weight: 700;
+      min-width: 78px;
+    }
+
+    /* Sticky first column for Kegiatan */
+    .rk-col-kegiatan {
+      min-width: 280px;
+      max-width: 360px;
+      white-space: normal !important;
+      word-break: break-word;
+      text-align: left;
+    }
+
+    /* Row Hierarchy Styles matching spreadsheet */
+    .rk-row-belanja-pegawai {
+      background-color: #86efac !important;
+      font-weight: 800;
+      color: #052e16;
+    }
+    .rk-row-belanja-barang {
+      background-color: #86efac !important;
+      font-weight: 800;
+      color: #052e16;
+    }
+    .rk-subkategori-yellow {
+      background-color: #fef08a !important;
+      font-weight: 700;
+      color: #713f12;
+    }
+    .rk-subkategori-orange {
+      background-color: #fed7aa !important;
+      font-weight: 700;
+      color: #7c2d12;
+    }
+    .rk-subkategori-purple {
+      background-color: #f5d0fe !important;
+      font-weight: 700;
+      color: #581c87;
+    }
+    .rk-row-summary {
+      background-color: #dbeafe !important;
+      font-weight: 800;
+      color: #1e3a8a;
+    }
+    .rk-row-grand-total {
+      background-color: #1e3a8a !important;
+      color: #ffffff !important;
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .rk-row-grand-total td {
+      border-color: #1e40af !important;
+    }
+
+    /* Cell Alignment & Formatting */
+    .rk-cell-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .rk-cell-center {
+      text-align: center;
+    }
+    .rk-cell-red {
+      background-color: #dc2626 !important;
+      color: #ffffff !important;
+      font-weight: 800;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Hover effect */
+    .rk-matrix-table tbody tr:hover td:not(.rk-cell-red) {
+      background-color: rgba(241, 245, 249, 0.7);
+    }
+
+    @page {
+      size: landscape;
+      margin: 4mm 5mm;
+    }
+
+    @media print {
+      html, body {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        color: #000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .header, .kalapas-table-toolbar, .kalapas-submenu, .rk-kpi-grid, .rk-progress-wrap, .no-print {
+        display: none !important;
+      }
+      .kalapas-table-wrap {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+      }
+      .rk-matrix-card {
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+      }
+      .rk-matrix-table-wrap {
+        max-height: none !important;
+        overflow: visible !important;
+        width: 100% !important;
+        border: none !important;
+      }
+      .print-doc-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 6px;
+        border-bottom: 1.5px solid #000;
+        padding-bottom: 3px;
+      }
+      .print-doc-header h3 {
+        margin: 0 0 2px 0;
+        font-size: 11pt;
+        font-weight: 800;
+        color: #000;
+      }
+      .print-doc-header p {
+        margin: 0;
+        font-size: 8pt;
+        color: #333;
+      }
+      .rk-matrix-table {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        table-layout: fixed !important;
+        font-size: 6.8pt !important;
+        border-collapse: collapse !important;
+      }
+      .rk-matrix-table th,
+      .rk-matrix-table td {
+        border: 0.5pt solid #475569 !important;
+        padding: 2.5px 1.5px !important;
+        line-height: 1.15 !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow: hidden !important;
+      }
+      .rk-col-kegiatan {
+        width: 24% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        white-space: normal !important;
+      }
+      .rk-col-anggaran {
+        width: 8.5% !important;
+        min-width: 0 !important;
+      }
+      .rk-th-month, .rk-col-month {
+        width: 4.9% !important;
+        min-width: 0 !important;
+        padding: 2px 1px !important;
+        font-size: 6.2pt !important;
+      }
+      .rk-col-sisa {
+        width: 8.7% !important;
+        min-width: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body class="page-umum">
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="logo kalapas-logo">
+          <img src="/images/simwaspim.jpeg" alt="Logo SIMWASPIM" class="kalapas-logo-img">
+        </div>
+        <div class="header-info">
+          <h2><%= sectionTitle %></h2>
+          <h3>Subbag Tata Usaha (Keuangan) Lapas Kelas I Medan</h3>
+          <p class="address"><%= subtitle %></p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="kalapas-table-wrap">
+    <!-- Top Toolbar (Hanya tombol kembali dan cetak matriks, tanpa tombol kelola admin) -->
+    <div class="kalapas-table-toolbar">
+      <div class="kalapas-toolbar-left">
+        <a href="<%= backUrl %>" class="kalapas-btn">⬅ Kembali ke Kalapas</a>
+      </div>
+
+      <div class="kalapas-toolbar-right">
+        <button onclick="window.print()" class="kalapas-btn kalapas-btn-secondary no-print">
+          🖨️ Cetak Matriks
+        </button>
+      </div>
+    </div>
+
+    <!-- TU Submenu with Year Selector positioned at the far right -->
+    <% if (typeof tuSubmenu !== 'undefined' && tuSubmenu) { %>
+      <div class="kalapas-submenu" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a href="/kalapas/table/tu-umum?tab=realisasi" class="<%= tuSubmenu.active === 'realisasi' ? 'active' : '' %>">📊 Realisasi</a>
+          <a href="/kalapas/table/tu-umum?tab=rencana-kerja" class="<%= tuSubmenu.active === 'rencana-kerja' ? 'active' : '' %>">📑 Rencana Kerja</a>
+          <a href="/kalapas/table/tu-umum?tab=bmn" class="<%= tuSubmenu.active === 'bmn' ? 'active' : '' %>">📦 BMN</a>
+          <a href="/kalapas/table/tu-umum?tab=kepegawaian" class="<%= tuSubmenu.active === 'kepegawaian' ? 'active' : '' %>">👥 Kepegawaian</a>
+        </div>
+
+        <!-- Year selector located at far right of submenu -->
+        <div class="no-print" style="display:inline-flex; align-items:center; gap:8px;">
+          <label style="font-size:12px; font-weight:bold; color:#cbd5e1;">Pilih Tahun:</label>
+          <form method="GET" action="/kalapas/table/tu-umum" style="display:inline-flex; align-items:center; margin:0;">
+            <input type="hidden" name="tab" value="rencana-kerja">
+            <select name="tahun" onchange="this.form.submit()" style="padding:6px 14px; font-size:12px; font-weight:bold; border-radius:6px; border:1px solid #3b82f6; background:#1e293b; color:#fff; cursor:pointer;">
+              <% data.availableYears.forEach(y => { %>
+                <option value="<%= y %>" <%= y === data.tahun ? 'selected' : '' %>>Tahun <%= y %></option>
+              <% }) %>
+            </select>
+          </form>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Executive KPI Highlights -->
+    <div class="rk-kpi-grid">
+      <div class="rk-kpi-card blue">
+        <div class="rk-kpi-label">Pagu Anggaran <%= data.tahun %></div>
+        <div class="rk-kpi-val">Rp <%= formatRupiah(data.grandTotal.anggaran) %></div>
+        <div class="rk-kpi-sub">Belanja Pegawai + Belanja Barang (52)</div>
+      </div>
+      <div class="rk-kpi-card green">
+        <div class="rk-kpi-label">Total Realisasi Satker</div>
+        <div class="rk-kpi-val">Rp <%= formatRupiah(data.grandTotal.realisasi) %></div>
+        <div class="rk-kpi-sub">Akumulasi Januari s/d Desember <%= data.tahun %></div>
+      </div>
+      <div class="rk-kpi-card <%= data.grandTotal.sisa < 0 ? 'red' : 'amber' %>">
+        <div class="rk-kpi-label">Sisa Anggaran Satker</div>
+        <div class="rk-kpi-val">Rp <%= formatRupiah(data.grandTotal.sisa) %></div>
+        <div class="rk-kpi-sub"><%= data.grandTotal.sisa < 0 ? '⚠️ Status Over Budget / Defisit' : '✅ Sisa Pagu Tersedia' %></div>
+      </div>
+      <div class="rk-kpi-card purple">
+        <div class="rk-kpi-label">% Capaian Penyerapan Total</div>
+        <div class="rk-kpi-val"><%= data.grandTotal.capaian.toFixed(2) %>%</div>
+        <div class="rk-kpi-sub">Target Akumulasi Belanja Tahunan</div>
+      </div>
+    </div>
+
+    <!-- Penyerapan Progress Indicator -->
+    <div class="rk-progress-wrap">
+      <div class="rk-progress-header">
+        <span>Tingkat Penyerapan Anggaran Satker Tahun <%= data.tahun %></span>
+        <span><%= data.grandTotal.capaian.toFixed(2) %>% dari Total Pagu</span>
+      </div>
+      <div class="rk-progress-bar-bg">
+        <div class="rk-progress-bar-fill" style="width: <%= Math.min(100, Math.max(5, data.grandTotal.capaian)) %>%;">
+          <%= data.grandTotal.capaian.toFixed(1) %>%
+        </div>
+      </div>
+    </div>
+
+    <!-- Print Document Header (Hanya muncul saat dicetak) -->
+    <div class="print-doc-header" style="display:none;">
+      <h3>RENCANA KERJA DAN REALISASI ANGGARAN TAHUN <%= data.tahun %></h3>
+      <p>Lembaga Pemasyarakatan Kelas I Medan – Subbag Tata Usaha (Keuangan)</p>
+    </div>
+
+    <!-- Main Spreadsheet Matrix Table -->
+    <div class="rk-matrix-card">
+      <div class="rk-matrix-toolbar no-print">
+        <div style="font-weight:700; font-size:13px; color:#1e293b; display:flex; align-items:center; gap:8px;">
+          <span>📊 MATRIKS RENCANA KERJA & REALISASI ANGGARAN TAHUN <%= data.tahun %></span>
+        </div>
+        <div style="display:flex; gap:10px; font-size:11px; align-items:center;">
+          <span style="display:inline-flex; align-items:center; gap:5px; background:#fee2e2; color:#991b1b; padding:3px 8px; border-radius:4px; font-weight:700;">
+            <span style="width:10px; height:10px; background:#dc2626; display:inline-block; border-radius:2px;"></span> Merah: Defisit / Perhatian
+          </span>
+          <span style="display:inline-flex; align-items:center; gap:5px; background:#e0e7ff; color:#3730a3; padding:3px 8px; border-radius:4px; font-weight:700;">
+            <span style="width:10px; height:10px; background:#c7d2fe; display:inline-block; border-radius:2px;"></span> Biru: Rekap Triwulan & Target
+          </span>
+        </div>
+      </div>
+
+      <div class="rk-matrix-table-wrap">
+        <table class="rk-matrix-table">
+          <thead>
+            <tr>
+              <th rowspan="2" class="rk-th-blue rk-col-kegiatan">KEGIATAN</th>
+              <th rowspan="2" class="rk-th-blue rk-col-anggaran">ANGGARAN</th>
+              <th colspan="12" class="rk-th-blue">PERIODE</th>
+              <th rowspan="2" class="rk-th-blue rk-col-sisa">SISA</th>
+            </tr>
+            <tr>
+              <th colspan="3" class="rk-th-subblue">TW. I (<%= data.groupPegawai.targetRow.tw1Pct %>%)</th>
+              <th colspan="3" class="rk-th-subblue">TW. II (<%= data.groupPegawai.targetRow.tw2Pct %>%)</th>
+              <th colspan="3" class="rk-th-subblue">TW. III (<%= data.groupPegawai.targetRow.tw3Pct %>%)</th>
+              <th colspan="3" class="rk-th-subblue">TW. IV (<%= data.groupPegawai.targetRow.tw4Pct %>%)</th>
+            </tr>
+            <tr>
+              <th class="rk-th-blue rk-col-kegiatan" style="font-size:10px; text-align:left;">POS ANGGARAN & SUB KEGIATAN</th>
+              <th class="rk-th-blue rk-col-anggaran" style="font-size:10px;">DIPA (Rp)</th>
+              <th class="rk-th-month rk-col-month">JAN</th>
+              <th class="rk-th-month rk-col-month">FEB</th>
+              <th class="rk-th-month rk-col-month">MAR</th>
+              <th class="rk-th-month rk-col-month">APR</th>
+              <th class="rk-th-month rk-col-month">MEI</th>
+              <th class="rk-th-month rk-col-month">JUN</th>
+              <th class="rk-th-month rk-col-month">JUL</th>
+              <th class="rk-th-month rk-col-month">AGT</th>
+              <th class="rk-th-month rk-col-month">SEPT</th>
+              <th class="rk-th-month rk-col-month">OKT</th>
+              <th class="rk-th-month rk-col-month">NOV</th>
+              <th class="rk-th-month rk-col-month">DES</th>
+              <th class="rk-th-blue rk-col-sisa" style="font-size:10px;">SISA PAGU (Rp)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- ═════════════════════════════════════════════════════════════ -->
+            <!-- 1. BELANJA PEGAWAI                                            -->
+            <!-- ═════════════════════════════════════════════════════════════ -->
+            <tr class="rk-row-belanja-pegawai">
+              <td class="rk-col-kegiatan">BELANJA PEGAWAI</td>
+              <td class="rk-cell-num"><%= formatRupiah(data.groupPegawai.totals.totalAnggaran) %></td>
+              <td colspan="12"></td>
+              <td></td>
+            </tr>
+
+            <% data.groupPegawai.subCategories.forEach(sub => { %>
+              <tr class="rk-subkategori-yellow">
+                <td class="rk-col-kegiatan" style="padding-left: 14px;"><%= sub.nama %></td>
+                <td class="rk-cell-num"><%= formatRupiah(sub.subAnggaran) %></td>
+                <td colspan="12"></td>
+                <td></td>
+              </tr>
+              <% sub.items.forEach(item => { %>
+                <tr>
+                  <td class="rk-col-kegiatan" style="padding-left: 24px;"><%= item.nama_kegiatan %></td>
+                  <td class="rk-cell-num"><%= formatRupiah(item.anggaran) %></td>
+                  <td class="rk-cell-num"><%= item.jan ? formatRupiah(item.jan) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.feb ? formatRupiah(item.feb) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.mar ? formatRupiah(item.mar) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.apr ? formatRupiah(item.apr) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.mei ? formatRupiah(item.mei) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.jun ? formatRupiah(item.jun) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.jul ? formatRupiah(item.jul) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.agt ? formatRupiah(item.agt) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.sep ? formatRupiah(item.sep) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.okt ? formatRupiah(item.okt) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.nov ? formatRupiah(item.nov) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.des ? formatRupiah(item.des) : 0 %></td>
+                  <td class="<%= item.isNegativeOrAlert ? 'rk-cell-red' : 'rk-cell-num' %>">
+                    <%= formatRupiah(item.sisa) %>
+                  </td>
+                </tr>
+              <% }) %>
+            <% }) %>
+
+            <!-- Belanja Pegawai Summary Rows -->
+            <tr class="rk-row-summary">
+              <td class="rk-col-kegiatan">REALISASI</td>
+              <td></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupPegawai.totals.realisasiTw1) %></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupPegawai.totals.realisasiTw2) %></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupPegawai.totals.realisasiTw3) %></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupPegawai.totals.realisasiTw4) %></td>
+              <td class="rk-cell-num"><%= formatRupiah(data.groupPegawai.totals.realisasiTotal) %></td>
+            </tr>
+            <tr class="rk-row-summary">
+              <td class="rk-col-kegiatan">TAGET</td>
+              <td></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupPegawai.totals.targetTw1) %></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupPegawai.totals.targetTw2) %></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupPegawai.totals.targetTw3) %></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupPegawai.totals.targetTw4) %></td>
+              <td class="rk-cell-num"><%= formatRupiah(data.groupPegawai.totals.targetTotal) %></td>
+            </tr>
+            <tr class="rk-row-summary">
+              <td class="rk-col-kegiatan">% CAPAIAN PENYERAPAN</td>
+              <td></td>
+              <td colspan="3" class="rk-cell-center"><%= Math.round(data.groupPegawai.totals.capaianTw1) %></td>
+              <td colspan="3" class="rk-cell-center"><%= Math.round(data.groupPegawai.totals.capaianTw2) %></td>
+              <td colspan="3" class="rk-cell-center"><%= Math.round(data.groupPegawai.totals.capaianTw3) %></td>
+              <td colspan="3" class="rk-cell-center"><%= Math.round(data.groupPegawai.totals.capaianTw4) %></td>
+              <td class="rk-cell-center" style="font-weight:bold;"><%= Math.round((data.groupPegawai.totals.realisasiTotal / (data.groupPegawai.totals.totalAnggaran || 1)) * 100) %>%</td>
+            </tr>
+
+            <!-- Spacer row -->
+            <tr style="height: 14px; background:#fff;"><td colspan="15" style="border:none;"></td></tr>
+
+            <!-- ═════════════════════════════════════════════════════════════ -->
+            <!-- 2. BELANJA BARANG (52)                                        -->
+            <!-- ═════════════════════════════════════════════════════════════ -->
+            <tr class="rk-row-belanja-barang">
+              <td class="rk-col-kegiatan">BELANJA BARANG (52)</td>
+              <td class="rk-cell-num"><%= formatRupiah(data.groupBarang.totals.totalAnggaran) %></td>
+              <td colspan="12"></td>
+              <td></td>
+            </tr>
+
+            <% data.groupBarang.subCategories.forEach((sub, subIdx) => { %>
+              <% 
+                let subClass = 'rk-subkategori-yellow';
+                if (subIdx === 1) subClass = 'rk-subkategori-yellow';
+                else if (subIdx === 2) subClass = 'rk-subkategori-orange';
+                else if (subIdx === 3) subClass = 'rk-subkategori-purple';
+                else if (subIdx === 4) subClass = 'rk-subkategori-orange';
+              %>
+              <tr class="<%= subClass %>">
+                <td class="rk-col-kegiatan" style="padding-left: 14px;"><%= sub.nama %></td>
+                <td class="rk-cell-num"><%= formatRupiah(sub.subAnggaran) %></td>
+                <td colspan="12"></td>
+                <td></td>
+              </tr>
+              <% sub.items.forEach(item => { %>
+                <tr>
+                  <td class="rk-col-kegiatan" style="padding-left: 24px;"><%= item.nama_kegiatan %></td>
+                  <td class="rk-cell-num"><%= formatRupiah(item.anggaran) %></td>
+                  <td class="rk-cell-num"><%= item.jan ? formatRupiah(item.jan) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.feb ? formatRupiah(item.feb) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.mar ? formatRupiah(item.mar) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.apr ? formatRupiah(item.apr) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.mei ? formatRupiah(item.mei) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.jun ? formatRupiah(item.jun) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.jul ? formatRupiah(item.jul) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.agt ? formatRupiah(item.agt) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.sep ? formatRupiah(item.sep) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.okt ? formatRupiah(item.okt) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.nov ? formatRupiah(item.nov) : 0 %></td>
+                  <td class="rk-cell-num"><%= item.des ? formatRupiah(item.des) : 0 %></td>
+                  <td class="<%= item.isNegativeOrAlert ? 'rk-cell-red' : 'rk-cell-num' %>">
+                    <%= formatRupiah(item.sisa) %>
+                  </td>
+                </tr>
+              <% }) %>
+            <% }) %>
+
+            <!-- Belanja Barang Summary Rows -->
+            <tr class="rk-row-summary">
+              <td class="rk-col-kegiatan">REALISASI</td>
+              <td></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupBarang.totals.realisasiTw1) %></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupBarang.totals.realisasiTw2) %></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupBarang.totals.realisasiTw3) %></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupBarang.totals.realisasiTw4) %></td>
+              <td class="rk-cell-num"><%= formatRupiah(data.groupBarang.totals.realisasiTotal) %></td>
+            </tr>
+            <tr class="rk-row-summary">
+              <td class="rk-col-kegiatan">TAGET</td>
+              <td></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupBarang.totals.targetTw1) %></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupBarang.totals.targetTw2) %></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupBarang.totals.targetTw3) %></td>
+              <td colspan="3" class="rk-cell-num" style="text-align:center;"><%= formatRupiah(data.groupBarang.totals.targetTw4) %></td>
+              <td class="rk-cell-num"><%= formatRupiah(data.groupBarang.totals.targetTotal) %></td>
+            </tr>
+            <tr class="rk-row-summary">
+              <td class="rk-col-kegiatan">% CAPAIAN PENYERAPAN</td>
+              <td></td>
+              <td colspan="3" class="rk-cell-center"><%= data.groupBarang.totals.capaianTw1.toFixed(2) %></td>
+              <td colspan="3" class="rk-cell-center"><%= data.groupBarang.totals.capaianTw2.toFixed(2) %></td>
+              <td colspan="3" class="rk-cell-center"><%= data.groupBarang.totals.capaianTw3.toFixed(2) %></td>
+              <td colspan="3" class="rk-cell-center"><%= data.groupBarang.totals.capaianTw4.toFixed(2) %></td>
+              <td class="rk-cell-center" style="font-weight:bold;"><%= ((data.groupBarang.totals.realisasiTotal / (data.groupBarang.totals.totalAnggaran || 1)) * 100).toFixed(2) %>%</td>
+            </tr>
+
+            <!-- ═════════════════════════════════════════════════════════════ -->
+            <!-- 3. GRAND TOTAL REKAPITULASI SATKER                            -->
+            <!-- ═════════════════════════════════════════════════════════════ -->
+            <tr class="rk-row-grand-total">
+              <td class="rk-col-kegiatan">TOTAL KESELURUHAN (SATKER)</td>
+              <td class="rk-cell-num"><%= formatRupiah(data.grandTotal.anggaran) %></td>
+              <td colspan="12" style="text-align:center; font-size:11px;">
+                Total Realisasi Tahun <%= data.tahun %>: Rp <%= formatRupiah(data.grandTotal.realisasi) %> | Capaian: <%= data.grandTotal.capaian.toFixed(2) %>%
+              </td>
+              <td class="<%= data.grandTotal.sisa < 0 ? 'rk-cell-red' : 'rk-cell-num' %>">
+                <%= formatRupiah(data.grandTotal.sisa) %>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

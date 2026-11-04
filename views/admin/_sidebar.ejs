@@ -203,8 +203,9 @@
     </a>
     <% } %>
 
-    <% if (safeAllowed.includes('tu-umum')) { %>
+    <% if (hasAny(['tu-umum','rencana-kerja'])) { %>
     <div class="nav-label">Role Tata Usaha</div>
+    <% if (safeAllowed.includes('tu-umum')) { %>
     <a href="/admin/tu-umum/realisasi" class="nav-item <%= active==='tu-realisasi'?'active':'' %>">
       <span class="icon">💰</span><span>TU Realisasi</span>
     </a>
@@ -214,6 +215,12 @@
     <a href="/admin/tu-umum/kepegawaian" class="nav-item <%= active==='tu-kepegawaian'?'active':'' %>">
       <span class="icon">👥</span><span>TU Kepegawaian</span>
     </a>
+    <% } %>
+    <% if (safeAllowed.includes('rencana-kerja') || safeAllowed.includes('tu-umum')) { %>
+    <a href="/admin/rencana-kerja" class="nav-item <%= active==='rencana-kerja'?'active':'' %>">
+      <span class="icon">📑</span><span>Rencana Kerja</span>
+    </a>
+    <% } %>
     <% } %>
 
     <% if (hasAny(['kamar-blok','luar-tembok'])) { %>

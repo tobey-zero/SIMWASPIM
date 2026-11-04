@@ -1272,14 +1272,14 @@ app.use((req, res, next) => {
 const ROLES = ['superadmin', 'registrasi', 'pembinaan', 'klinik', 'dapur', 'humas', 'kamtib', 'tata_usaha', 'pengamanan', 'giiatja', 'kalapas'];
 
 const roleAccess = {
-  superadmin: ['dashboard', 'statistik', 'remisi', 'kata-bijak', 'menu', 'jadwal', 'pembinaan-detail', 'razia', 'pengawalan', 'register-f', 'strapsel', 'piket-jaga', 'tu-umum', 'kamar-blok', 'papan-isi', 'luar-tembok', 'giiatja', 'users', 'video', 'klinik-medis', 'klinik-berobat', 'klinik-oncall', 'klinik-kontrol', 'klinik-statistik', 'pengaduan'],
+  superadmin: ['dashboard', 'statistik', 'remisi', 'kata-bijak', 'menu', 'jadwal', 'pembinaan-detail', 'razia', 'pengawalan', 'register-f', 'strapsel', 'piket-jaga', 'tu-umum', 'rencana-kerja', 'kamar-blok', 'papan-isi', 'luar-tembok', 'giiatja', 'users', 'video', 'klinik-medis', 'klinik-berobat', 'klinik-oncall', 'klinik-kontrol', 'klinik-statistik', 'pengaduan'],
   registrasi: ['dashboard', 'statistik', 'remisi', 'papan-isi'],
   pembinaan: ['dashboard', 'jadwal', 'pembinaan-detail'],
   klinik: ['dashboard', 'klinik-medis', 'klinik-berobat', 'klinik-oncall', 'klinik-kontrol', 'klinik-statistik'],
   dapur: ['dashboard', 'menu'],
   humas: ['dashboard', 'video', 'kata-bijak'],
   kamtib: ['dashboard',  'razia', 'pengawalan', 'register-f', 'strapsel', 'piket-jaga', 'pengaduan'],
-  tata_usaha: ['dashboard', 'tu-umum'],
+  tata_usaha: ['dashboard', 'tu-umum', 'rencana-kerja'],
   pengamanan: ['dashboard', 'kamar-blok', 'luar-tembok'],
   giiatja: ['dashboard', 'giiatja'],
   kalapas: [],
@@ -4073,8 +4073,13 @@ app.get('/kalapas/table/tu-realisasi', (req, res) => {
   });
 });
 
+app.get('/kalapas/table/rencana-kerja', (req, res) => {
+  const query = new URLSearchParams(req.query).toString();
+  return res.redirect(`/kalapas/table/tu-umum?tab=rencana-kerja${query ? '&' + query : ''}`);
+});
+
 app.get('/kalapas/table/tu-umum', (req, res) => {
-  const activeTab = ['realisasi', 'bmn', 'kepegawaian'].includes(String(req.query.tab || '').toLowerCase())
+  const activeTab = ['realisasi', 'rencana-kerja', 'bmn', 'kepegawaian'].includes(String(req.query.tab || '').toLowerCase())
     ? String(req.query.tab).toLowerCase()
     : 'realisasi';
   const data = getTuUmumData();
@@ -4090,6 +4095,19 @@ app.get('/kalapas/table/tu-umum', (req, res) => {
       subtitle: 'Ringkasan data realisasi belanja',
       financeSummary: data.financeSummary,
       financeIndicator: getFinanceIndicatorSummary(),
+      backUrl: '/kalapas',
+      tuSubmenu,
+    });
+  }
+
+  if (activeTab === 'rencana-kerja') {
+    const rkData = getRencanaKerjaData(req.query.tahun);
+    return res.render('kalapas-tu-rencana-kerja', {
+      pageTitle: 'Rencana Kerja & Realisasi Anggaran',
+      sectionTitle: 'RENCANA KERJA DAN REALISASI ANGGARAN',
+      subtitle: `Tahun Anggaran ${rkData.tahun} - Subbag Tata Usaha`,
+      data: rkData,
+      formatRupiah,
       backUrl: '/kalapas',
       tuSubmenu,
     });
@@ -7977,6 +7995,445 @@ app.post('/admin/tu-umum/pegawai/:id/delete', requireAccess('tu-umum'), (req, re
   const filterQuery = `?sortBy=${encodeURIComponent(sortBy)}&sortDir=${encodeURIComponent(sortDir)}`;
   db.prepare('DELETE FROM tu_kepegawaian WHERE id=?').run(Number(req.params.id));
   res.redirect(`/admin/tu-umum/kepegawaian${filterQuery}&success=1`);
+});
+
+// ── Rencana Kerja & Realisasi Bulanan (Tata Usaha) ──────────────────────────
+function getRencanaKerjaData(yearQuery) {
+  const currentYear = new Date().getFullYear();
+  const yearRows = db.prepare('SELECT DISTINCT tahun FROM rencana_kerja ORDER BY tahun DESC').all();
+  const availableYears = yearRows.map(r => Number(r.tahun)).filter(Boolean);
+
+  let tahun = Number(yearQuery);
+  if (!tahun || Number.isNaN(tahun)) {
+    if (availableYears.includes(currentYear)) {
+      tahun = currentYear;
+    } else if (availableYears.length > 0) {
+      tahun = availableYears[0];
+    } else {
+      tahun = currentYear;
+    }
+  } else if (!availableYears.includes(tahun) && availableYears.length > 0) {
+    if (availableYears.includes(currentYear)) {
+      tahun = currentYear;
+    } else {
+      tahun = availableYears[0];
+    }
+  }
+
+  const items = db.prepare(`
+    SELECT * FROM rencana_kerja
+    WHERE tahun = ? AND is_active = 1
+    ORDER BY urutan ASC, id ASC
+  `).all(tahun);
+
+  // Targets
+  const targetPegawaiRow = db.prepare('SELECT * FROM rencana_kerja_target WHERE tahun = ? AND jenis_belanja = ?').get(tahun, 'BELANJA PEGAWAI') || {
+    target_tw1: 20, target_tw2: 50, target_tw3: 75, target_tw4: 95
+  };
+  const targetBarangRow = db.prepare('SELECT * FROM rencana_kerja_target WHERE tahun = ? AND jenis_belanja = ?').get(tahun, 'BELANJA BARANG (52)') || {
+    target_tw1: 15, target_tw2: 50, target_tw3: 70, target_tw4: 90
+  };
+
+  // Process items
+  const processedItems = items.map(item => {
+    const jan = Number(item.jan) || 0;
+    const feb = Number(item.feb) || 0;
+    const mar = Number(item.mar) || 0;
+    const apr = Number(item.apr) || 0;
+    const mei = Number(item.mei) || 0;
+    const jun = Number(item.jun) || 0;
+    const jul = Number(item.jul) || 0;
+    const agt = Number(item.agt) || 0;
+    const sep = Number(item.sep) || 0;
+    const okt = Number(item.okt) || 0;
+    const nov = Number(item.nov) || 0;
+    const des = Number(item.des) || 0;
+
+    const tw1 = jan + feb + mar;
+    const tw2 = apr + mei + jun;
+    const tw3 = jul + agt + sep;
+    const tw4 = okt + nov + des;
+    const totalRealisasi = tw1 + tw2 + tw3 + tw4;
+    const anggaran = Number(item.anggaran) || 0;
+    const sisa = anggaran - totalRealisasi;
+    const isNegativeOrAlert = sisa < 0 || item.highlight_red === 1;
+
+    return {
+      ...item,
+      anggaran,
+      jan, feb, mar, apr, mei, jun, jul, agt, sep, okt, nov, des,
+      tw1, tw2, tw3, tw4,
+      totalRealisasi,
+      sisa,
+      isNegativeOrAlert
+    };
+  });
+
+  function buildGroup(jenisName, targetRow) {
+    const groupItems = processedItems.filter(i => i.jenis_belanja === jenisName);
+    const subCategoriesMap = new Map();
+
+    groupItems.forEach(item => {
+      const subKey = item.sub_kategori || 'Lain-lain';
+      if (!subCategoriesMap.has(subKey)) {
+        subCategoriesMap.set(subKey, {
+          nama: subKey,
+          warna: item.sub_kategori_warna || '',
+          items: []
+        });
+      }
+      subCategoriesMap.get(subKey).items.push(item);
+    });
+
+    const subCategories = Array.from(subCategoriesMap.values()).map(sub => {
+      const subAnggaran = sub.items.reduce((sum, i) => sum + i.anggaran, 0);
+      const subJan = sub.items.reduce((sum, i) => sum + i.jan, 0);
+      const subFeb = sub.items.reduce((sum, i) => sum + i.feb, 0);
+      const subMar = sub.items.reduce((sum, i) => sum + i.mar, 0);
+      const subApr = sub.items.reduce((sum, i) => sum + i.apr, 0);
+      const subMei = sub.items.reduce((sum, i) => sum + i.mei, 0);
+      const subJun = sub.items.reduce((sum, i) => sum + i.jun, 0);
+      const subJul = sub.items.reduce((sum, i) => sum + i.jul, 0);
+      const subAgt = sub.items.reduce((sum, i) => sum + i.agt, 0);
+      const subSep = sub.items.reduce((sum, i) => sum + i.sep, 0);
+      const subOkt = sub.items.reduce((sum, i) => sum + i.okt, 0);
+      const subNov = sub.items.reduce((sum, i) => sum + i.nov, 0);
+      const subDes = sub.items.reduce((sum, i) => sum + i.des, 0);
+
+      const subTw1 = subJan + subFeb + subMar;
+      const subTw2 = subApr + subMei + subJun;
+      const subTw3 = subJul + subAgt + subSep;
+      const subTw4 = subOkt + subNov + subDes;
+      const subTotalRealisasi = subTw1 + subTw2 + subTw3 + subTw4;
+      const subSisa = subAnggaran - subTotalRealisasi;
+
+      return {
+        ...sub,
+        subAnggaran,
+        subJan, subFeb, subMar, subApr, subMei, subJun,
+        subJul, subAgt, subSep, subOkt, subNov, subDes,
+        subTw1, subTw2, subTw3, subTw4,
+        subTotalRealisasi,
+        subSisa
+      };
+    });
+
+    const totalAnggaran = groupItems.reduce((sum, i) => sum + i.anggaran, 0);
+    const totalJan = groupItems.reduce((sum, i) => sum + i.jan, 0);
+    const totalFeb = groupItems.reduce((sum, i) => sum + i.feb, 0);
+    const totalMar = groupItems.reduce((sum, i) => sum + i.mar, 0);
+    const totalApr = groupItems.reduce((sum, i) => sum + i.apr, 0);
+    const totalMei = groupItems.reduce((sum, i) => sum + i.mei, 0);
+    const totalJun = groupItems.reduce((sum, i) => sum + i.jun, 0);
+    const totalJul = groupItems.reduce((sum, i) => sum + i.jul, 0);
+    const totalAgt = groupItems.reduce((sum, i) => sum + i.agt, 0);
+    const totalSep = groupItems.reduce((sum, i) => sum + i.sep, 0);
+    const totalOkt = groupItems.reduce((sum, i) => sum + i.okt, 0);
+    const totalNov = groupItems.reduce((sum, i) => sum + i.nov, 0);
+    const totalDes = groupItems.reduce((sum, i) => sum + i.des, 0);
+
+    const realisasiTw1 = totalJan + totalFeb + totalMar;
+    const realisasiTw2 = totalApr + totalMei + totalJun;
+    const realisasiTw3 = totalJul + totalAgt + totalSep;
+    const realisasiTw4 = totalOkt + totalNov + totalDes;
+    const realisasiTotal = realisasiTw1 + realisasiTw2 + realisasiTw3 + realisasiTw4;
+    const sisaTotal = totalAnggaran - realisasiTotal;
+
+    const tw1Pct = Number(targetRow.target_tw1) || 0;
+    const tw2Pct = Number(targetRow.target_tw2) || 0;
+    const tw3Pct = Number(targetRow.target_tw3) || 0;
+    const tw4Pct = Number(targetRow.target_tw4) || 0;
+
+    const targetTw1 = Math.round(totalAnggaran * (tw1Pct / 100));
+    const targetTw2 = Math.round(totalAnggaran * ((tw2Pct - tw1Pct) / 100));
+    const targetTw3 = Math.round(totalAnggaran * ((tw3Pct - tw2Pct) / 100));
+    const targetTw4 = Math.round(totalAnggaran * ((tw4Pct - tw3Pct) / 100));
+    const targetTotal = Math.round(totalAnggaran * (tw4Pct / 100));
+
+    const capaianTw1 = totalAnggaran > 0 ? (realisasiTw1 / totalAnggaran) * 100 : 0;
+    const capaianTw2 = totalAnggaran > 0 ? ((realisasiTw1 + realisasiTw2) / totalAnggaran) * 100 : 0;
+    const capaianTw3 = totalAnggaran > 0 ? ((realisasiTw1 + realisasiTw2 + realisasiTw3) / totalAnggaran) * 100 : 0;
+    const capaianTw4 = totalAnggaran > 0 ? (realisasiTotal / totalAnggaran) * 100 : 0;
+
+    return {
+      jenisName,
+      items: groupItems,
+      subCategories,
+      targetRow: { tw1Pct, tw2Pct, tw3Pct, tw4Pct },
+      totals: {
+        totalAnggaran,
+        totalJan, totalFeb, totalMar, totalApr, totalMei, totalJun,
+        totalJul, totalAgt, totalSep, totalOkt, totalNov, totalDes,
+        realisasiTw1, realisasiTw2, realisasiTw3, realisasiTw4,
+        realisasiTotal,
+        sisaTotal,
+        targetTw1, targetTw2, targetTw3, targetTw4, targetTotal,
+        capaianTw1, capaianTw2, capaianTw3, capaianTw4
+      }
+    };
+  }
+
+  const groupPegawai = buildGroup('BELANJA PEGAWAI', targetPegawaiRow);
+  const groupBarang = buildGroup('BELANJA BARANG (52)', targetBarangRow);
+
+  const grandTotalAnggaran = groupPegawai.totals.totalAnggaran + groupBarang.totals.totalAnggaran;
+  const grandTotalRealisasi = groupPegawai.totals.realisasiTotal + groupBarang.totals.realisasiTotal;
+  const grandTotalSisa = grandTotalAnggaran - grandTotalRealisasi;
+  const grandCapaian = grandTotalAnggaran > 0 ? (grandTotalRealisasi / grandTotalAnggaran) * 100 : 0;
+
+  return {
+    tahun,
+    availableYears: availableYears.length ? availableYears : [currentYear || 2026],
+    groupPegawai,
+    groupBarang,
+    allItems: processedItems,
+    grandTotal: {
+      anggaran: grandTotalAnggaran,
+      realisasi: grandTotalRealisasi,
+      sisa: grandTotalSisa,
+      capaian: grandCapaian
+    }
+  };
+}
+
+app.get('/admin/rencana-kerja', requireAccess('rencana-kerja'), (req, res) => {
+  const currentYear = new Date().getFullYear();
+  const monthCodes = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agt', 'sep', 'okt', 'nov', 'des'];
+  const currentMonthCode = monthCodes[new Date().getMonth()] || 'nov';
+
+  const data = getRencanaKerjaData(req.query.tahun);
+
+  const monthList = [
+    { code: 'jan', label: 'Januari', tw: 'TW. I' },
+    { code: 'feb', label: 'Februari', tw: 'TW. I' },
+    { code: 'mar', label: 'Maret', tw: 'TW. I' },
+    { code: 'apr', label: 'April', tw: 'TW. II' },
+    { code: 'mei', label: 'Mei', tw: 'TW. II' },
+    { code: 'jun', label: 'Juni', tw: 'TW. II' },
+    { code: 'jul', label: 'Juli', tw: 'TW. III' },
+    { code: 'agt', label: 'Agustus', tw: 'TW. III' },
+    { code: 'sep', label: 'September', tw: 'TW. III' },
+    { code: 'okt', label: 'Oktober', tw: 'TW. IV' },
+    { code: 'nov', label: 'November', tw: 'TW. IV' },
+    { code: 'des', label: 'Desember', tw: 'TW. IV' }
+  ];
+
+  let selectedBulan = String(req.query.bulan || '').toLowerCase().trim();
+  if (!monthList.some(m => m.code === selectedBulan)) {
+    selectedBulan = currentMonthCode;
+  }
+
+  const selectedTab = ['matrix', 'input', 'manage'].includes(req.query.tab) ? req.query.tab : 'matrix';
+
+  res.render('admin/rencana-kerja', {
+    user: req.session.user,
+    active: 'rencana-kerja',
+    data,
+    monthList,
+    selectedTab,
+    selectedBulan,
+    selectedTahun: data.tahun,
+    currentYear,
+    currentMonthCode,
+    success: req.query.success,
+    error: req.query.error,
+    formatRupiah
+  });
+});
+
+app.post('/admin/rencana-kerja/save-bulan', requireAccess('rencana-kerja'), (req, res) => {
+  const tahun = Number(req.body.tahun) || 2026;
+  const bulan = String(req.body.bulan || '').toLowerCase().trim();
+  const validMonths = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agt', 'sep', 'okt', 'nov', 'des'];
+  if (!validMonths.includes(bulan)) {
+    return res.redirect(`/admin/rencana-kerja?tahun=${tahun}&error=Bulan+tidak+valid`);
+  }
+
+  const realisasiMap = req.body.realisasi || {};
+  const updateStmt = db.prepare(`UPDATE rencana_kerja SET ${bulan} = ?, updated_at = datetime('now','localtime') WHERE id = ? AND tahun = ?`);
+
+  db.exec('BEGIN');
+  try {
+    for (const [idStr, rawVal] of Object.entries(realisasiMap)) {
+      const id = Number(idStr);
+      const nominal = parseMoneyNumber(rawVal);
+      if (id > 0) {
+        updateStmt.run(nominal, id, tahun);
+      }
+    }
+    db.exec('COMMIT');
+    return res.redirect(`/admin/rencana-kerja?tahun=${tahun}&tab=input&bulan=${bulan}&success=1`);
+  } catch (err) {
+    db.exec('ROLLBACK');
+    console.error('Error saving rencana kerja realisasi:', err);
+    return res.redirect(`/admin/rencana-kerja?tahun=${tahun}&tab=input&bulan=${bulan}&error=Gagal+menyimpan+realisasi`);
+  }
+});
+
+app.post('/admin/rencana-kerja/item/add', requireAccess('rencana-kerja'), (req, res) => {
+  const tahun = Number(req.body.tahun) || 2026;
+  const jenisBelanja = String(req.body.jenis_belanja || 'BELANJA BARANG (52)').trim();
+  const subKategori = String(req.body.sub_kategori || '').trim();
+  const subKategoriWarna = String(req.body.sub_kategori_warna || '').trim();
+  const namaKegiatan = String(req.body.nama_kegiatan || '').trim();
+  const anggaran = parseMoneyNumber(req.body.anggaran);
+  const highlightRed = req.body.highlight_red === '1' || req.body.highlight_red === true ? 1 : 0;
+
+  if (!namaKegiatan) {
+    return res.redirect(`/admin/rencana-kerja?tahun=${tahun}&tab=manage&error=Nama+kegiatan+wajib+diisi`);
+  }
+
+  const maxOrder = db.prepare('SELECT MAX(urutan) AS m FROM rencana_kerja WHERE tahun = ?').get(tahun)?.m || 0;
+
+  db.prepare(`
+    INSERT INTO rencana_kerja (tahun, jenis_belanja, sub_kategori, sub_kategori_warna, nama_kegiatan, anggaran, highlight_red, urutan)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(tahun, jenisBelanja, subKategori, subKategoriWarna, namaKegiatan, anggaran, highlightRed, maxOrder + 1);
+
+  res.redirect(`/admin/rencana-kerja?tahun=${tahun}&tab=manage&success=1`);
+});
+
+app.post('/admin/rencana-kerja/item/:id/update', requireAccess('rencana-kerja'), (req, res) => {
+  const id = Number(req.params.id);
+  const tahun = Number(req.body.tahun) || 2026;
+  const jenisBelanja = String(req.body.jenis_belanja || '').trim();
+  const subKategori = String(req.body.sub_kategori || '').trim();
+  const subKategoriWarna = String(req.body.sub_kategori_warna || '').trim();
+  const namaKegiatan = String(req.body.nama_kegiatan || '').trim();
+  const anggaran = parseMoneyNumber(req.body.anggaran);
+  const highlightRed = req.body.highlight_red === '1' ? 1 : 0;
+
+  if (id > 0 && namaKegiatan) {
+    db.prepare(`
+      UPDATE rencana_kerja
+      SET nama_kegiatan = ?, sub_kategori = ?, sub_kategori_warna = ?, jenis_belanja = ?, anggaran = ?, highlight_red = ?, updated_at = datetime('now','localtime')
+      WHERE id = ?
+    `).run(namaKegiatan, subKategori, subKategoriWarna, jenisBelanja, anggaran, highlightRed, id);
+  }
+
+  res.redirect(`/admin/rencana-kerja?tahun=${tahun}&tab=manage&success=1`);
+});
+
+app.post('/admin/rencana-kerja/item/:id/delete', requireAccess('rencana-kerja'), (req, res) => {
+  const id = Number(req.params.id);
+  const tahun = Number(req.body.tahun || req.query.tahun) || 2026;
+  if (id > 0) {
+    db.prepare('DELETE FROM rencana_kerja WHERE id = ?').run(id);
+  }
+  res.redirect(`/admin/rencana-kerja?tahun=${tahun}&tab=manage&success=1`);
+});
+
+app.post('/admin/rencana-kerja/target/update', requireAccess('rencana-kerja'), (req, res) => {
+  const tahun = Number(req.body.tahun) || 2026;
+  const pTw1 = Number(req.body.target_pegawai_tw1) || 20;
+  const pTw2 = Number(req.body.target_pegawai_tw2) || 50;
+  const pTw3 = Number(req.body.target_pegawai_tw3) || 75;
+  const pTw4 = Number(req.body.target_pegawai_tw4) || 95;
+
+  const bTw1 = Number(req.body.target_barang_tw1) || 15;
+  const bTw2 = Number(req.body.target_barang_tw2) || 50;
+  const bTw3 = Number(req.body.target_barang_tw3) || 70;
+  const bTw4 = Number(req.body.target_barang_tw4) || 90;
+
+  const existsPegawai = db.prepare('SELECT id FROM rencana_kerja_target WHERE tahun = ? AND jenis_belanja = ?').get(tahun, 'BELANJA PEGAWAI');
+  if (existsPegawai) {
+    db.prepare('UPDATE rencana_kerja_target SET target_tw1 = ?, target_tw2 = ?, target_tw3 = ?, target_tw4 = ? WHERE id = ?').run(pTw1, pTw2, pTw3, pTw4, existsPegawai.id);
+  } else {
+    db.prepare('INSERT INTO rencana_kerja_target (tahun, jenis_belanja, target_tw1, target_tw2, target_tw3, target_tw4) VALUES (?, ?, ?, ?, ?, ?)').run(tahun, 'BELANJA PEGAWAI', pTw1, pTw2, pTw3, pTw4);
+  }
+
+  const existsBarang = db.prepare('SELECT id FROM rencana_kerja_target WHERE tahun = ? AND jenis_belanja = ?').get(tahun, 'BELANJA BARANG (52)');
+  if (existsBarang) {
+    db.prepare('UPDATE rencana_kerja_target SET target_tw1 = ?, target_tw2 = ?, target_tw3 = ?, target_tw4 = ? WHERE id = ?').run(bTw1, bTw2, bTw3, bTw4, existsBarang.id);
+  } else {
+    db.prepare('INSERT INTO rencana_kerja_target (tahun, jenis_belanja, target_tw1, target_tw2, target_tw3, target_tw4) VALUES (?, ?, ?, ?, ?, ?)').run(tahun, 'BELANJA BARANG (52)', bTw1, bTw2, bTw3, bTw4);
+  }
+
+  res.redirect(`/admin/rencana-kerja?tahun=${tahun}&tab=manage&success=1`);
+});
+
+app.post('/admin/rencana-kerja/copy-year', requireAccess('rencana-kerja'), (req, res) => {
+  const sourceTahun = Number(req.body.source_tahun) || 2026;
+  const targetTahun = Number(req.body.target_tahun);
+  const copyMode = req.body.copy_mode === 'with_realisasi' ? 'with_realisasi' : 'draft';
+
+  if (!targetTahun || targetTahun < 2000 || targetTahun > 2100) {
+    return res.redirect(`/admin/rencana-kerja?tahun=${sourceTahun}&tab=manage&error=Tahun+anggaran+tujuan+tidak+valid`);
+  }
+
+  const existingCount = db.prepare('SELECT COUNT(*) AS c FROM rencana_kerja WHERE tahun = ?').get(targetTahun)?.c || 0;
+  if (existingCount > 0) {
+    return res.redirect(`/admin/rencana-kerja?tahun=${targetTahun}&tab=manage&error=Data+rencana+kerja+tahun+${targetTahun}+sudah+ada.+Pilih+tahun+lain.`);
+  }
+
+  const sourceItems = db.prepare(`
+    SELECT * FROM rencana_kerja
+    WHERE tahun = ? AND is_active = 1
+    ORDER BY urutan ASC, id ASC
+  `).all(sourceTahun);
+
+  if (!sourceItems.length) {
+    return res.redirect(`/admin/rencana-kerja?tahun=${sourceTahun}&tab=manage&error=Tidak+ada+data+kegiatan+di+tahun+sumber+(${sourceTahun})`);
+  }
+
+  db.exec('BEGIN');
+  try {
+    const insertItem = db.prepare(`
+      INSERT INTO rencana_kerja (
+        tahun, jenis_belanja, sub_kategori, sub_kategori_warna, nama_kegiatan, anggaran,
+        jan, feb, mar, apr, mei, jun, jul, agt, sep, okt, nov, des,
+        highlight_red, urutan
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const item of sourceItems) {
+      const isDraft = copyMode === 'draft';
+      insertItem.run(
+        targetTahun,
+        item.jenis_belanja,
+        item.sub_kategori || '',
+        item.sub_kategori_warna || '',
+        item.nama_kegiatan,
+        item.anggaran,
+        isDraft ? 0 : Number(item.jan) || 0,
+        isDraft ? 0 : Number(item.feb) || 0,
+        isDraft ? 0 : Number(item.mar) || 0,
+        isDraft ? 0 : Number(item.apr) || 0,
+        isDraft ? 0 : Number(item.mei) || 0,
+        isDraft ? 0 : Number(item.jun) || 0,
+        isDraft ? 0 : Number(item.jul) || 0,
+        isDraft ? 0 : Number(item.agt) || 0,
+        isDraft ? 0 : Number(item.sep) || 0,
+        isDraft ? 0 : Number(item.okt) || 0,
+        isDraft ? 0 : Number(item.nov) || 0,
+        isDraft ? 0 : Number(item.des) || 0,
+        item.highlight_red || 0,
+        item.urutan || 0
+      );
+    }
+
+    const sourceTargets = db.prepare('SELECT * FROM rencana_kerja_target WHERE tahun = ?').all(sourceTahun);
+    const insertTarget = db.prepare(`
+      INSERT INTO rencana_kerja_target (tahun, jenis_belanja, target_tw1, target_tw2, target_tw3, target_tw4)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+    if (sourceTargets.length) {
+      for (const t of sourceTargets) {
+        insertTarget.run(targetTahun, t.jenis_belanja, t.target_tw1, t.target_tw2, t.target_tw3, t.target_tw4);
+      }
+    } else {
+      insertTarget.run(targetTahun, 'BELANJA PEGAWAI', 20, 50, 75, 95);
+      insertTarget.run(targetTahun, 'BELANJA BARANG (52)', 15, 50, 70, 90);
+    }
+
+    db.exec('COMMIT');
+    return res.redirect(`/admin/rencana-kerja?tahun=${targetTahun}&tab=matrix&success=Tahun+anggaran+${targetTahun}+berhasil+dibuat+dari+draft+tahun+${sourceTahun}`);
+  } catch (err) {
+    db.exec('ROLLBACK');
+    console.error('Error copying year rencana kerja:', err);
+    return res.redirect(`/admin/rencana-kerja?tahun=${sourceTahun}&tab=manage&error=Gagal+menyalin+tahun+anggaran`);
+  }
 });
 
 // ── Kamar/Blok ──────────────────────────────────────────────────
