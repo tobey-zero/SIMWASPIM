@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "exit 0"
+    "build": "exit 0",
+    "lint": "node --check server.js"
   },
   "keywords": [
     "lapas",
