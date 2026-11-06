@@ -416,7 +416,15 @@ db.exec(`
     berkurang_kuantitas TEXT DEFAULT '0',
     berkurang_nilai TEXT DEFAULT '0',
     saldo_akhir_kuantitas TEXT DEFAULT '0',
-    saldo_akhir_nilai TEXT DEFAULT '0'
+    saldo_akhir_nilai TEXT DEFAULT '0',
+    nup TEXT DEFAULT '',
+    kondisi TEXT DEFAULT 'Baik',
+    status_bmn TEXT DEFAULT 'Aktif',
+    nilai_perolehan REAL DEFAULT 0,
+    akumulasi_penyusutan REAL DEFAULT 0,
+    nilai_buku REAL DEFAULT 0,
+    kategori TEXT DEFAULT 'Peralatan & Mesin',
+    lokasi TEXT DEFAULT 'Lapas Kelas I Medan'
   );
 
   CREATE TABLE IF NOT EXISTS tu_kepegawaian (
@@ -819,6 +827,14 @@ if (!raziaBuktiColumnNames.includes('tanggal_temuan')) db.exec('ALTER TABLE razi
 const tuUmumBarangColumns = db.prepare("PRAGMA table_info('tu_umum_barang')").all();
 const tuUmumBarangColumnNames = tuUmumBarangColumns.map(col => col.name);
 if (!tuUmumBarangColumnNames.includes('tahun_perolehan')) db.exec("ALTER TABLE tu_umum_barang ADD COLUMN tahun_perolehan TEXT NOT NULL DEFAULT ''");
+if (!tuUmumBarangColumnNames.includes('nup')) db.exec("ALTER TABLE tu_umum_barang ADD COLUMN nup TEXT DEFAULT ''");
+if (!tuUmumBarangColumnNames.includes('kondisi')) db.exec("ALTER TABLE tu_umum_barang ADD COLUMN kondisi TEXT DEFAULT 'Baik'");
+if (!tuUmumBarangColumnNames.includes('status_bmn')) db.exec("ALTER TABLE tu_umum_barang ADD COLUMN status_bmn TEXT DEFAULT 'Aktif'");
+if (!tuUmumBarangColumnNames.includes('nilai_perolehan')) db.exec("ALTER TABLE tu_umum_barang ADD COLUMN nilai_perolehan REAL DEFAULT 0");
+if (!tuUmumBarangColumnNames.includes('akumulasi_penyusutan')) db.exec("ALTER TABLE tu_umum_barang ADD COLUMN akumulasi_penyusutan REAL DEFAULT 0");
+if (!tuUmumBarangColumnNames.includes('nilai_buku')) db.exec("ALTER TABLE tu_umum_barang ADD COLUMN nilai_buku REAL DEFAULT 0");
+if (!tuUmumBarangColumnNames.includes('kategori')) db.exec("ALTER TABLE tu_umum_barang ADD COLUMN kategori TEXT DEFAULT 'Peralatan & Mesin'");
+if (!tuUmumBarangColumnNames.includes('lokasi')) db.exec("ALTER TABLE tu_umum_barang ADD COLUMN lokasi TEXT DEFAULT 'Lapas Kelas I Medan'");
 
 const tuKepegawaianColumns = db.prepare("PRAGMA table_info('tu_kepegawaian')").all();
 const tuKepegawaianColumnNames = tuKepegawaianColumns.map(col => col.name);
@@ -1493,30 +1509,49 @@ seedIfEmpty('register_f', () => {
 });
 
 seedIfEmpty('tu_umum_barang', () => {
+  const { generateBmnData } = require('./scripts/bmn-generator');
   const insert = db.prepare(`
     INSERT INTO tu_umum_barang
-      (kode, uraian, satuan, tahun_perolehan, saldo_awal_kuantitas, saldo_awal_nilai, bertambah_kuantitas, bertambah_nilai, berkurang_kuantitas, berkurang_nilai, saldo_akhir_kuantitas, saldo_akhir_nilai)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (kode, uraian, satuan, tahun_perolehan, saldo_awal_kuantitas, saldo_awal_nilai, bertambah_kuantitas, bertambah_nilai, berkurang_kuantitas, berkurang_nilai, saldo_akhir_kuantitas, saldo_akhir_nilai, nup, kondisi, status_bmn, nilai_perolehan, akumulasi_penyusutan, nilai_buku, kategori, lokasi)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  const rows = [
-    ['3090101002', 'Pistol', 'Buah', '2026', '0', '0', '0', '0', '27', '147,441,806', '(27)', '(147,441,806)'],
-    ['3090103001', 'Senapan Grendel (Bolt Action Figle)', 'Buah', '2026', '0', '0', '0', '0', '23', '43,300,013', '(23)', '(43,300,013)'],
-    ['3090103999', 'Senjata Bahu/Senjata Laras Panjang Lainnya', 'dummy', '2026', '0', '0', '28', '53,287,513', '28', '62,341,513', '0', '(9,054,000)'],
-  ];
-  rows.forEach(r => insert.run(...r));
+  const rows = generateBmnData();
+  db.exec('BEGIN');
+  try {
+    for (const r of rows) {
+      insert.run(
+        r.kode, r.uraian, r.satuan, r.tahun_perolehan || '',
+        r.saldo_awal_kuantitas || '0', r.saldo_awal_nilai || '0',
+        r.bertambah_kuantitas || '0', r.bertambah_nilai || '0',
+        r.berkurang_kuantitas || '0', r.berkurang_nilai || '0',
+        r.saldo_akhir_kuantitas || '0', r.saldo_akhir_nilai || '0',
+        r.nup || '', r.kondisi || 'Baik', r.status_bmn || 'Aktif',
+        r.nilai_perolehan || 0, r.akumulasi_penyusutan || 0, r.nilai_buku || 0,
+        r.kategori || 'Peralatan & Mesin', r.lokasi || 'Lapas Kelas I Medan'
+      );
+    }
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
 });
 
 seedIfEmpty('tu_kepegawaian', () => {
+  const { generateKepegawaianData } = require('./scripts/kepegawaian-generator');
   const insert = db.prepare(`
     INSERT INTO tu_kepegawaian
       (nama_pegawai, nip, pangkat_gol, tmt_pangkat, jabatan, tmt_jabatan, agama, status, pendidikan, penempatan_seksi, penempatan_bidang, jenis_kelamin, type_pegawai)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  const rows = [
-    ['FONIKA AFFANDI, A.Md.I.P., S.H., M.H.', '198005282000121001', 'Pembina Tingkat I (IV/b)', '2024-04-01', 'KALAPAS', '2025-01-15', 'ISLAM', 'MENIKAH', 'STRATA 2', 'TATA USAHA', 'TATA USAHA', 'Laki-Laki', 'STRUKTURAL'],
-    ['MARIA REZKI SANTOSO, A.Md.I.P., S.H., M.H.', '197903112000122001', 'Pembina (IV/a)', '2023-10-01', 'Kabag Tata Usaha', '2024-02-10', 'ISLAM', 'MENIKAH', 'STRATA 2', 'TATA USAHA', 'TATA USAHA', 'Perempuan', 'STRUKTURAL'],
-  ];
-  rows.forEach(r => insert.run(...r));
+  const rows = generateKepegawaianData();
+  rows.forEach(r => {
+    insert.run(
+      r.nama_pegawai, r.nip, r.pangkat_gol, r.tmt_pangkat, r.jabatan, r.tmt_jabatan,
+      r.agama, r.status, r.pendidikan, r.penempatan_seksi, r.penempatan_bidang,
+      r.jenis_kelamin, r.type_pegawai
+    );
+  });
 });
 
 seedIfEmpty('giiatja_kegiatan', () => {

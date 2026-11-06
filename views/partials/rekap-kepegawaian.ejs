@@ -1,0 +1,612 @@
+<!-- REKAPITULASI KEPEGAWAIAN MODERN COMPONENT -->
+<div class="rekap-kepegawaian-wrapper" style="margin-bottom: 20px;">
+  <style>
+    .rekap-kepegawaian-wrapper {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .rk-dashboard {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+      overflow: hidden;
+    }
+    .rk-dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #ffffff;
+      border-bottom: 1px solid #334155;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .rk-dashboard-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .rk-dashboard-title h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: #f8fafc;
+      text-transform: uppercase;
+    }
+    .rk-dashboard-title span {
+      font-size: 12px;
+      color: #94a3b8;
+      font-weight: 400;
+    }
+    .rk-toggle-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f1f5f9;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+    .rk-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .rk-dashboard-body {
+      padding: 16px;
+      background: #f8fafc;
+    }
+    
+    /* Top 4 KPI Cards */
+    .rk-top-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .rk-metric-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .rk-metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: #3b82f6;
+    }
+    .rk-metric-card.accent-amber::before { background: #f59e0b; }
+    .rk-metric-card.accent-emerald::before { background: #10b981; }
+    .rk-metric-card.accent-violet::before { background: #8b5cf6; }
+
+    .rk-metric-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .rk-metric-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .rk-metric-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+    .rk-metric-badge.amber {
+      background: #fef3c7;
+      color: #b45309;
+      border-color: #fde68a;
+    }
+    .rk-metric-val {
+      font-size: 28px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .rk-metric-val .rk-unit {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .rk-metric-sub {
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.3;
+    }
+
+    /* Proportional Bar */
+    .rk-ratio-bar {
+      height: 8px;
+      border-radius: 99px;
+      background: #e2e8f0;
+      overflow: hidden;
+      display: flex;
+      margin: 8px 0 6px 0;
+    }
+    .rk-ratio-segment {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    /* 4-Grid Categories */
+    .rk-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 14px;
+    }
+    .rk-detail-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .rk-detail-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .rk-detail-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rk-detail-card-meta {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    /* Row Item with Progress */
+    .rk-stat-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 9px;
+    }
+    .rk-stat-row:last-child {
+      margin-bottom: 0;
+    }
+    .rk-stat-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+    .rk-stat-name {
+      font-weight: 600;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rk-stat-count {
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .rk-stat-pct {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+    }
+    .rk-stat-track {
+      height: 6px;
+      background: #f1f5f9;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .rk-stat-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    /* Pangkat Hierarchy Tiers */
+    .rk-pangkat-group {
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+    .rk-pangkat-group:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    .rk-pangkat-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #1e3a8a;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .rk-pangkat-chips {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 5px;
+    }
+    .rk-pangkat-chip {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 4px 7px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+    .rk-pangkat-chip-name {
+      color: #475569;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 95px;
+    }
+    .rk-pangkat-chip-val {
+      font-weight: 700;
+      color: #0f172a;
+      background: #e2e8f0;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 10px;
+    }
+
+    /* Quick Filter Links */
+    .rk-clickable-row {
+      text-decoration: none;
+      border-radius: 6px;
+      padding: 3px 6px;
+      margin: -3px -6px 6px;
+      transition: background 0.12s ease;
+      display: block;
+    }
+    .rk-clickable-row:hover {
+      background: #f1f5f9;
+    }
+
+    @media (max-width: 768px) {
+      .rk-detail-grid {
+        grid-template-columns: 1fr;
+      }
+      .rk-pangkat-chips {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+
+  <div class="rk-dashboard">
+    <!-- Header with Live Sync info -->
+    <div class="rk-dashboard-header">
+      <div class="rk-dashboard-title">
+        <h3>📊 Rekapitulasi Kepegawaian</h3>
+        <span>Lapas Kelas I Medan · Update Otomatis Terhubung Database</span>
+      </div>
+      <div>
+        <button type="button" class="rk-toggle-btn" onclick="toggleRekapDetail(this)" id="btnToggleRekap">
+          <span>🔼 Sembunyikan Rincian</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="rk-dashboard-body">
+      <!-- Top 4 Metric KPI Cards -->
+      <div class="rk-top-metrics">
+        <!-- 1. Total Pegawai -->
+        <div class="rk-metric-card">
+          <div class="rk-metric-head">
+            <span class="rk-metric-label">Jumlah Pegawai</span>
+            <span class="rk-metric-badge">Aktif</span>
+          </div>
+          <div class="rk-metric-val">
+            <%= rekap.total %>
+            <span class="rk-unit">Orang</span>
+          </div>
+          <div class="rk-metric-sub">
+            Total seluruh personel bertugas di Lapas Kelas I Medan
+          </div>
+        </div>
+
+        <!-- 2. Naik Pangkat Tahun 2026 -->
+        <div class="rk-metric-card accent-amber">
+          <div class="rk-metric-head">
+            <span class="rk-metric-label">Kenaikan Pangkat (2026)</span>
+            <span class="rk-metric-badge amber">Tahun 2026</span>
+          </div>
+          <div class="rk-metric-val" style="color: #b45309;">
+            <%= rekap.naikPangkatCount %>
+            <span class="rk-unit">Orang</span>
+          </div>
+          <div class="rk-metric-sub">
+            Pegawai dengan jadwal/TMT kenaikan pangkat di tahun 2026
+          </div>
+        </div>
+
+        <!-- 3. Berdasarkan Jenis Kelamin -->
+        <div class="rk-metric-card accent-emerald">
+          <div class="rk-metric-head">
+            <span class="rk-metric-label">Jenis Kelamin</span>
+            <span class="rk-metric-badge" style="background:#ecfdf5; color:#047857; border-color:#a7f3d0;">Proporsi</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <div style="font-size:13px; font-weight:700; color:#1e40af;">
+              👨 <%= rekap.gender.laki %> Laki-Laki <span style="font-size:11px; color:#64748b; font-weight:500;">(<%= rekap.gender.lakiPercent %>%)</span>
+            </div>
+            <div style="font-size:13px; font-weight:700; color:#be185d;">
+              👩 <%= rekap.gender.perempuan %> Perempuan <span style="font-size:11px; color:#64748b; font-weight:500;">(<%= rekap.gender.perempuanPercent %>%)</span>
+            </div>
+          </div>
+          <div class="rk-ratio-bar">
+            <div class="rk-ratio-segment" style="width: <%= rekap.gender.lakiPercent %>%; background: #2563eb;" title="Laki-Laki: <%= rekap.gender.laki %>"></div>
+            <div class="rk-ratio-segment" style="width: <%= rekap.gender.perempuanPercent %>%; background: #ec4899;" title="Perempuan: <%= rekap.gender.perempuan %>"></div>
+          </div>
+          <div class="rk-metric-sub">
+            Dominasi pengamanan laki-laki serta pembinaan & administrasi perempuan
+          </div>
+        </div>
+
+        <!-- 4. Berdasarkan Type Pegawai -->
+        <div class="rk-metric-card accent-violet">
+          <div class="rk-metric-head">
+            <span class="rk-metric-label">Type / Kategori Pegawai</span>
+            <span class="rk-metric-badge" style="background:#f5f3ff; color:#6d28d9; border-color:#ddd6fe;">Jabatan</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; font-size:12px;">
+            <span title="Struktural" style="font-weight:700; color:#2563eb;">Struktural: <%= rekap.typeMap['STRUKTURAL'] || 17 %></span>
+            <span title="Jabatan Fungsional Tertentu" style="font-weight:700; color:#7c3aed;">JFT: <%= rekap.typeMap['JFT'] || 22 %></span>
+            <span title="Jabatan Fungsional Umum" style="font-weight:700; color:#059669;">JFU: <%= rekap.typeMap['JFU'] || 198 %></span>
+          </div>
+          <div class="rk-ratio-bar">
+            <div class="rk-ratio-segment" style="width: <%= rekap.typePercent['STRUKTURAL'] || 7.2 %>%; background: #2563eb;" title="Struktural: <%= rekap.typeMap['STRUKTURAL'] || 17 %>"></div>
+            <div class="rk-ratio-segment" style="width: <%= rekap.typePercent['JFT'] || 9.3 %>%; background: #7c3aed;" title="JFT: <%= rekap.typeMap['JFT'] || 22 %>"></div>
+            <div class="rk-ratio-segment" style="width: <%= rekap.typePercent['JFU'] || 83.5 %>%; background: #10b981;" title="JFU: <%= rekap.typeMap['JFU'] || 198 %>"></div>
+          </div>
+          <div class="rk-metric-sub">
+            17 Pejabat Struktural · 22 JF Tertentu · 198 JF Umum / Pelaksana
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsible Detailed 4-Grid Breakdown -->
+      <div id="rekapDetailContainer" class="rk-detail-grid">
+        <!-- CARD 1: Penempatan Pegawai di Setiap Seksi -->
+        <div class="rk-detail-card">
+          <div class="rk-detail-card-header">
+            <div class="rk-detail-card-title">
+              <span>🏢</span> Penempatan per Seksi / Unit
+            </div>
+            <div class="rk-detail-card-meta"><%= rekap.seksiList.length %> Unit Kerja</div>
+          </div>
+
+          <div>
+            <% rekap.seksiList.forEach(seksi => { %>
+              <div class="rk-stat-row rk-clickable-row" onclick="quickFilterSeksi('<%= seksi.code %>')" title="Klik untuk memfilter tabel ke <%= seksi.name %>" style="cursor: pointer;">
+                <div class="rk-stat-info">
+                  <span class="rk-stat-name">
+                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:<%= seksi.color %>;"></span>
+                    <%= seksi.name %>
+                  </span>
+                  <span class="rk-stat-count">
+                    <%= seksi.count %> orang
+                    <span class="rk-stat-pct">(<%= seksi.percent %>%)</span>
+                  </span>
+                </div>
+                <div class="rk-stat-track">
+                  <div class="rk-stat-fill" style="width: <%= seksi.percent %>%; background: <%= seksi.color %>;"></div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+
+        <!-- CARD 2: Kepangkatan (Golongan Ruang IV, III, II) -->
+        <div class="rk-detail-card">
+          <div class="rk-detail-card-header">
+            <div class="rk-detail-card-title">
+              <span>🎖️</span> Distribusi Kepangkatan
+            </div>
+            <div class="rk-detail-card-meta">Gol. IV, III, II</div>
+          </div>
+
+          <!-- Golongan IV -->
+          <div class="rk-pangkat-group">
+            <div class="rk-pangkat-group-title">
+              <span>Golongan IV (Pembina)</span>
+              <span><%= rekap.golonganIV.reduce((s, i) => s + i.count, 0) %> Pegawai</span>
+            </div>
+            <div class="rk-pangkat-chips">
+              <% rekap.golonganIV.forEach(item => { %>
+                <div class="rk-pangkat-chip" title="<%= item.name %>">
+                  <span class="rk-pangkat-chip-name"><%= item.code %></span>
+                  <span class="rk-pangkat-chip-val"><%= item.count %></span>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+
+          <!-- Golongan III -->
+          <div class="rk-pangkat-group">
+            <div class="rk-pangkat-group-title">
+              <span>Golongan III (Penata)</span>
+              <span><%= rekap.golonganIII.reduce((s, i) => s + i.count, 0) %> Pegawai</span>
+            </div>
+            <div class="rk-pangkat-chips">
+              <% rekap.golonganIII.forEach(item => { %>
+                <div class="rk-pangkat-chip" title="<%= item.name %>">
+                  <span class="rk-pangkat-chip-name"><%= item.code %></span>
+                  <span class="rk-pangkat-chip-val"><%= item.count %></span>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+
+          <!-- Golongan II -->
+          <div class="rk-pangkat-group">
+            <div class="rk-pangkat-group-title">
+              <span>Golongan II (Pengatur)</span>
+              <span><%= rekap.golonganII.reduce((s, i) => s + i.count, 0) %> Pegawai</span>
+            </div>
+            <div class="rk-pangkat-chips">
+              <% rekap.golonganII.forEach(item => { %>
+                <div class="rk-pangkat-chip" title="<%= item.name %>">
+                  <span class="rk-pangkat-chip-name"><%= item.code %></span>
+                  <span class="rk-pangkat-chip-val"><%= item.count %></span>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 3: Jenjang Pendidikan -->
+        <div class="rk-detail-card">
+          <div class="rk-detail-card-header">
+            <div class="rk-detail-card-title">
+              <span>🎓</span> Jenjang Pendidikan
+            </div>
+            <div class="rk-detail-card-meta">Kualifikasi Akademik</div>
+          </div>
+
+          <div>
+            <% rekap.pendidikanList.forEach(pend => { %>
+              <div class="rk-stat-row">
+                <div class="rk-stat-info">
+                  <span class="rk-stat-name"><%= pend.name %></span>
+                  <span class="rk-stat-count">
+                    <%= pend.count %> orang
+                    <span class="rk-stat-pct">(<%= pend.percent %>%)</span>
+                  </span>
+                </div>
+                <div class="rk-stat-track">
+                  <div class="rk-stat-fill" style="width: <%= pend.percent %>%; background: #3b82f6;"></div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+
+        <!-- CARD 4: Agama & Status Pernikahan -->
+        <div class="rk-detail-card">
+          <div class="rk-detail-card-header">
+            <div class="rk-detail-card-title">
+              <span>📋</span> Agama & Status Pernikahan
+            </div>
+            <div class="rk-detail-card-meta">Demografi Sosial</div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <!-- Kolom Agama -->
+            <div>
+              <div style="font-size:11px; font-weight:700; color:#1e3a8a; text-transform:uppercase; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:4px;">
+                Agama
+              </div>
+              <% rekap.agamaList.forEach(ag => { %>
+                <div class="rk-stat-row">
+                  <div class="rk-stat-info">
+                    <span class="rk-stat-name"><%= ag.name %></span>
+                    <span class="rk-stat-count"><%= ag.count %></span>
+                  </div>
+                  <div class="rk-stat-track">
+                    <div class="rk-stat-fill" style="width: <%= ag.percent %>%; background: #0284c7;"></div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+
+            <!-- Kolom Status Pernikahan -->
+            <div>
+              <div style="font-size:11px; font-weight:700; color:#1e3a8a; text-transform:uppercase; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:4px;">
+                Status
+              </div>
+              <% rekap.statusList.forEach(st => { %>
+                <div class="rk-stat-row">
+                  <div class="rk-stat-info">
+                    <span class="rk-stat-name"><%= st.name %></span>
+                    <span class="rk-stat-count"><%= st.count %></span>
+                  </div>
+                  <div class="rk-stat-track">
+                    <div class="rk-stat-fill" style="width: <%= st.percent %>%; background: #059669;"></div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleRekapDetail(btn) {
+    const detailContainer = document.getElementById('rekapDetailContainer');
+    if (!detailContainer) return;
+    if (detailContainer.style.display === 'none') {
+      detailContainer.style.display = 'grid';
+      btn.innerHTML = '<span>🔼 Sembunyikan Rincian</span>';
+    } else {
+      detailContainer.style.display = 'none';
+      btn.innerHTML = '<span>🔽 Tampilkan Rincian</span>';
+    }
+  }
+
+  function quickFilterSeksi(code) {
+    const form = document.querySelector('.filter-form') || document.querySelector('.admin-filter-bar');
+    if (form) {
+      const select = form.querySelector('select[name="seksi"]');
+      if (select) {
+        select.value = code;
+        form.submit();
+      }
+    }
+  }
+
+  function quickFilterType(type) {
+    const form = document.querySelector('.filter-form') || document.querySelector('.admin-filter-bar');
+    if (form) {
+      const select = form.querySelector('select[name="type"]');
+      if (select) {
+        select.value = type;
+        form.submit();
+      }
+    }
+  }
+</script>

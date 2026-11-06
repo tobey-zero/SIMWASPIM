@@ -1,119 +1,572 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daftar Barang TU – Admin Lapas</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Barang BMN TU – Admin Lapas</title>
   <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    /* Admin Filter Bar */
+    .admin-filter-bar {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .admin-filter-bar input[type="text"] {
+      flex: 1 1 200px;
+      padding: 7px 12px;
+      font-size: 13px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      outline: none;
+    }
+    .admin-filter-bar select {
+      padding: 7px 10px;
+      font-size: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #334155;
+    }
+
+    /* Badges */
+    .bmn-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .bmn-badge-emerald { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .bmn-badge-rose { background: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; }
+    .bmn-badge-blue { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .bmn-badge-amber { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    .bmn-badge-slate { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+
+    /* Pagination Bar */
+    .pagination-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 12px 18px;
+      background: #ffffff;
+      border-top: 1px solid #e5e7eb;
+    }
+    .pagination-info {
+      font-size: 13px;
+      color: #4b5563;
+    }
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .page-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 32px;
+      padding: 0 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      background: #f9fafb;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      text-decoration: none;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+    .page-btn:hover:not(.disabled) {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+      color: #111827;
+    }
+    .page-btn.active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #ffffff;
+    }
+    .page-btn.disabled {
+      color: #9ca3af;
+      border-color: #e5e7eb;
+      background: #f9fafb;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .form-toggle-btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .form-toggle-btn:hover { background: #1d4ed8; }
+  </style>
 </head>
 <body>
 <div class="admin-wrapper">
   <%- include('_sidebar') %>
   <div class="main-content">
     <div class="topbar">
-      <div class="topbar-title"><h2>📦 Daftar Barang TU</h2><p>Kelola laporan barang pengguna (mutasi dan saldo)</p></div>
-      <div class="topbar-actions"><a href="/kalapas/table/tu-umum" target="_blank" class="btn-public">🧭 Lihat Tabel Kalapas</a></div>
+      <div class="topbar-title">
+        <h2>📦 Pengelolaan BMN (Daftar Barang)</h2>
+        <p>Penatausahaan Barang Milik Negara &bull; Subbag Tata Usaha Lapas Kelas I Medan</p>
+      </div>
+      <div class="topbar-actions">
+        <a href="/kalapas/table/tu-umum?tab=bmn" target="_blank" class="btn-public">🧭 Lihat Tampilan Kalapas</a>
+      </div>
     </div>
-    <div class="content-area">
-      <% if (success) { %><div class="alert alert-success">✅ Data berhasil disimpan.</div><% } %>
 
-      <div class="card">
-        <div class="card-header"><h3>➕ Tambah Data TU Bagian Umum</h3></div>
-        <div class="card-body">
+    <div class="content-area">
+      <% if (success) { %>
+        <div class="alert alert-success">✅ Perubahan data BMN berhasil disimpan.</div>
+      <% } %>
+
+      <!-- Modern Executive Rekapitulasi BMN Component Directly Above Table -->
+      <%- include('../partials/rekap-bmn', { rekap, filters, baseUrl: '/admin/tu-umum/barang' }) %>
+
+      <!-- Collapsible Form Tambah BMN -->
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; font-size: 14px; font-weight: 700;">➕ Input Data Barang Milik Negara (BMN) Baru</h3>
+          <button type="button" class="form-toggle-btn" onclick="toggleFormInput()">
+            <span id="form-toggle-label">Buka Form Tambah</span>
+          </button>
+        </div>
+        <div class="card-body" id="form-tambah-bmn" style="display: none; padding: 16px;">
           <form method="POST" action="/admin/tu-umum/add">
             <div class="form-grid col-4" style="margin-bottom:12px;">
-              <div class="form-group"><label>Kode</label><input type="text" name="kode" required></div>
-              <div class="form-group"><label>Uraian</label><input type="text" name="uraian" required></div>
-              <div class="form-group"><label>Satuan</label><input type="text" name="satuan" required></div>
-              <div class="form-group"><label>Tahun Perolehan</label><input type="text" name="tahun_perolehan" placeholder="cth: 2026"></div>
-              <div class="form-group"><label>Saldo Awal Kuantitas</label><input type="text" name="saldo_awal_kuantitas" value="0"></div>
-              <div class="form-group"><label>Saldo Awal Nilai</label><input type="text" name="saldo_awal_nilai" value="0"></div>
-              <div class="form-group"><label>Bertambah Kuantitas</label><input type="text" name="bertambah_kuantitas" value="0"></div>
-              <div class="form-group"><label>Bertambah Nilai</label><input type="text" name="bertambah_nilai" value="0"></div>
-              <div class="form-group"><label>Berkurang Kuantitas</label><input type="text" name="berkurang_kuantitas" value="0"></div>
-              <div class="form-group"><label>Berkurang Nilai</label><input type="text" name="berkurang_nilai" value="0"></div>
-              <div class="form-group"><label>Saldo Akhir Kuantitas</label><input type="text" name="saldo_akhir_kuantitas" value="0"></div>
-              <div class="form-group"><label>Saldo Akhir Nilai</label><input type="text" name="saldo_akhir_nilai" value="0"></div>
+              <div class="form-group">
+                <label>Kode Barang <span style="color:red;">*</span></label>
+                <input type="text" name="kode" required placeholder="cth: 3050101001">
+              </div>
+              <div class="form-group">
+                <label>Nomor Urut Pendaftaran (NUP)</label>
+                <input type="text" name="nup" placeholder="cth: 1">
+              </div>
+              <div class="form-group" style="grid-column: span 2;">
+                <label>Uraian / Nama Barang <span style="color:red;">*</span></label>
+                <input type="text" name="uraian" required placeholder="cth: Genset Silent Perkins 250 kVA">
+              </div>
             </div>
-            <button type="submit" class="btn btn-primary btn-sm">➕ Tambah</button>
+
+            <div class="form-grid col-4" style="margin-bottom:12px;">
+              <div class="form-group">
+                <label>Kategori BMN</label>
+                <select name="kategori">
+                  <option value="Peralatan & Mesin">Peralatan & Mesin</option>
+                  <option value="Gedung & Bangunan">Gedung & Bangunan</option>
+                  <option value="Tanah">Tanah</option>
+                  <option value="Senjata & Pengamanan">Senjata & Pengamanan</option>
+                  <option value="Kendaraan Dinas">Kendaraan Dinas</option>
+                  <option value="Aset Tetap Lainnya">Aset Tetap Lainnya</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Lokasi Penempatan</label>
+                <input type="text" name="lokasi" placeholder="cth: Gudang BMN / Blok Hunian">
+              </div>
+              <div class="form-group">
+                <label>Tahun Perolehan</label>
+                <input type="text" name="tahun_perolehan" placeholder="cth: 2026">
+              </div>
+              <div class="form-group">
+                <label>Satuan</label>
+                <input type="text" name="satuan" value="Unit" required>
+              </div>
+            </div>
+
+            <div class="form-grid col-4" style="margin-bottom:12px;">
+              <div class="form-group">
+                <label>Kondisi Barang</label>
+                <select name="kondisi">
+                  <option value="Baik">Baik (Siap Pakai)</option>
+                  <option value="Rusak Berat">Rusak Berat</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Status Penggunaan</label>
+                <select name="status_bmn">
+                  <option value="Aktif">Aktif Digunakan</option>
+                  <option value="Henti Guna">Henti Guna (Usul Hapus)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Nilai Perolehan (Aset) Rp</label>
+                <input type="number" name="nilai_perolehan" id="inp_tambah_nilai_perolehan" value="0" min="0" oninput="hitungNilaiBukuTambah()">
+              </div>
+              <div class="form-group">
+                <label>Akumulasi Penyusutan Rp</label>
+                <input type="number" name="akumulasi_penyusutan" id="inp_tambah_akumulasi_penyusutan" value="0" min="0" oninput="hitungNilaiBukuTambah()">
+              </div>
+            </div>
+
+            <div class="form-grid col-4" style="margin-bottom:14px; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+              <div class="form-group">
+                <label>Nilai Buku (Otomatis: Aset - Susut)</label>
+                <input type="number" name="nilai_buku" id="inp_tambah_nilai_buku" value="0" readonly style="background:#e2e8f0; font-weight:700;">
+              </div>
+              <div class="form-group">
+                <label>Saldo Akhir Kuantitas</label>
+                <input type="text" name="saldo_akhir_kuantitas" value="1">
+              </div>
+              <div class="form-group">
+                <label>Saldo Awal Kuantitas</label>
+                <input type="text" name="saldo_awal_kuantitas" value="1">
+              </div>
+              <div class="form-group">
+                <label>Mutasi Saldo (Opsional)</label>
+                <input type="text" name="bertambah_kuantitas" placeholder="Bertambah Qty" value="0">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm">💾 Simpan BMN Baru</button>
           </form>
         </div>
       </div>
 
+      <!-- Edit Panel (if active) -->
       <% if (edit) { %>
-      <div class="edit-panel">
-        <h4>✏️ Edit Data TU Bagian Umum (ID: <%= edit.id %>)</h4>
+      <div class="edit-panel" style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:16px; margin-bottom:16px;">
+        <h4 style="margin:0 0 12px 0; color:#92400e; font-size:14px;">✏️ Edit Data BMN: <strong><%= edit.uraian %></strong> (ID: <%= edit.id %>)</h4>
         <form method="POST" action="/admin/tu-umum/<%= edit.id %>/update">
           <div class="form-grid col-4" style="margin-bottom:12px;">
-            <div class="form-group"><label>Kode</label><input type="text" name="kode" value="<%= edit.kode %>" required></div>
-            <div class="form-group"><label>Uraian</label><input type="text" name="uraian" value="<%= edit.uraian %>" required></div>
-            <div class="form-group"><label>Satuan</label><input type="text" name="satuan" value="<%= edit.satuan %>" required></div>
-            <div class="form-group"><label>Tahun Perolehan</label><input type="text" name="tahun_perolehan" value="<%= edit.tahun_perolehan || '' %>" placeholder="cth: 2026"></div>
-            <div class="form-group"><label>Saldo Awal Kuantitas</label><input type="text" name="saldo_awal_kuantitas" value="<%= edit.saldo_awal_kuantitas || '0' %>"></div>
-            <div class="form-group"><label>Saldo Awal Nilai</label><input type="text" name="saldo_awal_nilai" value="<%= edit.saldo_awal_nilai || '0' %>"></div>
-            <div class="form-group"><label>Bertambah Kuantitas</label><input type="text" name="bertambah_kuantitas" value="<%= edit.bertambah_kuantitas || '0' %>"></div>
-            <div class="form-group"><label>Bertambah Nilai</label><input type="text" name="bertambah_nilai" value="<%= edit.bertambah_nilai || '0' %>"></div>
-            <div class="form-group"><label>Berkurang Kuantitas</label><input type="text" name="berkurang_kuantitas" value="<%= edit.berkurang_kuantitas || '0' %>"></div>
-            <div class="form-group"><label>Berkurang Nilai</label><input type="text" name="berkurang_nilai" value="<%= edit.berkurang_nilai || '0' %>"></div>
-            <div class="form-group"><label>Saldo Akhir Kuantitas</label><input type="text" name="saldo_akhir_kuantitas" value="<%= edit.saldo_akhir_kuantitas || '0' %>"></div>
-            <div class="form-group"><label>Saldo Akhir Nilai</label><input type="text" name="saldo_akhir_nilai" value="<%= edit.saldo_akhir_nilai || '0' %>"></div>
+            <div class="form-group">
+              <label>Kode Barang</label>
+              <input type="text" name="kode" value="<%= edit.kode %>" required>
+            </div>
+            <div class="form-group">
+              <label>Nomor Urut Pendaftaran (NUP)</label>
+              <input type="text" name="nup" value="<%= edit.nup || '' %>">
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Uraian / Nama Barang</label>
+              <input type="text" name="uraian" value="<%= edit.uraian %>" required>
+            </div>
           </div>
+
+          <div class="form-grid col-4" style="margin-bottom:12px;">
+            <div class="form-group">
+              <label>Kategori BMN</label>
+              <select name="kategori">
+                <option value="Peralatan & Mesin" <%= (edit.kategori === 'Peralatan & Mesin') ? 'selected' : '' %>>Peralatan & Mesin</option>
+                <option value="Gedung & Bangunan" <%= (edit.kategori === 'Gedung & Bangunan') ? 'selected' : '' %>>Gedung & Bangunan</option>
+                <option value="Tanah" <%= (edit.kategori === 'Tanah') ? 'selected' : '' %>>Tanah</option>
+                <option value="Senjata & Pengamanan" <%= (edit.kategori === 'Senjata & Pengamanan') ? 'selected' : '' %>>Senjata & Pengamanan</option>
+                <option value="Kendaraan Dinas" <%= (edit.kategori === 'Kendaraan Dinas') ? 'selected' : '' %>>Kendaraan Dinas</option>
+                <option value="Aset Tetap Lainnya" <%= (edit.kategori === 'Aset Tetap Lainnya') ? 'selected' : '' %>>Aset Tetap Lainnya</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Lokasi Penempatan</label>
+              <input type="text" name="lokasi" value="<%= edit.lokasi || '' %>">
+            </div>
+            <div class="form-group">
+              <label>Tahun Perolehan</label>
+              <input type="text" name="tahun_perolehan" value="<%= edit.tahun_perolehan || '' %>">
+            </div>
+            <div class="form-group">
+              <label>Satuan</label>
+              <input type="text" name="satuan" value="<%= edit.satuan %>" required>
+            </div>
+          </div>
+
+          <div class="form-grid col-4" style="margin-bottom:12px;">
+            <div class="form-group">
+              <label>Kondisi Barang</label>
+              <select name="kondisi">
+                <option value="Baik" <%= (edit.kondisi === 'Baik') ? 'selected' : '' %>>Baik (Siap Pakai)</option>
+                <option value="Rusak Berat" <%= (edit.kondisi === 'Rusak Berat') ? 'selected' : '' %>>Rusak Berat</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Status Penggunaan</label>
+              <select name="status_bmn">
+                <option value="Aktif" <%= (edit.status_bmn === 'Aktif') ? 'selected' : '' %>>Aktif Digunakan</option>
+                <option value="Henti Guna" <%= (edit.status_bmn === 'Henti Guna') ? 'selected' : '' %>>Henti Guna (Usul Hapus)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Nilai Perolehan Rp</label>
+              <input type="number" name="nilai_perolehan" id="inp_edit_nilai_perolehan" value="<%= edit.nilai_perolehan || 0 %>" min="0" oninput="hitungNilaiBukuEdit()">
+            </div>
+            <div class="form-group">
+              <label>Akumulasi Penyusutan Rp</label>
+              <input type="number" name="akumulasi_penyusutan" id="inp_edit_akumulasi_penyusutan" value="<%= edit.akumulasi_penyusutan || 0 %>" min="0" oninput="hitungNilaiBukuEdit()">
+            </div>
+          </div>
+
+          <div class="form-grid col-4" style="margin-bottom:14px; background:#fff; padding:10px; border-radius:6px; border:1px solid #fde68a;">
+            <div class="form-group">
+              <label>Nilai Buku (Aset - Susut)</label>
+              <input type="number" name="nilai_buku" id="inp_edit_nilai_buku" value="<%= edit.nilai_buku || 0 %>" readonly style="background:#f1f5f9; font-weight:700;">
+            </div>
+            <div class="form-group">
+              <label>Saldo Akhir Kuantitas</label>
+              <input type="text" name="saldo_akhir_kuantitas" value="<%= edit.saldo_akhir_kuantitas || '1' %>">
+            </div>
+            <div class="form-group">
+              <label>Saldo Awal Kuantitas</label>
+              <input type="text" name="saldo_awal_kuantitas" value="<%= edit.saldo_awal_kuantitas || '1' %>">
+            </div>
+            <div class="form-group">
+              <label>Bertambah Kuantitas</label>
+              <input type="text" name="bertambah_kuantitas" value="<%= edit.bertambah_kuantitas || '0' %>">
+            </div>
+          </div>
+
           <div style="display:flex;gap:8px;">
-            <button type="submit" class="btn btn-success btn-sm">💾 Simpan</button>
+            <button type="submit" class="btn btn-success btn-sm">💾 Simpan Perubahan</button>
             <a href="/admin/tu-umum/barang" class="btn btn-secondary btn-sm">✕ Batal</a>
           </div>
         </form>
       </div>
       <% } %>
 
+      <!-- Search & Filter Bar -->
+      <form method="GET" action="/admin/tu-umum/barang" class="admin-filter-bar">
+        <input type="text" name="search" value="<%= filters.search || '' %>" placeholder="Cari kode, uraian, NUP, lokasi...">
+        
+        <select name="kondisi">
+          <option value="">Semua Kondisi</option>
+          <option value="Baik" <%= filters.kondisi === 'Baik' ? 'selected' : '' %>>Baik</option>
+          <option value="Rusak Berat" <%= filters.kondisi === 'Rusak Berat' ? 'selected' : '' %>>Rusak Berat</option>
+        </select>
+
+        <select name="status_bmn">
+          <option value="">Semua Status</option>
+          <option value="Aktif" <%= filters.status_bmn === 'Aktif' ? 'selected' : '' %>>Aktif Digunakan</option>
+          <option value="Henti Guna" <%= filters.status_bmn === 'Henti Guna' ? 'selected' : '' %>>Henti Guna</option>
+        </select>
+
+        <select name="kategori">
+          <option value="">Semua Kategori</option>
+          <% (rekap.kategoriList || []).forEach(k => { %>
+            <option value="<%= k.name %>" <%= filters.kategori === k.name ? 'selected' : '' %>><%= k.name %></option>
+          <% }) %>
+        </select>
+
+        <select name="perPage" title="Jumlah data per halaman">
+          <option value="15" <%= pagination.perPage === 15 ? 'selected' : '' %>>15 / Hal</option>
+          <option value="25" <%= pagination.perPage === 25 ? 'selected' : '' %>>25 / Hal</option>
+          <option value="50" <%= pagination.perPage === 50 ? 'selected' : '' %>>50 / Hal</option>
+          <option value="100" <%= pagination.perPage === 100 ? 'selected' : '' %>>100 / Hal</option>
+        </select>
+
+        <button type="submit" class="btn btn-primary btn-sm">🔍 Cari & Filter</button>
+        <% if (filters.search || filters.kondisi || filters.status_bmn || filters.kategori) { %>
+          <a href="/admin/tu-umum/barang" class="btn btn-secondary btn-sm">✕ Reset</a>
+        <% } %>
+      </form>
+
+      <!-- Paginated Table Card -->
       <div class="card">
-        <div class="card-header"><h3>Daftar TU Bagian Umum (<%= list.length %> data)</h3></div>
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:14px; font-weight:700;">
+            Daftar Barang Milik Negara (<%= pagination.totalFiltered %> dari total <%= pagination.totalAll %> BMN)
+          </h3>
+          <span style="font-size:12px; color:#64748b;">Halaman <%= pagination.page %> dari <%= pagination.totalPages %></span>
+        </div>
         <div class="card-body" style="padding:0;">
           <div class="table-wrap">
             <table class="admin-table">
               <thead>
                 <tr>
-                  <th>#</th><th>Kode</th><th>Uraian</th><th>Satuan</th><th>Tahun Perolehan</th>
-                  <th>Saldo Awal QTY</th><th>Saldo Awal Nilai</th>
-                  <th>Bertambah QTY</th><th>Bertambah Nilai</th>
-                  <th>Berkurang QTY</th><th>Berkurang Nilai</th>
-                  <th>Saldo Akhir QTY</th><th>Saldo Akhir Nilai</th><th>Aksi</th>
+                  <th style="width: 45px; text-align: center;">#</th>
+                  <th>Kode BMN / NUP</th>
+                  <th>Uraian / Nama Barang</th>
+                  <th>Kategori</th>
+                  <th>Lokasi Penempatan</th>
+                  <th>Satuan / Thn</th>
+                  <th style="text-align: right;">Nilai Perolehan</th>
+                  <th style="text-align: right;">Penyusutan</th>
+                  <th style="text-align: right;">Nilai Buku</th>
+                  <th style="text-align: center;">Kondisi</th>
+                  <th style="text-align: center;">Status</th>
+                  <th style="text-align: center; width: 110px;">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                <% list.forEach((item, i) => { %>
-                <tr>
-                  <td><%= i+1 %></td>
-                  <td><%= item.kode %></td>
-                  <td><%= item.uraian %></td>
-                  <td><%= item.satuan %></td>
-                  <td><%= item.tahun_perolehan || '-' %></td>
-                  <td><%= item.saldo_awal_kuantitas || '0' %></td>
-                  <td><%= item.saldo_awal_nilai || '0' %></td>
-                  <td><%= item.bertambah_kuantitas || '0' %></td>
-                  <td><%= item.bertambah_nilai || '0' %></td>
-                  <td><%= item.berkurang_kuantitas || '0' %></td>
-                  <td><%= item.berkurang_nilai || '0' %></td>
-                  <td><%= item.saldo_akhir_kuantitas || '0' %></td>
-                  <td><%= item.saldo_akhir_nilai || '0' %></td>
-                  <td>
-                    <div class="actions">
-                      <a href="/admin/tu-umum/barang?edit=<%= item.id %>" class="btn btn-warning btn-xs">✏️ Edit</a>
-                      <form method="POST" action="/admin/tu-umum/<%= item.id %>/delete" style="display:inline" onsubmit="return confirm('Hapus data ini?')">
-                        <button class="btn btn-danger btn-xs">🗑 Hapus</button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-                <% }) %>
-                <% if (!list.length) { %><tr><td colspan="14" style="text-align:center;color:#aaa;padding:20px;">Belum ada data</td></tr><% } %>
+                <% if (!list.length) { %>
+                  <tr>
+                    <td colspan="12" style="text-align:center; color:#94a3b8; padding:30px;">
+                      Tidak ada data BMN yang cocok dengan filter.
+                    </td>
+                  </tr>
+                <% } else { %>
+                  <% list.forEach((item, i) => { %>
+                  <tr>
+                    <td style="text-align: center; color: #64748b; font-weight: 600;"><%= pagination.startIndex + i %></td>
+                    <td>
+                      <div style="font-family: monospace; font-weight: 700; color: #1e293b;"><%= item.kode %></div>
+                      <div style="font-size: 11px; color: #64748b;">NUP: <%= item.nup || '-' %></div>
+                    </td>
+                    <td>
+                      <div style="font-weight: 700; color: #0f172a;"><%= item.uraian %></div>
+                    </td>
+                    <td>
+                      <span class="bmn-badge bmn-badge-slate"><%= item.kategori || 'Peralatan & Mesin' %></span>
+                    </td>
+                    <td style="font-size: 11px; color: #475569;"><%= item.lokasi || 'Lapas Kelas I Medan' %></td>
+                    <td>
+                      <div><%= item.satuan %></div>
+                      <small style="color: #64748b;"><%= item.tahun_perolehan || '-' %></small>
+                    </td>
+                    <td style="text-align: right; font-weight: 700; font-family: monospace;">
+                      Rp <%= new Intl.NumberFormat('id-ID').format(item.nilai_perolehan || 0) %>
+                    </td>
+                    <td style="text-align: right; color: #b45309; font-weight: 600; font-family: monospace;">
+                      Rp <%= new Intl.NumberFormat('id-ID').format(item.akumulasi_penyusutan || 0) %>
+                    </td>
+                    <td style="text-align: right; color: #1e40af; font-weight: 700; font-family: monospace;">
+                      Rp <%= new Intl.NumberFormat('id-ID').format(item.nilai_buku || 0) %>
+                    </td>
+                    <td style="text-align: center;">
+                      <% if (String(item.kondisi || '').toLowerCase().includes('rusak')) { %>
+                        <span class="bmn-badge bmn-badge-rose">Rusak Berat</span>
+                      <% } else { %>
+                        <span class="bmn-badge bmn-badge-emerald">Baik</span>
+                      <% } %>
+                    </td>
+                    <td style="text-align: center;">
+                      <% if (String(item.status_bmn || '').toLowerCase().includes('henti')) { %>
+                        <span class="bmn-badge bmn-badge-amber">Henti Guna</span>
+                      <% } else { %>
+                        <span class="bmn-badge bmn-badge-blue">Aktif</span>
+                      <% } %>
+                    </td>
+                    <td style="text-align: center;">
+                      <div class="actions" style="justify-content: center; gap: 4px;">
+                        <a href="/admin/tu-umum/barang?edit=<%= item.id %>" class="btn btn-warning btn-xs" title="Edit Data BMN">✏️</a>
+                        <form method="POST" action="/admin/tu-umum/<%= item.id %>/delete" style="display:inline" onsubmit="return confirm('Hapus data BMN <%= item.uraian %>?')">
+                          <button class="btn btn-danger btn-xs" title="Hapus Data">🗑</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                  <% }) %>
+                <% } %>
               </tbody>
             </table>
           </div>
+
+          <!-- Bottom Pagination Controls -->
+          <% if (pagination.totalFiltered > 0) { %>
+          <div class="pagination-bar">
+            <div class="pagination-info">
+              Menampilkan <strong><%= pagination.startIndex %>–<%= pagination.endIndex %></strong> dari <strong><%= pagination.totalFiltered %></strong> data BMN
+              <% if (pagination.totalFiltered !== pagination.totalAll) { %>
+                <span>(difilter dari <%= pagination.totalAll %>)</span>
+              <% } %>
+            </div>
+
+            <div class="pagination-controls">
+              <!-- Prev -->
+              <% if (pagination.page > 1) { %>
+                <a href="<%= makePageUrl(1) %>" class="page-btn" title="Halaman Pertama">&laquo;</a>
+                <a href="<%= makePageUrl(pagination.page - 1) %>" class="page-btn" title="Sebelumnya">&lsaquo;</a>
+              <% } else { %>
+                <span class="page-btn disabled">&laquo;</span>
+                <span class="page-btn disabled">&lsaquo;</span>
+              <% } %>
+
+              <!-- Window -->
+              <%
+                const delta = 2;
+                let startP = Math.max(1, pagination.page - delta);
+                let endP = Math.min(pagination.totalPages, pagination.page + delta);
+                if (pagination.page <= delta + 1) endP = Math.min(pagination.totalPages, delta * 2 + 1);
+                if (pagination.page >= pagination.totalPages - delta) startP = Math.max(1, pagination.totalPages - (delta * 2));
+              %>
+
+              <% if (startP > 1) { %>
+                <a href="<%= makePageUrl(1) %>" class="page-btn">1</a>
+                <% if (startP > 2) { %><span class="page-btn disabled">...</span><% } %>
+              <% } %>
+
+              <% for (let p = startP; p <= endP; p++) { %>
+                <% if (p === pagination.page) { %>
+                  <span class="page-btn active"><%= p %></span>
+                <% } else { %>
+                  <a href="<%= makePageUrl(p) %>" class="page-btn"><%= p %></a>
+                <% } %>
+              <% } %>
+
+              <% if (endP < pagination.totalPages) { %>
+                <% if (endP < pagination.totalPages - 1) { %><span class="page-btn disabled">...</span><% } %>
+                <a href="<%= makePageUrl(pagination.totalPages) %>" class="page-btn"><%= pagination.totalPages %></a>
+              <% } %>
+
+              <!-- Next -->
+              <% if (pagination.page < pagination.totalPages) { %>
+                <a href="<%= makePageUrl(pagination.page + 1) %>" class="page-btn" title="Berikutnya">&rsaquo;</a>
+                <a href="<%= makePageUrl(pagination.totalPages) %>" class="page-btn" title="Halaman Terakhir">&raquo;</a>
+              <% } else { %>
+                <span class="page-btn disabled">&rsaquo;</span>
+                <span class="page-btn disabled">&raquo;</span>
+              <% } %>
+            </div>
+          </div>
+          <% } %>
+
         </div>
       </div>
 
     </div>
   </div>
 </div>
+
+<script>
+  function toggleFormInput() {
+    var form = document.getElementById('form-tambah-bmn');
+    var label = document.getElementById('form-toggle-label');
+    if (!form) return;
+    if (form.style.display === 'none') {
+      form.style.display = 'block';
+      if (label) label.innerText = 'Tutup Form Tambah';
+    } else {
+      form.style.display = 'none';
+      if (label) label.innerText = 'Buka Form Tambah';
+    }
+  }
+
+  function hitungNilaiBukuTambah() {
+    var aset = parseFloat(document.getElementById('inp_tambah_nilai_perolehan').value) || 0;
+    var susut = parseFloat(document.getElementById('inp_tambah_akumulasi_penyusutan').value) || 0;
+    var buku = Math.max(0, aset - susut);
+    document.getElementById('inp_tambah_nilai_buku').value = buku;
+  }
+
+  function hitungNilaiBukuEdit() {
+    var elAset = document.getElementById('inp_edit_nilai_perolehan');
+    var elSusut = document.getElementById('inp_edit_akumulasi_penyusutan');
+    var elBuku = document.getElementById('inp_edit_nilai_buku');
+    if (!elAset || !elSusut || !elBuku) return;
+    var aset = parseFloat(elAset.value) || 0;
+    var susut = parseFloat(elSusut.value) || 0;
+    elBuku.value = Math.max(0, aset - susut);
+  }
+</script>
 </body>
 </html>

@@ -18,6 +18,120 @@
       line-height:1.2;
     }
     .tbl-sort-icon.active { color:#2563eb; }
+
+    /* Admin Filter Bar */
+    .admin-filter-bar {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .admin-filter-bar input[type="text"] {
+      flex: 1 1 200px;
+      padding: 7px 12px;
+      font-size: 13px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      outline: none;
+    }
+    .admin-filter-bar select {
+      padding: 7px 10px;
+      font-size: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #334155;
+    }
+
+    /* Badges */
+    .badge-type {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-type.struktural { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    .badge-type.jft { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+    .badge-type.jfu { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+
+    /* Pagination Bar */
+    .pagination-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 12px 18px;
+      background: #ffffff;
+      border-top: 1px solid #e5e7eb;
+    }
+    .pagination-info {
+      font-size: 13px;
+      color: #4b5563;
+    }
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .page-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 32px;
+      padding: 0 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      background: #f9fafb;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      text-decoration: none;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+    .page-btn:hover:not(.disabled) {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+      color: #111827;
+    }
+    .page-btn.active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #ffffff;
+    }
+    .page-btn.disabled {
+      color: #9ca3af;
+      border-color: #e5e7eb;
+      background: #f9fafb;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .form-toggle-btn {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+    .form-toggle-btn:hover { background: #e2e8f0; }
   </style>
 </head>
 <body>
@@ -25,40 +139,28 @@
   <%- include('_sidebar') %>
   <div class="main-content">
     <div class="topbar">
-      <div class="topbar-title"><h2>👥 Data Kepegawaian</h2><p>Kelola data kepegawaian Tata Usaha</p></div>
-      <div class="topbar-actions"><a href="/kalapas/table/tu-umum" target="_blank" class="btn-public">🧭 Lihat Tabel Kalapas</a></div>
+      <div class="topbar-title">
+        <h2>👥 Data Kepegawaian</h2>
+        <p>Kelola data dan rekapitulasi kepegawaian Tata Usaha</p>
+      </div>
+      <div class="topbar-actions">
+        <a href="/kalapas/table/tu-umum?tab=kepegawaian" target="_blank" class="btn-public">🧭 Lihat Tampilan Kalapas</a>
+      </div>
     </div>
     <div class="content-area">
       <% if (success) { %><div class="alert alert-success">✅ Data berhasil disimpan.</div><% } %>
 
-      <div class="card">
-        <div class="card-header"><h3>➕ Tambah Data Kepegawaian</h3></div>
-        <div class="card-body">
-          <form method="POST" action="/admin/tu-umum/pegawai/add<%= filterQuery || '' %>">
-            <div class="form-grid col-4" style="margin-bottom:12px;">
-              <div class="form-group"><label>Nama Pegawai</label><input type="text" name="nama_pegawai" required></div>
-              <div class="form-group"><label>NIP</label><input type="text" name="nip"></div>
-              <div class="form-group"><label>Pangkat/Gol</label><input type="text" name="pangkat_gol"></div>
-              <div class="form-group"><label>TMT Pangkat</label><input type="date" name="tmt_pangkat"></div>
-              <div class="form-group"><label>Jabatan</label><input type="text" name="jabatan"></div>
-              <div class="form-group"><label>TMT Jabatan</label><input type="date" name="tmt_jabatan"></div>
-              <div class="form-group"><label>Agama</label><input type="text" name="agama"></div>
-              <div class="form-group"><label>Status</label><input type="text" name="status"></div>
-              <div class="form-group"><label>Pendidikan</label><input type="text" name="pendidikan"></div>
-              <div class="form-group"><label>Penempatan/Seksi</label><input type="text" name="penempatan_seksi"></div>
-              <div class="form-group"><label>Penempatan/Bidang</label><input type="text" name="penempatan_bidang"></div>
-              <div class="form-group"><label>Jenis Kelamin</label><input type="text" name="jenis_kelamin"></div>
-              <div class="form-group"><label>Type Pegawai</label><input type="text" name="type_pegawai"></div>
-            </div>
-            <button type="submit" class="btn btn-primary btn-sm">➕ Tambah Pegawai</button>
-          </form>
-        </div>
-      </div>
+      <!-- REKAPITULASI KEPEGAWAIAN MODERN (DI ATAS TABEL) -->
+      <%- include('../partials/rekap-kepegawaian', { rekap }) %>
 
+      <!-- FORM EDIT PEGAWAI (JIKA SEDANG MODE EDIT) -->
       <% if (editPegawai) { %>
-      <div class="edit-panel">
-        <h4>✏️ Edit Data Kepegawaian (ID: <%= editPegawai.id %>)</h4>
-        <form method="POST" action="/admin/tu-umum/pegawai/<%= editPegawai.id %>/update<%= filterQuery || '' %>">
+      <div class="edit-panel" style="margin-bottom: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h4 style="margin:0;">✏️ Edit Data Kepegawaian (ID: <%= editPegawai.id %> - <%= editPegawai.nama_pegawai %>)</h4>
+          <a href="/admin/tu-umum/kepegawaian<%= preserveFilterQuery || '' %>" class="btn btn-secondary btn-xs">✕ Tutup Edit</a>
+        </div>
+        <form method="POST" action="/admin/tu-umum/pegawai/<%= editPegawai.id %>/update<%= preserveFilterQuery || '' %>">
           <div class="form-grid col-4" style="margin-bottom:12px;">
             <div class="form-group"><label>Nama Pegawai</label><input type="text" name="nama_pegawai" value="<%= editPegawai.nama_pegawai %>" required></div>
             <div class="form-group"><label>NIP</label><input type="text" name="nip" value="<%= editPegawai.nip || '' %>"></div>
@@ -69,27 +171,169 @@
             <div class="form-group"><label>Agama</label><input type="text" name="agama" value="<%= editPegawai.agama || '' %>"></div>
             <div class="form-group"><label>Status</label><input type="text" name="status" value="<%= editPegawai.status || '' %>"></div>
             <div class="form-group"><label>Pendidikan</label><input type="text" name="pendidikan" value="<%= editPegawai.pendidikan || '' %>"></div>
-            <div class="form-group"><label>Penempatan/Seksi</label><input type="text" name="penempatan_seksi" value="<%= editPegawai.penempatan_seksi || '' %>"></div>
+            <div class="form-group">
+              <label>Penempatan/Seksi</label>
+              <select name="penempatan_seksi">
+                <% ['KPLP', 'PEMBINAAN NARAPIDANA', 'TATA USAHA', 'KEGIATAN KERJA', 'ADM KEAMANAN DAN TATA TERTIB'].forEach(sek => { %>
+                  <option value="<%= sek %>" <%= editPegawai.penempatan_seksi === sek ? 'selected' : '' %>><%= sek %></option>
+                <% }) %>
+              </select>
+            </div>
             <div class="form-group"><label>Penempatan/Bidang</label><input type="text" name="penempatan_bidang" value="<%= editPegawai.penempatan_bidang || '' %>"></div>
-            <div class="form-group"><label>Jenis Kelamin</label><input type="text" name="jenis_kelamin" value="<%= editPegawai.jenis_kelamin || '' %>"></div>
-            <div class="form-group"><label>Type Pegawai</label><input type="text" name="type_pegawai" value="<%= editPegawai.type_pegawai || '' %>"></div>
+            <div class="form-group">
+              <label>Jenis Kelamin</label>
+              <select name="jenis_kelamin">
+                <option value="Laki-Laki" <%= editPegawai.jenis_kelamin === 'Laki-Laki' ? 'selected' : '' %>>Laki-Laki</option>
+                <option value="Perempuan" <%= editPegawai.jenis_kelamin === 'Perempuan' ? 'selected' : '' %>>Perempuan</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Type Pegawai</label>
+              <select name="type_pegawai">
+                <option value="STRUKTURAL" <%= editPegawai.type_pegawai === 'STRUKTURAL' ? 'selected' : '' %>>STRUKTURAL</option>
+                <option value="JFT" <%= editPegawai.type_pegawai === 'JFT' ? 'selected' : '' %>>JFT (Fungsional Tertentu)</option>
+                <option value="JFU" <%= editPegawai.type_pegawai === 'JFU' ? 'selected' : '' %>>JFU (Pelaksana)</option>
+              </select>
+            </div>
           </div>
           <div style="display:flex;gap:8px;">
-            <button type="submit" class="btn btn-success btn-sm">💾 Simpan</button>
-            <a href="/admin/tu-umum/kepegawaian<%= filterQuery || '' %>" class="btn btn-secondary btn-sm">✕ Batal</a>
+            <button type="submit" class="btn btn-success btn-sm">💾 Simpan Perubahan</button>
+            <a href="/admin/tu-umum/kepegawaian<%= preserveFilterQuery || '' %>" class="btn btn-secondary btn-sm">✕ Batal</a>
           </div>
         </form>
       </div>
       <% } %>
 
+      <!-- FORM TAMBAH PEGAWAI (COLLAPSIBLE) -->
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0;">➕ Tambah Data Pegawai Baru</h3>
+          <button type="button" class="form-toggle-btn" onclick="toggleAddForm(this)" id="btnToggleAddForm">
+            <span>🔽 Buka Form Input</span>
+          </button>
+        </div>
+        <div class="card-body" id="addFormBody" style="display:none;">
+          <form method="POST" action="/admin/tu-umum/pegawai/add<%= preserveFilterQuery || '' %>">
+            <div class="form-grid col-4" style="margin-bottom:12px;">
+              <div class="form-group"><label>Nama Pegawai *</label><input type="text" name="nama_pegawai" placeholder="Nama lengkap & gelar" required></div>
+              <div class="form-group"><label>NIP</label><input type="text" name="nip" placeholder="18 digit NIP"></div>
+              <div class="form-group"><label>Pangkat / Gol</label><input type="text" name="pangkat_gol" placeholder="Misal: Penata Muda (III/a)"></div>
+              <div class="form-group"><label>TMT Pangkat</label><input type="date" name="tmt_pangkat"></div>
+              <div class="form-group"><label>Jabatan</label><input type="text" name="jabatan" placeholder="Jabatan pegawai"></div>
+              <div class="form-group"><label>TMT Jabatan</label><input type="date" name="tmt_jabatan"></div>
+              <div class="form-group">
+                <label>Agama</label>
+                <select name="agama">
+                  <option value="KRISTEN">KRISTEN</option>
+                  <option value="ISLAM">ISLAM</option>
+                  <option value="KATHOLIK">KATHOLIK</option>
+                  <option value="HINDU">HINDU</option>
+                  <option value="BUDHA">BUDHA</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <select name="status">
+                  <option value="MENIKAH">MENIKAH</option>
+                  <option value="BELUM MENIKAH">BELUM MENIKAH</option>
+                  <option value="DUDA">DUDA</option>
+                  <option value="JANDA">JANDA</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Pendidikan</label>
+                <select name="pendidikan">
+                  <option value="SMA">SMA</option>
+                  <option value="DIII">DIII</option>
+                  <option value="DIV">DIV</option>
+                  <option value="STRATA 1">STRATA 1</option>
+                  <option value="STRATA 2">STRATA 2</option>
+                  <option value="STRATA 3">STRATA 3</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Penempatan / Seksi</label>
+                <select name="penempatan_seksi">
+                  <option value="KPLP">KPLP</option>
+                  <option value="PEMBINAAN NARAPIDANA">PEMBINAAN NARAPIDANA</option>
+                  <option value="TATA USAHA">TATA USAHA</option>
+                  <option value="KEGIATAN KERJA">KEGIATAN KERJA</option>
+                  <option value="ADM KEAMANAN DAN TATA TERTIB">ADM KEAMANAN DAN TATA TERTIB</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Penempatan / Bidang</label><input type="text" name="penempatan_bidang" placeholder="Unit kerja / regu"></div>
+              <div class="form-group">
+                <label>Jenis Kelamin</label>
+                <select name="jenis_kelamin">
+                  <option value="Laki-Laki">Laki-Laki</option>
+                  <option value="Perempuan">Perempuan</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Type Pegawai</label>
+                <select name="type_pegawai">
+                  <option value="JFU">JFU (Pelaksana)</option>
+                  <option value="JFT">JFT (Fungsional Tertentu)</option>
+                  <option value="STRUKTURAL">STRUKTURAL</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">➕ Simpan Pegawai Baru</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- FILTER & SEARCH BAR -->
+      <form method="GET" action="/admin/tu-umum/kepegawaian" class="admin-filter-bar">
+        <% if (filters.sortBy) { %><input type="hidden" name="sortBy" value="<%= filters.sortBy %>"><% } %>
+        <% if (filters.sortDir) { %><input type="hidden" name="sortDir" value="<%= filters.sortDir %>"><% } %>
+
+        <input type="text" name="search" placeholder="🔍 Cari nama pegawai, NIP, jabatan..." value="<%= filters.search || '' %>">
+
+        <select name="seksi">
+          <option value="">Semua Seksi / Unit</option>
+          <% rekap.seksiList.forEach(s => { %>
+            <option value="<%= s.code %>" <%= filters.seksi === s.code ? 'selected' : '' %>><%= s.name %></option>
+          <% }) %>
+        </select>
+
+        <select name="type">
+          <option value="">Semua Tipe</option>
+          <option value="STRUKTURAL" <%= filters.type === 'STRUKTURAL' ? 'selected' : '' %>>Struktural</option>
+          <option value="JFT" <%= filters.type === 'JFT' ? 'selected' : '' %>>JFT</option>
+          <option value="JFU" <%= filters.type === 'JFU' ? 'selected' : '' %>>JFU</option>
+        </select>
+
+        <select name="perPage" onchange="this.form.submit()">
+          <option value="15" <%= pagination.perPage === 15 ? 'selected' : '' %>>15 per halaman</option>
+          <option value="25" <%= pagination.perPage === 25 ? 'selected' : '' %>>25 per halaman</option>
+          <option value="50" <%= pagination.perPage === 50 ? 'selected' : '' %>>50 per halaman</option>
+          <option value="100" <%= pagination.perPage === 100 ? 'selected' : '' %>>100 per halaman</option>
+        </select>
+
+        <button type="submit" class="btn btn-primary btn-sm">Terapkan</button>
+        <% if (filters.search || filters.seksi || filters.type) { %>
+          <a href="/admin/tu-umum/kepegawaian" class="btn btn-secondary btn-sm">Reset</a>
+        <% } %>
+      </form>
+
+      <!-- TABEL DAFTAR PEGAWAI DENGAN PAGINATION -->
       <div class="card">
-        <div class="card-header"><h3>Daftar Kepegawaian (<%= pegawaiList.length %> data)</h3></div>
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0;">
+            Daftar Kepegawaian 
+            <span style="font-size:12px; font-weight:normal; color:#64748b;">
+              (<%= pagination.totalFiltered === pagination.totalAll ? `${pagination.totalAll} data` : `${pagination.totalFiltered} dari ${pagination.totalAll} data` %>)
+            </span>
+          </h3>
+          <span style="font-size:12px; color:#64748b;">Halaman <%= pagination.page %> dari <%= pagination.totalPages || 1 %></span>
+        </div>
         <div class="card-body" style="padding:0;">
           <div class="table-wrap">
             <table class="admin-table">
               <thead>
                 <tr>
-                  <th>No</th>
+                  <th style="width:40px; text-align:center;">No</th>
                   <th>Nama Pegawai</th>
                   <th>NIP</th>
                   <th>Pangkat/Gol</th>
@@ -97,8 +341,8 @@
                     <span class="tbl-sort-wrap">
                       <span>TMT Pangkat</span>
                       <span class="tbl-sort-icons">
-                        <a href="/admin/tu-umum/kepegawaian?sortBy=tmt_pangkat&sortDir=asc" class="tbl-sort-icon <%= sortBy === 'tmt_pangkat' && sortDir === 'asc' ? 'active' : '' %>" title="Urut naik">↑</a>
-                        <a href="/admin/tu-umum/kepegawaian?sortBy=tmt_pangkat&sortDir=desc" class="tbl-sort-icon <%= sortBy === 'tmt_pangkat' && sortDir === 'desc' ? 'active' : '' %>" title="Urut turun">↓</a>
+                        <a href="<%= makeSortUrl('tmt_pangkat', 'asc') %>" class="tbl-sort-icon <%= filters.sortBy === 'tmt_pangkat' && filters.sortDir === 'asc' ? 'active' : '' %>" title="Urut naik">↑</a>
+                        <a href="<%= makeSortUrl('tmt_pangkat', 'desc') %>" class="tbl-sort-icon <%= filters.sortBy === 'tmt_pangkat' && filters.sortDir === 'desc' ? 'active' : '' %>" title="Urut turun">↓</a>
                       </span>
                     </span>
                   </th>
@@ -107,8 +351,8 @@
                     <span class="tbl-sort-wrap">
                       <span>TMT Jabatan</span>
                       <span class="tbl-sort-icons">
-                        <a href="/admin/tu-umum/kepegawaian?sortBy=tmt_jabatan&sortDir=asc" class="tbl-sort-icon <%= sortBy === 'tmt_jabatan' && sortDir === 'asc' ? 'active' : '' %>" title="Urut naik">↑</a>
-                        <a href="/admin/tu-umum/kepegawaian?sortBy=tmt_jabatan&sortDir=desc" class="tbl-sort-icon <%= sortBy === 'tmt_jabatan' && sortDir === 'desc' ? 'active' : '' %>" title="Urut turun">↓</a>
+                        <a href="<%= makeSortUrl('tmt_jabatan', 'asc') %>" class="tbl-sort-icon <%= filters.sortBy === 'tmt_jabatan' && filters.sortDir === 'asc' ? 'active' : '' %>" title="Urut naik">↑</a>
+                        <a href="<%= makeSortUrl('tmt_jabatan', 'desc') %>" class="tbl-sort-icon <%= filters.sortBy === 'tmt_jabatan' && filters.sortDir === 'desc' ? 'active' : '' %>" title="Urut turun">↓</a>
                       </span>
                     </span>
                   </th>
@@ -116,48 +360,130 @@
                   <th>Status</th>
                   <th>Pendidikan</th>
                   <th>Penempatan/Seksi</th>
-                  <th>Penempatan/Bidang</th>
                   <th>Jenis Kelamin</th>
-                  <th>Type Pegawai</th>
-                  <th>Aksi</th>
+                  <th>Type</th>
+                  <th style="text-align:center;">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 <% pegawaiList.forEach((item, i) => { %>
                 <tr>
-                  <td><%= i + 1 %></td>
-                  <td><%= item.nama_pegawai || '-' %></td>
-                  <td><%= item.nip || '-' %></td>
+                  <td style="text-align:center; color:#64748b; font-weight:600;"><%= pagination.startIndex + i %></td>
+                  <td style="font-weight:700; color:#0f172a;"><%= item.nama_pegawai || '-' %></td>
+                  <td style="font-family:monospace; font-size:11px;"><%= item.nip || '-' %></td>
                   <td><%= item.pangkat_gol || '-' %></td>
                   <td><%= item.tmt_pangkat ? formatDateIndo(item.tmt_pangkat) : '-' %></td>
-                  <td><%= item.jabatan || '-' %></td>
+                  <td style="color:#1e40af; font-weight:600;"><%= item.jabatan || '-' %></td>
                   <td><%= item.tmt_jabatan ? formatDateIndo(item.tmt_jabatan) : '-' %></td>
                   <td><%= item.agama || '-' %></td>
                   <td><%= item.status || '-' %></td>
                   <td><%= item.pendidikan || '-' %></td>
-                  <td><%= item.penempatan_seksi || '-' %></td>
-                  <td><%= item.penempatan_bidang || '-' %></td>
+                  <td><span style="font-weight:600; color:#334155;"><%= item.penempatan_seksi || '-' %></span></td>
                   <td><%= item.jenis_kelamin || '-' %></td>
-                  <td><%= item.type_pegawai || '-' %></td>
                   <td>
-                    <div class="actions">
-                      <a href="/admin/tu-umum/kepegawaian?editPegawai=<%= item.id %><%= filterQueryWithAmp || '' %>" class="btn btn-warning btn-xs">✏️ Edit</a>
-                      <form method="POST" action="/admin/tu-umum/pegawai/<%= item.id %>/delete<%= filterQuery || '' %>" style="display:inline" onsubmit="return confirm('Hapus data pegawai ini?')">
+                    <% const t = String(item.type_pegawai || '').toUpperCase(); %>
+                    <span class="badge-type <%= t === 'STRUKTURAL' ? 'struktural' : (t === 'JFT' ? 'jft' : 'jfu') %>">
+                      <%= t || '-' %>
+                    </span>
+                  </td>
+                  <td style="text-align:center;">
+                    <div class="actions" style="justify-content:center;">
+                      <a href="/admin/tu-umum/kepegawaian?editPegawai=<%= item.id %><%= preserveFilterQueryWithAmp || '' %>" class="btn btn-warning btn-xs">✏️ Edit</a>
+                      <form method="POST" action="/admin/tu-umum/pegawai/<%= item.id %>/delete<%= preserveFilterQuery || '' %>" style="display:inline" onsubmit="return confirm('Hapus data pegawai <%= item.nama_pegawai %>?')">
                         <button class="btn btn-danger btn-xs">🗑 Hapus</button>
                       </form>
                     </div>
                   </td>
                 </tr>
                 <% }) %>
-                <% if (!pegawaiList.length) { %><tr><td colspan="15" style="text-align:center;color:#aaa;padding:20px;">Belum ada data</td></tr><% } %>
+
+                <% if (!pegawaiList.length) { %>
+                  <tr>
+                    <td colspan="14" style="text-align:center;color:#94a3b8;padding:30px;">
+                      Tidak ada data pegawai yang sesuai dengan filter atau kata kunci pencarian.
+                    </td>
+                  </tr>
+                <% } %>
               </tbody>
             </table>
           </div>
+
+          <!-- Bottom Pagination Controls -->
+          <% if (pagination.totalPages > 1) { %>
+            <div class="pagination-bar">
+              <div class="pagination-info">
+                Menampilkan <%= pagination.startIndex %> – <%= pagination.endIndex %> dari <%= pagination.totalFiltered %> data pegawai
+                <% if (pagination.totalFiltered !== pagination.totalAll) { %>
+                  (difilter dari total <%= pagination.totalAll %> data)
+                <% } %>
+              </div>
+
+              <div class="pagination-controls">
+                <!-- First Page -->
+                <a href="<%= makePageUrl(1) %>" class="page-btn <%= pagination.page <= 1 ? 'disabled' : '' %>" title="Halaman Pertama">«</a>
+                
+                <!-- Prev Page -->
+                <a href="<%= makePageUrl(pagination.page - 1) %>" class="page-btn <%= pagination.page <= 1 ? 'disabled' : '' %>" title="Sebelumnya">‹</a>
+
+                <!-- Page Window -->
+                <% 
+                  let startPage = Math.max(1, pagination.page - 2);
+                  let endPage = Math.min(pagination.totalPages, pagination.page + 2);
+                  if (pagination.page <= 3) {
+                    endPage = Math.min(pagination.totalPages, 5);
+                  }
+                  if (pagination.page >= pagination.totalPages - 2) {
+                    startPage = Math.max(1, pagination.totalPages - 4);
+                  }
+                %>
+
+                <% if (startPage > 1) { %>
+                  <a href="<%= makePageUrl(1) %>" class="page-btn">1</a>
+                  <% if (startPage > 2) { %><span style="padding:0 4px; color:#9ca3af;">...</span><% } %>
+                <% } %>
+
+                <% for (let p = startPage; p <= endPage; p++) { %>
+                  <a href="<%= makePageUrl(p) %>" class="page-btn <%= p === pagination.page ? 'active' : '' %>"><%= p %></a>
+                <% } %>
+
+                <% if (endPage < pagination.totalPages) { %>
+                  <% if (endPage < pagination.totalPages - 1) { %><span style="padding:0 4px; color:#9ca3af;">...</span><% } %>
+                  <a href="<%= makePageUrl(pagination.totalPages) %>" class="page-btn"><%= pagination.totalPages %></a>
+                <% } %>
+
+                <!-- Next Page -->
+                <a href="<%= makePageUrl(pagination.page + 1) %>" class="page-btn <%= pagination.page >= pagination.totalPages ? 'disabled' : '' %>" title="Berikutnya">›</a>
+
+                <!-- Last Page -->
+                <a href="<%= makePageUrl(pagination.totalPages) %>" class="page-btn <%= pagination.page >= pagination.totalPages ? 'disabled' : '' %>" title="Halaman Terakhir">»</a>
+              </div>
+            </div>
+          <% } else if (pegawaiList.length > 0) { %>
+            <div class="pagination-bar">
+              <div class="pagination-info">
+                Menampilkan seluruh <%= pagination.totalFiltered %> data pegawai
+              </div>
+            </div>
+          <% } %>
         </div>
       </div>
 
     </div>
   </div>
 </div>
+
+<script>
+  function toggleAddForm(btn) {
+    const formBody = document.getElementById('addFormBody');
+    if (!formBody) return;
+    if (formBody.style.display === 'none') {
+      formBody.style.display = 'block';
+      btn.innerHTML = '<span>🔼 Tutup Form Input</span>';
+    } else {
+      formBody.style.display = 'none';
+      btn.innerHTML = '<span>🔽 Buka Form Input</span>';
+    }
+  }
+</script>
 </body>
 </html>

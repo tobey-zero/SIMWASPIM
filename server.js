@@ -496,6 +496,187 @@ function formatDateIndo(value) {
   }).format(dateObj);
 }
 
+function getKepegawaianRekap() {
+  const total = db.prepare('SELECT COUNT(*) AS c FROM tu_kepegawaian').get()?.c || 0;
+
+  // Gender
+  const genderRows = db.prepare('SELECT jenis_kelamin, COUNT(*) AS count FROM tu_kepegawaian GROUP BY jenis_kelamin').all();
+  let laki = 0, perempuan = 0;
+  genderRows.forEach(r => {
+    if (String(r.jenis_kelamin || '').toLowerCase().includes('perempuan')) perempuan += Number(r.count);
+    else laki += Number(r.count);
+  });
+
+  // Type Pegawai
+  const typeRows = db.prepare('SELECT type_pegawai, COUNT(*) AS count FROM tu_kepegawaian GROUP BY type_pegawai').all();
+  const typeMap = { STRUKTURAL: 0, JFT: 0, JFU: 0 };
+  typeRows.forEach(r => {
+    const k = String(r.type_pegawai || '').trim().toUpperCase();
+    if (k.includes('STRUKTURAL')) typeMap['STRUKTURAL'] = (typeMap['STRUKTURAL'] || 0) + Number(r.count);
+    else if (k.includes('JFT')) typeMap['JFT'] = (typeMap['JFT'] || 0) + Number(r.count);
+    else typeMap['JFU'] = (typeMap['JFU'] || 0) + Number(r.count);
+  });
+  const typePercent = {
+    STRUKTURAL: total > 0 ? ((typeMap.STRUKTURAL / total) * 100).toFixed(1) : '0',
+    JFT: total > 0 ? ((typeMap.JFT / total) * 100).toFixed(1) : '0',
+    JFU: total > 0 ? ((typeMap.JFU / total) * 100).toFixed(1) : '0'
+  };
+
+  // Seksi List
+  const seksiRows = db.prepare('SELECT penempatan_seksi, COUNT(*) AS count FROM tu_kepegawaian GROUP BY penempatan_seksi').all();
+  const seksiMap = {};
+  seksiRows.forEach(r => { seksiMap[String(r.penempatan_seksi || '').trim().toUpperCase()] = Number(r.count); });
+
+  const seksiList = [
+    { code: 'KPLP', name: 'KPLP (Kesatuan Pengamanan)', count: seksiMap['KPLP'] || 0, color: '#dc2626' },
+    { code: 'PEMBINAAN NARAPIDANA', name: 'Pembinaan Narapidana & Anak Didik', count: seksiMap['PEMBINAAN NARAPIDANA'] || 0, color: '#2563eb' },
+    { code: 'TATA USAHA', name: 'Tata Usaha', count: seksiMap['TATA USAHA'] || 0, color: '#059669' },
+    { code: 'KEGIATAN KERJA', name: 'Kegiatan Kerja (Giatja)', count: seksiMap['KEGIATAN KERJA'] || 0, color: '#d97706' },
+    { code: 'ADM KEAMANAN DAN TATA TERTIB', name: 'Adm. Keamanan & Ketertiban', count: seksiMap['ADM KEAMANAN DAN TATA TERTIB'] || 0, color: '#7c3aed' }
+  ].map(s => ({ ...s, percent: total > 0 ? ((s.count / total) * 100).toFixed(1) : '0' }));
+
+  // Pangkat
+  const pangkatRows = db.prepare('SELECT pangkat_gol, COUNT(*) AS count FROM tu_kepegawaian GROUP BY pangkat_gol').all();
+  const pangkatMap = {};
+  pangkatRows.forEach(r => { pangkatMap[String(r.pangkat_gol || '').trim()] = Number(r.count); });
+
+  const golonganIV = [
+    { code: 'IV/d', name: 'Pembina Utama Madya (IV/d)', count: pangkatMap['Pembina Utama Madya (IV/d)'] || 0 },
+    { code: 'IV/c', name: 'Pembina Utama Muda (IV/c)', count: pangkatMap['Pembina Utama Muda (IV/c)'] || 0 },
+    { code: 'IV/b', name: 'Pembina Tingkat I (IV/b)', count: pangkatMap['Pembina Tingkat I (IV/b)'] || 0 },
+    { code: 'IV/a', name: 'Pembina (IV/a)', count: pangkatMap['Pembina (IV/a)'] || 0 }
+  ];
+  const golonganIII = [
+    { code: 'III/d', name: 'Penata Tingkat I (III/d)', count: pangkatMap['Penata Tingkat I (III/d)'] || 0 },
+    { code: 'III/c', name: 'Penata (III/c)', count: pangkatMap['Penata (III/c)'] || 0 },
+    { code: 'III/b', name: 'Penata Muda Tingkat I (III/b)', count: pangkatMap['Penata Muda Tingkat I (III/b)'] || 0 },
+    { code: 'III/a', name: 'Penata Muda (III/a)', count: pangkatMap['Penata Muda (III/a)'] || 0 }
+  ];
+  const golonganII = [
+    { code: 'II/d', name: 'Pengatur Tingkat I (II/d)', count: pangkatMap['Pengatur Tingkat I (II/d)'] || 0 },
+    { code: 'II/c', name: 'Pengatur (II/c)', count: pangkatMap['Pengatur (II/c)'] || 0 },
+    { code: 'II/b', name: 'Pengatur Muda Tingkat I (II/b)', count: pangkatMap['Pengatur Muda Tingkat I (II/b)'] || 0 },
+    { code: 'II/a', name: 'Pengatur Muda (II/a)', count: pangkatMap['Pengatur Muda (II/a)'] || 0 }
+  ];
+
+  // Pendidikan
+  const pendRows = db.prepare('SELECT pendidikan, COUNT(*) AS count FROM tu_kepegawaian GROUP BY pendidikan').all();
+  const pendOrder = ['SMA', 'STRATA 1', 'STRATA 2', 'DIV', 'DIII', 'STRATA 3'];
+  const pendMap = {};
+  pendRows.forEach(r => { pendMap[String(r.pendidikan || '').trim().toUpperCase()] = Number(r.count); });
+  const pendidikanList = pendOrder.map(p => ({
+    name: p,
+    count: pendMap[p] || 0,
+    percent: total > 0 ? (((pendMap[p] || 0) / total) * 100).toFixed(1) : '0'
+  })).filter(p => p.count > 0);
+
+  // Agama
+  const agamaRows = db.prepare('SELECT agama, COUNT(*) AS count FROM tu_kepegawaian GROUP BY agama').all();
+  const agamaMap = {};
+  agamaRows.forEach(r => { agamaMap[String(r.agama || '').trim().toUpperCase()] = Number(r.count); });
+  const agamaList = ['KRISTEN', 'ISLAM', 'KATHOLIK'].map(a => ({
+    name: a,
+    count: agamaMap[a] || 0,
+    percent: total > 0 ? (((agamaMap[a] || 0) / total) * 100).toFixed(1) : '0'
+  })).filter(a => a.count > 0);
+
+  // Status
+  const statusRows = db.prepare('SELECT status, COUNT(*) AS count FROM tu_kepegawaian GROUP BY status').all();
+  const statusMap = {};
+  statusRows.forEach(r => { statusMap[String(r.status || '').trim().toUpperCase()] = Number(r.count); });
+  const statusList = [
+    { name: 'MENIKAH', count: statusMap['MENIKAH'] || 0 },
+    { name: 'BELUM MENIKAH', count: statusMap['BELUM MENIKAH'] || 0 },
+    { name: 'DUDA', count: (statusMap['DUDA'] || 0) + (statusMap['JANDA'] || 0) }
+  ].map(s => ({
+    ...s,
+    percent: total > 0 ? ((s.count / total) * 100).toFixed(1) : '0'
+  }));
+
+  const naikPangkatCount = db.prepare("SELECT COUNT(*) AS c FROM tu_kepegawaian WHERE tmt_pangkat LIKE '2026%'").get()?.c || 0;
+
+  return {
+    total,
+    gender: {
+      laki,
+      lakiPercent: total > 0 ? ((laki / total) * 100).toFixed(1) : '0',
+      perempuan,
+      perempuanPercent: total > 0 ? ((perempuan / total) * 100).toFixed(1) : '0'
+    },
+    typeMap,
+    typePercent,
+    naikPangkatCount,
+    seksiList,
+    golonganIV,
+    golonganIII,
+    golonganII,
+    pendidikanList,
+    agamaList,
+    statusList
+  };
+}
+
+function getPaginatedKepegawaian(query = {}) {
+  const { sortBy, sortDir } = parseKepegawaianSortQuery(query);
+  const search = String(query.search || '').trim().toLowerCase();
+  const seksi = String(query.seksi || '').trim().toUpperCase();
+  const type = String(query.type || '').trim().toUpperCase();
+  const rawPage = parseInt(query.page, 10);
+  const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
+  const rawLimit = parseInt(query.perPage || query.limit, 10);
+  const perPage = [15, 25, 50, 100].includes(rawLimit) ? rawLimit : 15;
+
+  const allRows = db.prepare('SELECT * FROM tu_kepegawaian ORDER BY id ASC').all();
+  const totalAll = allRows.length;
+
+  let filtered = allRows;
+  if (seksi) {
+    filtered = filtered.filter(item => String(item.penempatan_seksi || '').trim().toUpperCase() === seksi);
+  }
+  if (type) {
+    filtered = filtered.filter(item => String(item.type_pegawai || '').trim().toUpperCase() === type);
+  }
+  if (search) {
+    filtered = filtered.filter(item => {
+      const matchNama = String(item.nama_pegawai || '').toLowerCase().includes(search);
+      const matchNip = String(item.nip || '').toLowerCase().includes(search);
+      const matchJabatan = String(item.jabatan || '').toLowerCase().includes(search);
+      const matchPangkat = String(item.pangkat_gol || '').toLowerCase().includes(search);
+      const matchSeksi = String(item.penempatan_seksi || '').toLowerCase().includes(search);
+      const matchAgama = String(item.agama || '').toLowerCase().includes(search);
+      const matchPendidikan = String(item.pendidikan || '').toLowerCase().includes(search);
+      return matchNama || matchNip || matchJabatan || matchPangkat || matchSeksi || matchAgama || matchPendidikan;
+    });
+  }
+
+  const sorted = sortPegawaiListByTmt(filtered, sortBy, sortDir);
+  const totalFiltered = sorted.length;
+  const totalPages = Math.ceil(totalFiltered / perPage) || 1;
+  const validPage = Math.min(page, totalPages);
+  const offset = (validPage - 1) * perPage;
+  const paginatedRows = sorted.slice(offset, offset + perPage);
+
+  return {
+    rows: paginatedRows,
+    pagination: {
+      page: validPage,
+      perPage,
+      totalAll,
+      totalFiltered,
+      totalPages,
+      startIndex: totalFiltered > 0 ? offset + 1 : 0,
+      endIndex: Math.min(offset + perPage, totalFiltered)
+    },
+    filters: {
+      search,
+      seksi,
+      type,
+      sortBy,
+      sortDir
+    }
+  };
+}
+
 function parseKepegawaianSortQuery(query = {}) {
   const sortBy = ['tmt_pangkat', 'tmt_jabatan'].includes(String(query.sortBy || ''))
     ? String(query.sortBy)
@@ -520,6 +701,186 @@ function sortPegawaiListByTmt(pegawaiList = [], sortBy = 'tmt_pangkat', sortDir 
 
     return String(a?.nama_pegawai || a?.namaPegawai || '').localeCompare(String(b?.nama_pegawai || b?.namaPegawai || ''), 'id', { sensitivity: 'base' });
   });
+}
+
+// ── BMN (Barang Milik Negara) Rekapitulasi & Pagination ─────────────────────────
+function getBmnRekap() {
+  const total = db.prepare('SELECT COUNT(*) AS c FROM tu_umum_barang').get()?.c || 0;
+  const sums = db.prepare(`
+    SELECT
+      COALESCE(SUM(nilai_perolehan), 0) AS totalAset,
+      COALESCE(SUM(akumulasi_penyusutan), 0) AS totalSusut,
+      COALESCE(SUM(nilai_buku), 0) AS totalNilaiBuku
+    FROM tu_umum_barang
+  `).get() || { totalAset: 0, totalSusut: 0, totalNilaiBuku: 0 };
+
+  const totalAset = Number(sums.totalAset) || 0;
+  const akumulasiPenyusutan = Number(sums.totalSusut) || 0;
+  const nilaiBuku = Number(sums.totalNilaiBuku) || (totalAset - akumulasiPenyusutan);
+
+  // Kondisi (Baik vs Rusak Berat)
+  const kondisiRows = db.prepare('SELECT kondisi, COUNT(*) AS count FROM tu_umum_barang GROUP BY kondisi').all();
+  let baik = 0, rusakBerat = 0;
+  kondisiRows.forEach(r => {
+    const k = String(r.kondisi || '').toLowerCase();
+    if (k.includes('rusak')) rusakBerat += Number(r.count);
+    else baik += Number(r.count);
+  });
+  const baikPct = total > 0 ? ((baik / total) * 100).toFixed(1) : '0';
+  const rusakBeratPct = total > 0 ? ((rusakBerat / total) * 100).toFixed(1) : '0';
+
+  // Status (Aktif vs Henti Guna)
+  const statusRows = db.prepare('SELECT status_bmn, COUNT(*) AS count FROM tu_umum_barang GROUP BY status_bmn').all();
+  let aktif = 0, hentiGuna = 0;
+  statusRows.forEach(r => {
+    const s = String(r.status_bmn || '').toLowerCase();
+    if (s.includes('henti') || s.includes('tidak') || s.includes('nonaktif')) hentiGuna += Number(r.count);
+    else aktif += Number(r.count);
+  });
+  const aktifPct = total > 0 ? ((aktif / total) * 100).toFixed(1) : '0';
+  const hentiGunaPct = total > 0 ? ((hentiGuna / total) * 100).toFixed(1) : '0';
+
+  // Kategori Breakdown
+  const katRows = db.prepare(`
+    SELECT
+      kategori,
+      COUNT(*) AS count,
+      COALESCE(SUM(nilai_perolehan), 0) AS totalNilai
+    FROM tu_umum_barang
+    GROUP BY kategori
+    ORDER BY totalNilai DESC
+  `).all();
+
+  const kategoriList = katRows.map(k => ({
+    name: k.kategori || 'Peralatan & Mesin',
+    count: Number(k.count),
+    totalNilai: Number(k.totalNilai),
+    totalNilaiFormatted: formatRupiah(Number(k.totalNilai)),
+    percent: total > 0 ? ((Number(k.count) / total) * 100).toFixed(1) : '0',
+    percentNilai: totalAset > 0 ? ((Number(k.totalNilai) / totalAset) * 100).toFixed(1) : '0'
+  }));
+
+  const susutPct = totalAset > 0 ? ((akumulasiPenyusutan / totalAset) * 100).toFixed(2) : '0';
+  const nilaiBukuPct = totalAset > 0 ? ((nilaiBuku / totalAset) * 100).toFixed(2) : '0';
+
+  return {
+    total,
+    totalAset,
+    akumulasiPenyusutan,
+    nilaiBuku,
+    formatted: {
+      total: new Intl.NumberFormat('id-ID').format(total),
+      totalAset: `Rp ${formatRupiah(totalAset)}`,
+      akumulasiPenyusutan: `Rp ${formatRupiah(akumulasiPenyusutan)}`,
+      nilaiBuku: `Rp ${formatRupiah(nilaiBuku)}`,
+      susutPct,
+      nilaiBukuPct
+    },
+    kondisi: {
+      baik,
+      baikFormatted: new Intl.NumberFormat('id-ID').format(baik),
+      baikPct,
+      rusakBerat,
+      rusakBeratFormatted: new Intl.NumberFormat('id-ID').format(rusakBerat),
+      rusakBeratPct
+    },
+    status: {
+      aktif,
+      aktifFormatted: new Intl.NumberFormat('id-ID').format(aktif),
+      aktifPct,
+      hentiGuna,
+      hentiGunaFormatted: new Intl.NumberFormat('id-ID').format(hentiGuna),
+      hentiGunaPct
+    },
+    kategoriList
+  };
+}
+
+function getPaginatedBmn(query = {}) {
+  const search = String(query.search || '').trim().toLowerCase();
+  const kondisi = String(query.kondisi || '').trim();
+  const statusBmn = String(query.status_bmn || query.status || '').trim();
+  const kategori = String(query.kategori || '').trim();
+  const tahun = String(query.tahun || '').trim();
+  const sortBy = String(query.sortBy || 'id');
+  const sortDir = String(query.sortDir || 'DESC').toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+  const rawPage = parseInt(query.page, 10);
+  const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
+  const rawLimit = parseInt(query.perPage || query.limit, 10);
+  const perPage = [15, 25, 50, 100].includes(rawLimit) ? rawLimit : 15;
+
+  const allRows = db.prepare('SELECT * FROM tu_umum_barang ORDER BY id DESC').all();
+  const totalAll = allRows.length;
+
+  let filtered = allRows;
+  if (kondisi) {
+    filtered = filtered.filter(item => String(item.kondisi || '').toLowerCase() === kondisi.toLowerCase());
+  }
+  if (statusBmn) {
+    filtered = filtered.filter(item => String(item.status_bmn || '').toLowerCase() === statusBmn.toLowerCase());
+  }
+  if (kategori) {
+    filtered = filtered.filter(item => String(item.kategori || '').toLowerCase() === kategori.toLowerCase());
+  }
+  if (tahun) {
+    filtered = filtered.filter(item => String(item.tahun_perolehan || '').trim() === tahun);
+  }
+  if (search) {
+    filtered = filtered.filter(item => {
+      const matchKode = String(item.kode || '').toLowerCase().includes(search);
+      const matchUraian = String(item.uraian || '').toLowerCase().includes(search);
+      const matchNup = String(item.nup || '').toLowerCase().includes(search);
+      const matchLokasi = String(item.lokasi || '').toLowerCase().includes(search);
+      const matchKategori = String(item.kategori || '').toLowerCase().includes(search);
+      const matchTahun = String(item.tahun_perolehan || '').toLowerCase().includes(search);
+      return matchKode || matchUraian || matchNup || matchLokasi || matchKategori || matchTahun;
+    });
+  }
+
+  // Sorting
+  filtered.sort((a, b) => {
+    let valA = a[sortBy];
+    let valB = b[sortBy];
+    if (['nilai_perolehan', 'akumulasi_penyusutan', 'nilai_buku', 'id'].includes(sortBy)) {
+      valA = Number(valA) || 0;
+      valB = Number(valB) || 0;
+    } else {
+      valA = String(valA || '').toLowerCase();
+      valB = String(valB || '').toLowerCase();
+    }
+    if (valA < valB) return sortDir === 'ASC' ? -1 : 1;
+    if (valA > valB) return sortDir === 'ASC' ? 1 : -1;
+    return 0;
+  });
+
+  const totalFiltered = filtered.length;
+  const totalPages = Math.ceil(totalFiltered / perPage) || 1;
+  const validPage = Math.min(page, totalPages);
+  const offset = (validPage - 1) * perPage;
+  const paginatedRows = filtered.slice(offset, offset + perPage);
+
+  return {
+    rows: paginatedRows,
+    pagination: {
+      page: validPage,
+      perPage,
+      totalAll,
+      totalFiltered,
+      totalPages,
+      startIndex: totalFiltered > 0 ? offset + 1 : 0,
+      endIndex: Math.min(offset + perPage, totalFiltered)
+    },
+    filters: {
+      search,
+      kondisi,
+      status_bmn: statusBmn,
+      kategori,
+      tahun,
+      sortBy,
+      sortDir
+    }
+  };
 }
 
 function isOnGoingPunishment(selectedYmd, startDateValue, endDateValue) {
@@ -4083,9 +4444,6 @@ app.get('/kalapas/table/tu-umum', (req, res) => {
     ? String(req.query.tab).toLowerCase()
     : 'realisasi';
   const data = getTuUmumData();
-  const { sortBy, sortDir } = parseKepegawaianSortQuery(req.query);
-  const sortedPegawaiList = sortPegawaiListByTmt(data.pegawaiList, sortBy, sortDir);
-  const makeSortUrl = (targetSortBy, targetSortDir) => `/kalapas/table/tu-umum?tab=kepegawaian&sortBy=${encodeURIComponent(targetSortBy)}&sortDir=${encodeURIComponent(targetSortDir)}`;
   const tuSubmenu = { active: activeTab };
 
   if (activeTab === 'realisasi') {
@@ -4129,98 +4487,104 @@ app.get('/kalapas/table/tu-umum', (req, res) => {
   ]);
 
   if (activeTab === 'bmn') {
-    return res.render('kalapas-table', {
+    const rekap = getBmnRekap();
+    const { rows: bmnRows, pagination, filters } = getPaginatedBmn(req.query);
+
+    const makePageUrl = (targetPage) => {
+      const p = new URLSearchParams();
+      p.set('tab', 'bmn');
+      if (filters.search) p.set('search', filters.search);
+      if (filters.kondisi) p.set('kondisi', filters.kondisi);
+      if (filters.status_bmn) p.set('status_bmn', filters.status_bmn);
+      if (filters.kategori) p.set('kategori', filters.kategori);
+      if (filters.tahun) p.set('tahun', filters.tahun);
+      if (filters.sortBy) p.set('sortBy', filters.sortBy);
+      if (filters.sortDir) p.set('sortDir', filters.sortDir);
+      p.set('perPage', String(pagination.perPage));
+      p.set('page', String(targetPage));
+      return `/kalapas/table/tu-umum?${p.toString()}`;
+    };
+
+    const makeSortUrl = (targetSortBy, targetSortDir) => {
+      const p = new URLSearchParams();
+      p.set('tab', 'bmn');
+      if (filters.search) p.set('search', filters.search);
+      if (filters.kondisi) p.set('kondisi', filters.kondisi);
+      if (filters.status_bmn) p.set('status_bmn', filters.status_bmn);
+      if (filters.kategori) p.set('kategori', filters.kategori);
+      if (filters.tahun) p.set('tahun', filters.tahun);
+      p.set('sortBy', targetSortBy);
+      p.set('sortDir', targetSortDir);
+      p.set('perPage', String(pagination.perPage));
+      p.set('page', '1');
+      return `/kalapas/table/tu-umum?${p.toString()}`;
+    };
+
+    return res.render('kalapas-tu-bmn', {
       pageTitle: 'Laporan BMN',
       sectionTitle: 'LAPORAN BARANG MILIK NEGARA (BMN)',
-      subtitle: `Total data: ${rows.length}`,
-      columns: ['KODE', 'URAIAN', 'SATUAN', 'TAHUN PEROLEHAN', 'SALDO AWAL QTY', 'SALDO AWAL NILAI', 'BERTAMBAH QTY', 'BERTAMBAH NILAI', 'BERKURANG QTY', 'BERKURANG NILAI', 'SALDO AKHIR QTY', 'SALDO AKHIR NILAI'],
-      rows,
+      subtitle: `Total: ${pagination.totalAll} data aset BMN terdata (Halaman ${pagination.page} dari ${pagination.totalPages})`,
+      rows: bmnRows,
+      rekap,
+      pagination,
+      filters,
+      makePageUrl,
+      makeSortUrl,
+      formatRupiah,
       backUrl: '/kalapas',
       tuSubmenu,
     });
   }
 
-  const pegawaiRows = sortedPegawaiList.map((item, index) => [
-    String(index + 1),
-    item.namaPegawai || '-',
-    item.nip || '-',
-    item.pangkatGol || '-',
-    item.tmtPangkat ? formatDateIndo(item.tmtPangkat) : '-',
-    item.jabatan || '-',
-    item.tmtJabatan ? formatDateIndo(item.tmtJabatan) : '-',
-    item.agama || '-',
-    item.status || '-',
-    item.pendidikan || '-',
-    item.penempatanSeksi || '-',
-    item.penempatanBidang || '-',
-    item.jenisKelamin || '-',
-    item.typePegawai || '-',
-  ]);
+  const rekap = getKepegawaianRekap();
+  const { rows: pRows, pagination, filters } = getPaginatedKepegawaian(req.query);
 
-  return res.render('kalapas-table', {
+  const makePageUrl = (targetPage) => {
+    const p = new URLSearchParams();
+    p.set('tab', 'kepegawaian');
+    if (filters.search) p.set('search', filters.search);
+    if (filters.seksi) p.set('seksi', filters.seksi);
+    if (filters.type) p.set('type', filters.type);
+    if (filters.sortBy) p.set('sortBy', filters.sortBy);
+    if (filters.sortDir) p.set('sortDir', filters.sortDir);
+    p.set('perPage', String(pagination.perPage));
+    p.set('page', String(targetPage));
+    return `/kalapas/table/tu-umum?${p.toString()}`;
+  };
+
+  const makeSortUrl = (targetSortBy, targetSortDir) => {
+    const p = new URLSearchParams();
+    p.set('tab', 'kepegawaian');
+    if (filters.search) p.set('search', filters.search);
+    if (filters.seksi) p.set('seksi', filters.seksi);
+    if (filters.type) p.set('type', filters.type);
+    p.set('sortBy', targetSortBy);
+    p.set('sortDir', targetSortDir);
+    p.set('perPage', String(pagination.perPage));
+    p.set('page', '1');
+    return `/kalapas/table/tu-umum?${p.toString()}`;
+  };
+
+  return res.render('kalapas-tu-kepegawaian', {
     pageTitle: 'Data Kepegawaian',
     sectionTitle: 'DATA KEPEGAWAIAN',
-    subtitle: `Total data: ${pegawaiRows.length}`,
-    headerRows: [[
-      { label: 'No' },
-      { label: 'Nama Pegawai' },
-      { label: 'NIP' },
-      { label: 'Pangkat/Gol' },
-      {
-        label: 'TMT Pangkat',
-        sortLinks: [
-          { label: '↑', href: makeSortUrl('tmt_pangkat', 'asc'), active: sortBy === 'tmt_pangkat' && sortDir === 'asc' },
-          { label: '↓', href: makeSortUrl('tmt_pangkat', 'desc'), active: sortBy === 'tmt_pangkat' && sortDir === 'desc' },
-        ],
-      },
-      { label: 'Jabatan' },
-      {
-        label: 'TMT Jabatan',
-        sortLinks: [
-          { label: '↑', href: makeSortUrl('tmt_jabatan', 'asc'), active: sortBy === 'tmt_jabatan' && sortDir === 'asc' },
-          { label: '↓', href: makeSortUrl('tmt_jabatan', 'desc'), active: sortBy === 'tmt_jabatan' && sortDir === 'desc' },
-        ],
-      },
-      { label: 'Agama' },
-      { label: 'Status' },
-      { label: 'Pendidikan' },
-      { label: 'Penempatan/Seksi' },
-      { label: 'Penempatan/Bidang' },
-      { label: 'Jenis Kelamin' },
-      { label: 'Type Pegawai' },
-    ]],
-    columns: ['No', 'Nama Pegawai', 'NIP', 'Pangkat/Gol', 'TMT Pangkat', 'Jabatan', 'TMT Jabatan', 'Agama', 'Status', 'Pendidikan', 'Penempatan/Seksi', 'Penempatan/Bidang', 'Jenis Kelamin', 'Type Pegawai'],
-    rows: pegawaiRows,
+    subtitle: `Total data: ${pagination.totalFiltered}`,
+    rekap,
+    pegawaiList: pRows,
+    pagination,
+    filters,
+    makePageUrl,
+    makeSortUrl,
     backUrl: '/kalapas',
     tuSubmenu,
+    formatDateIndo,
   });
 });
 
 app.get('/kalapas/table/tu-bmn', (req, res) => {
-  const data = getTuUmumData();
-  const rows = data.tuUmumList.map(item => [
-    item.kode || '-',
-    item.uraian || '-',
-    item.satuan || '-',
-    item.tahunPerolehan || '-',
-    item.saldoAwalKuantitas || '0',
-    item.saldoAwalNilai || '0',
-    item.bertambahKuantitas || '0',
-    item.bertambahNilai || '0',
-    item.berkurangKuantitas || '0',
-    item.berkurangNilai || '0',
-    item.saldoAkhirKuantitas || '0',
-    item.saldoAkhirNilai || '0',
-  ]);
-
-  res.render('kalapas-table', {
-    pageTitle: 'Laporan BMN',
-    sectionTitle: 'LAPORAN BARANG MILIK NEGARA (BMN)',
-    subtitle: `Total data: ${rows.length}`,
-    columns: ['KODE', 'URAIAN', 'SATUAN', 'TAHUN PEROLEHAN', 'SALDO AWAL QTY', 'SALDO AWAL NILAI', 'BERTAMBAH QTY', 'BERTAMBAH NILAI', 'BERKURANG QTY', 'BERKURANG NILAI', 'SALDO AKHIR QTY', 'SALDO AKHIR NILAI'],
-    rows,
-    backUrl: '/kalapas'
-  });
+  const p = new URLSearchParams(req.query);
+  p.set('tab', 'bmn');
+  res.redirect(`/kalapas/table/tu-umum?${p.toString()}`);
 });
 
 app.get('/kalapas/table/kepegawaian', (req, res) => {
@@ -7722,11 +8086,31 @@ app.get('/admin/tu-umum/realisasi', requireAccess('tu-umum'), (req, res) => {
 });
 
 app.get('/admin/tu-umum/barang', requireAccess('tu-umum'), (req, res) => {
-  const list = db.prepare('SELECT * FROM tu_umum_barang ORDER BY id DESC').all();
+  const rekap = getBmnRekap();
+  const { rows: list, pagination, filters } = getPaginatedBmn(req.query);
   const edit = req.query.edit ? db.prepare('SELECT * FROM tu_umum_barang WHERE id=?').get(Number(req.query.edit)) : null;
+
+  const makePageUrl = (targetPage) => {
+    const p = new URLSearchParams();
+    if (filters.search) p.set('search', filters.search);
+    if (filters.kondisi) p.set('kondisi', filters.kondisi);
+    if (filters.status_bmn) p.set('status_bmn', filters.status_bmn);
+    if (filters.kategori) p.set('kategori', filters.kategori);
+    if (filters.tahun) p.set('tahun', filters.tahun);
+    if (filters.sortBy) p.set('sortBy', filters.sortBy);
+    if (filters.sortDir) p.set('sortDir', filters.sortDir);
+    p.set('perPage', String(pagination.perPage));
+    p.set('page', String(targetPage));
+    return `/admin/tu-umum/barang?${p.toString()}`;
+  };
+
   res.render('admin/tu-barang', {
     user: req.session.user,
     list,
+    rekap,
+    pagination,
+    filters,
+    makePageUrl,
     edit,
     active: 'tu-barang',
     success: req.query.success,
@@ -7734,24 +8118,60 @@ app.get('/admin/tu-umum/barang', requireAccess('tu-umum'), (req, res) => {
 });
 
 app.get('/admin/tu-umum/kepegawaian', requireAccess('tu-umum'), (req, res) => {
-  const { sortBy, sortDir } = parseKepegawaianSortQuery(req.query);
-  const pegawaiList = db.prepare('SELECT * FROM tu_kepegawaian ORDER BY id ASC').all();
-  const sortedPegawaiList = sortPegawaiListByTmt(pegawaiList, sortBy, sortDir);
+  const rekap = getKepegawaianRekap();
+  const { rows: pegawaiList, pagination, filters } = getPaginatedKepegawaian(req.query);
 
-  const filterParams = new URLSearchParams();
-  filterParams.set('sortBy', sortBy);
-  filterParams.set('sortDir', sortDir);
+  const makePageUrl = (targetPage) => {
+    const p = new URLSearchParams();
+    if (filters.search) p.set('search', filters.search);
+    if (filters.seksi) p.set('seksi', filters.seksi);
+    if (filters.type) p.set('type', filters.type);
+    if (filters.sortBy) p.set('sortBy', filters.sortBy);
+    if (filters.sortDir) p.set('sortDir', filters.sortDir);
+    p.set('perPage', String(pagination.perPage));
+    p.set('page', String(targetPage));
+    return `/admin/tu-umum/kepegawaian?${p.toString()}`;
+  };
+
+  const makeSortUrl = (targetSortBy, targetSortDir) => {
+    const p = new URLSearchParams();
+    if (filters.search) p.set('search', filters.search);
+    if (filters.seksi) p.set('seksi', filters.seksi);
+    if (filters.type) p.set('type', filters.type);
+    p.set('sortBy', targetSortBy);
+    p.set('sortDir', targetSortDir);
+    p.set('perPage', String(pagination.perPage));
+    p.set('page', '1');
+    return `/admin/tu-umum/kepegawaian?${p.toString()}`;
+  };
+
+  const preserveFilterParams = new URLSearchParams();
+  if (filters.search) preserveFilterParams.set('search', filters.search);
+  if (filters.seksi) preserveFilterParams.set('seksi', filters.seksi);
+  if (filters.type) preserveFilterParams.set('type', filters.type);
+  if (filters.sortBy) preserveFilterParams.set('sortBy', filters.sortBy);
+  if (filters.sortDir) preserveFilterParams.set('sortDir', filters.sortDir);
+  if (pagination.page > 1) preserveFilterParams.set('page', String(pagination.page));
+  if (pagination.perPage !== 15) preserveFilterParams.set('perPage', String(pagination.perPage));
+  const preserveFilterQuery = preserveFilterParams.toString() ? `?${preserveFilterParams.toString()}` : '';
+  const preserveFilterQueryWithAmp = preserveFilterParams.toString() ? `&${preserveFilterParams.toString()}` : '';
+
   const editPegawai = req.query.editPegawai ? db.prepare('SELECT * FROM tu_kepegawaian WHERE id=?').get(Number(req.query.editPegawai)) : null;
+
   res.render('admin/tu-kepegawaian', {
     user: req.session.user,
-    pegawaiList: sortedPegawaiList,
+    pegawaiList,
+    rekap,
+    pagination,
+    filters,
+    makePageUrl,
+    makeSortUrl,
+    preserveFilterQuery,
+    preserveFilterQueryWithAmp,
     editPegawai,
-    sortBy,
-    sortDir,
-    filterQuery: `?${filterParams.toString()}`,
-    filterQueryWithAmp: `&${filterParams.toString()}`,
     active: 'tu-kepegawaian',
     success: req.query.success,
+    formatDateIndo,
   });
 });
 
@@ -7867,68 +8287,126 @@ app.post('/admin/tu-umum/indikator/update', requireAccess('tu-umum'), (req, res)
   res.redirect('/admin/tu-umum/realisasi?success=1');
 });
 
+function buildBmnRedirectQuery(reqQuery = {}) {
+  const p = new URLSearchParams();
+  if (reqQuery.search) p.set('search', String(reqQuery.search));
+  if (reqQuery.kondisi) p.set('kondisi', String(reqQuery.kondisi));
+  if (reqQuery.status_bmn) p.set('status_bmn', String(reqQuery.status_bmn));
+  if (reqQuery.kategori) p.set('kategori', String(reqQuery.kategori));
+  if (reqQuery.tahun) p.set('tahun', String(reqQuery.tahun));
+  if (reqQuery.sortBy) p.set('sortBy', String(reqQuery.sortBy));
+  if (reqQuery.sortDir) p.set('sortDir', String(reqQuery.sortDir));
+  if (reqQuery.page) p.set('page', String(reqQuery.page));
+  if (reqQuery.perPage) p.set('perPage', String(reqQuery.perPage));
+  const s = p.toString();
+  return s ? `?${s}` : '';
+}
+
 app.post('/admin/tu-umum/add', requireAccess('tu-umum'), (req, res) => {
+  const redirectQuery = buildBmnRedirectQuery(req.query);
   const {
     kode, uraian, satuan, tahun_perolehan,
+    nup, kondisi, status_bmn,
+    nilai_perolehan, akumulasi_penyusutan,
+    kategori, lokasi,
     saldo_awal_kuantitas, saldo_awal_nilai,
     bertambah_kuantitas, bertambah_nilai,
     berkurang_kuantitas, berkurang_nilai,
     saldo_akhir_kuantitas, saldo_akhir_nilai,
   } = req.body;
+
+  const parsedAset = parseFloat(nilai_perolehan) || 0;
+  const parsedSusut = parseFloat(akumulasi_penyusutan) || 0;
+  const parsedBuku = Math.max(0, parsedAset - parsedSusut);
 
   db.prepare(`
     INSERT INTO tu_umum_barang
-      (kode, uraian, satuan, tahun_perolehan, saldo_awal_kuantitas, saldo_awal_nilai, bertambah_kuantitas, bertambah_nilai, berkurang_kuantitas, berkurang_nilai, saldo_akhir_kuantitas, saldo_akhir_nilai)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (kode, uraian, satuan, tahun_perolehan, saldo_awal_kuantitas, saldo_awal_nilai, bertambah_kuantitas, bertambah_nilai, berkurang_kuantitas, berkurang_nilai, saldo_akhir_kuantitas, saldo_akhir_nilai, nup, kondisi, status_bmn, nilai_perolehan, akumulasi_penyusutan, nilai_buku, kategori, lokasi)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
-    kode, uraian, satuan, String(tahun_perolehan || '').trim(),
-    saldo_awal_kuantitas || '0', saldo_awal_nilai || '0',
+    (kode || '').trim(), (uraian || '').trim(), (satuan || 'Unit').trim(), String(tahun_perolehan || '').trim(),
+    saldo_awal_kuantitas || '1', saldo_awal_nilai || String(parsedAset),
     bertambah_kuantitas || '0', bertambah_nilai || '0',
     berkurang_kuantitas || '0', berkurang_nilai || '0',
-    saldo_akhir_kuantitas || '0', saldo_akhir_nilai || '0'
+    saldo_akhir_kuantitas || '1', saldo_akhir_nilai || String(parsedBuku),
+    String(nup || '').trim(), String(kondisi || 'Baik').trim(), String(status_bmn || 'Aktif').trim(),
+    parsedAset, parsedSusut, parsedBuku,
+    String(kategori || 'Peralatan & Mesin').trim(), String(lokasi || 'Lapas Kelas I Medan').trim()
   );
 
-  res.redirect('/admin/tu-umum/barang?success=1');
+  const prefix = redirectQuery ? `${redirectQuery}&` : '?';
+  res.redirect(`/admin/tu-umum/barang${prefix}success=1`);
 });
 
 app.post('/admin/tu-umum/:id/update', requireAccess('tu-umum'), (req, res) => {
+  const redirectQuery = buildBmnRedirectQuery(req.query);
+  const id = Number(req.params.id);
   const {
     kode, uraian, satuan, tahun_perolehan,
+    nup, kondisi, status_bmn,
+    nilai_perolehan, akumulasi_penyusutan,
+    kategori, lokasi,
     saldo_awal_kuantitas, saldo_awal_nilai,
     bertambah_kuantitas, bertambah_nilai,
     berkurang_kuantitas, berkurang_nilai,
     saldo_akhir_kuantitas, saldo_akhir_nilai,
   } = req.body;
 
+  const parsedAset = parseFloat(nilai_perolehan) || 0;
+  const parsedSusut = parseFloat(akumulasi_penyusutan) || 0;
+  const parsedBuku = Math.max(0, parsedAset - parsedSusut);
+
   db.prepare(`
     UPDATE tu_umum_barang
-    SET kode=?, uraian=?, satuan=?, tahun_perolehan=?, saldo_awal_kuantitas=?, saldo_awal_nilai=?, bertambah_kuantitas=?, bertambah_nilai=?, berkurang_kuantitas=?, berkurang_nilai=?, saldo_akhir_kuantitas=?, saldo_akhir_nilai=?
+    SET kode=?, uraian=?, satuan=?, tahun_perolehan=?,
+        saldo_awal_kuantitas=?, saldo_awal_nilai=?,
+        bertambah_kuantitas=?, bertambah_nilai=?,
+        berkurang_kuantitas=?, berkurang_nilai=?,
+        saldo_akhir_kuantitas=?, saldo_akhir_nilai=?,
+        nup=?, kondisi=?, status_bmn=?,
+        nilai_perolehan=?, akumulasi_penyusutan=?, nilai_buku=?,
+        kategori=?, lokasi=?
     WHERE id=?
   `).run(
-    kode, uraian, satuan, String(tahun_perolehan || '').trim(),
-    saldo_awal_kuantitas || '0', saldo_awal_nilai || '0',
+    (kode || '').trim(), (uraian || '').trim(), (satuan || 'Unit').trim(), String(tahun_perolehan || '').trim(),
+    saldo_awal_kuantitas || '1', saldo_awal_nilai || String(parsedAset),
     bertambah_kuantitas || '0', bertambah_nilai || '0',
     berkurang_kuantitas || '0', berkurang_nilai || '0',
-    saldo_akhir_kuantitas || '0', saldo_akhir_nilai || '0',
-    Number(req.params.id)
+    saldo_akhir_kuantitas || '1', saldo_akhir_nilai || String(parsedBuku),
+    String(nup || '').trim(), String(kondisi || 'Baik').trim(), String(status_bmn || 'Aktif').trim(),
+    parsedAset, parsedSusut, parsedBuku,
+    String(kategori || 'Peralatan & Mesin').trim(), String(lokasi || 'Lapas Kelas I Medan').trim(),
+    id
   );
 
-  res.redirect('/admin/tu-umum/barang?success=1');
+  const prefix = redirectQuery ? `${redirectQuery}&` : '?';
+  res.redirect(`/admin/tu-umum/barang${prefix}success=1`);
 });
 
 app.post('/admin/tu-umum/:id/delete', requireAccess('tu-umum'), (req, res) => {
+  const redirectQuery = buildBmnRedirectQuery(req.query);
   db.prepare('DELETE FROM tu_umum_barang WHERE id=?').run(Number(req.params.id));
-  res.redirect('/admin/tu-umum/barang?success=1');
+  const prefix = redirectQuery ? `${redirectQuery}&` : '?';
+  res.redirect(`/admin/tu-umum/barang${prefix}success=1`);
 });
 
+function buildKepegawaianRedirectQuery(reqQuery = {}) {
+  const p = new URLSearchParams();
+  if (reqQuery.search) p.set('search', String(reqQuery.search));
+  if (reqQuery.seksi) p.set('seksi', String(reqQuery.seksi));
+  if (reqQuery.type) p.set('type', String(reqQuery.type));
+  if (reqQuery.sortBy) p.set('sortBy', String(reqQuery.sortBy));
+  if (reqQuery.sortDir) p.set('sortDir', String(reqQuery.sortDir));
+  if (reqQuery.page) p.set('page', String(reqQuery.page));
+  if (reqQuery.perPage) p.set('perPage', String(reqQuery.perPage));
+  const s = p.toString();
+  return s ? `?${s}` : '';
+}
+
 app.post('/admin/tu-umum/pegawai/add', requireAccess('tu-umum'), (req, res) => {
-  const sortBy = ['tmt_pangkat', 'tmt_jabatan'].includes(String(req.query.sortBy || ''))
-    ? String(req.query.sortBy)
-    : 'tmt_pangkat';
-  const sortDir = String(req.query.sortDir || '').toLowerCase() === 'desc' ? 'desc' : 'asc';
-  const filterQuery = `?sortBy=${encodeURIComponent(sortBy)}&sortDir=${encodeURIComponent(sortDir)}`;
+  const redirectQuery = buildKepegawaianRedirectQuery(req.query);
   const namaPegawai = (req.body.nama_pegawai || '').trim().toUpperCase();
-  if (!namaPegawai) return res.redirect(`/admin/tu-umum/kepegawaian${filterQuery}`);
+  if (!namaPegawai) return res.redirect(`/admin/tu-umum/kepegawaian${redirectQuery}`);
 
   db.prepare(`
     INSERT INTO tu_kepegawaian
@@ -7950,18 +8428,15 @@ app.post('/admin/tu-umum/pegawai/add', requireAccess('tu-umum'), (req, res) => {
     (req.body.type_pegawai || '').trim(),
   );
 
-  res.redirect(`/admin/tu-umum/kepegawaian${filterQuery}&success=1`);
+  const prefix = redirectQuery ? `${redirectQuery}&` : '?';
+  res.redirect(`/admin/tu-umum/kepegawaian${prefix}success=1`);
 });
 
 app.post('/admin/tu-umum/pegawai/:id/update', requireAccess('tu-umum'), (req, res) => {
-  const sortBy = ['tmt_pangkat', 'tmt_jabatan'].includes(String(req.query.sortBy || ''))
-    ? String(req.query.sortBy)
-    : 'tmt_pangkat';
-  const sortDir = String(req.query.sortDir || '').toLowerCase() === 'desc' ? 'desc' : 'asc';
-  const filterQuery = `?sortBy=${encodeURIComponent(sortBy)}&sortDir=${encodeURIComponent(sortDir)}`;
+  const redirectQuery = buildKepegawaianRedirectQuery(req.query);
   const id = Number(req.params.id);
   const namaPegawai = (req.body.nama_pegawai || '').trim().toUpperCase();
-  if (!namaPegawai) return res.redirect(`/admin/tu-umum/kepegawaian${filterQuery}`);
+  if (!namaPegawai) return res.redirect(`/admin/tu-umum/kepegawaian${redirectQuery}`);
 
   db.prepare(`
     UPDATE tu_kepegawaian
@@ -7984,17 +8459,15 @@ app.post('/admin/tu-umum/pegawai/:id/update', requireAccess('tu-umum'), (req, re
     id,
   );
 
-  res.redirect(`/admin/tu-umum/kepegawaian${filterQuery}&success=1`);
+  const prefix = redirectQuery ? `${redirectQuery}&` : '?';
+  res.redirect(`/admin/tu-umum/kepegawaian${prefix}success=1`);
 });
 
 app.post('/admin/tu-umum/pegawai/:id/delete', requireAccess('tu-umum'), (req, res) => {
-  const sortBy = ['tmt_pangkat', 'tmt_jabatan'].includes(String(req.query.sortBy || ''))
-    ? String(req.query.sortBy)
-    : 'tmt_pangkat';
-  const sortDir = String(req.query.sortDir || '').toLowerCase() === 'desc' ? 'desc' : 'asc';
-  const filterQuery = `?sortBy=${encodeURIComponent(sortBy)}&sortDir=${encodeURIComponent(sortDir)}`;
+  const redirectQuery = buildKepegawaianRedirectQuery(req.query);
   db.prepare('DELETE FROM tu_kepegawaian WHERE id=?').run(Number(req.params.id));
-  res.redirect(`/admin/tu-umum/kepegawaian${filterQuery}&success=1`);
+  const prefix = redirectQuery ? `${redirectQuery}&` : '?';
+  res.redirect(`/admin/tu-umum/kepegawaian${prefix}success=1`);
 });
 
 // ── Rencana Kerja & Realisasi Bulanan (Tata Usaha) ──────────────────────────
