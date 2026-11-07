@@ -1,12 +1,18 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= pageTitle %> - Kalapas</title>
+  <title>
+    <%= pageTitle %> - Kalapas
+  </title>
   <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
   <style>
-    .kalapas-table-wrap { padding: 14px 15px; }
+    .kalapas-table-wrap {
+      padding: 14px 15px;
+    }
+
     .kalapas-table-toolbar {
       display: flex;
       justify-content: space-between;
@@ -15,11 +21,12 @@
       align-items: center;
       margin-bottom: 12px;
     }
+
     .kalapas-btn {
       text-decoration: none;
       color: #fff;
       background: #1a4bb8;
-      border: 1px solid rgba(255,255,255,.3);
+      border: 1px solid rgba(255, 255, 255, .3);
       border-radius: 6px;
       padding: 7px 13px;
       font-size: 12px;
@@ -30,12 +37,19 @@
       cursor: pointer;
       transition: background 0.15s ease;
     }
-    .kalapas-btn:hover { background: #153e98; }
+
+    .kalapas-btn:hover {
+      background: #153e98;
+    }
+
     .kalapas-btn-secondary {
       background: #334155;
       border-color: #475569;
     }
-    .kalapas-btn-secondary:hover { background: #1e293b; }
+
+    .kalapas-btn-secondary:hover {
+      background: #1e293b;
+    }
 
     .kalapas-submenu {
       display: flex;
@@ -43,6 +57,7 @@
       flex-wrap: wrap;
       margin-bottom: 14px;
     }
+
     .kalapas-submenu a {
       text-decoration: none;
       border: 1px solid #93c5fd;
@@ -54,11 +69,15 @@
       font-weight: bold;
       transition: all 0.15s ease;
     }
-    .kalapas-submenu a:hover { background: #dbeafe; }
+
+    .kalapas-submenu a:hover {
+      background: #dbeafe;
+    }
+
     .kalapas-submenu a.active {
       color: #fff;
       background: #1a4bb8;
-      border-color: rgba(255,255,255,.3);
+      border-color: rgba(255, 255, 255, .3);
     }
 
     /* Filter Panel */
@@ -68,8 +87,9 @@
       border-radius: 10px;
       padding: 12px 16px;
       margin-bottom: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
+
     .filter-form {
       display: flex;
       flex-wrap: wrap;
@@ -77,10 +97,12 @@
       gap: 10px;
       width: 100%;
     }
+
     .filter-input-wrap {
       flex: 1 1 200px;
       position: relative;
     }
+
     .filter-input {
       width: 100%;
       padding: 7px 12px;
@@ -90,10 +112,12 @@
       outline: none;
       box-sizing: border-box;
     }
+
     .filter-input:focus {
       border-color: #2563eb;
-      box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
     }
+
     .filter-select {
       padding: 7px 10px;
       font-size: 12px;
@@ -103,6 +127,7 @@
       color: #1e293b;
       outline: none;
     }
+
     .filter-btn {
       padding: 7px 14px;
       font-size: 12px;
@@ -114,10 +139,26 @@
       align-items: center;
       gap: 5px;
     }
-    .filter-btn-primary { background: #2563eb; color: #fff; }
-    .filter-btn-primary:hover { background: #1d4ed8; }
-    .filter-btn-reset { background: #f1f5f9; color: #475569; text-decoration: none; border: 1px solid #cbd5e1; }
-    .filter-btn-reset:hover { background: #e2e8f0; }
+
+    .filter-btn-primary {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .filter-btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .filter-btn-reset {
+      background: #f1f5f9;
+      color: #475569;
+      text-decoration: none;
+      border: 1px solid #cbd5e1;
+    }
+
+    .filter-btn-reset:hover {
+      background: #e2e8f0;
+    }
 
     /* Modern Table Container */
     .table-container {
@@ -128,17 +169,20 @@
       overflow: hidden;
       margin-bottom: 16px;
     }
+
     .table-responsive {
       width: 100%;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
+
     .bmn-data-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
       text-align: left;
     }
+
     .bmn-data-table th {
       background: #0f172a;
       color: #f8fafc;
@@ -150,6 +194,7 @@
       border-bottom: 2px solid #1e293b;
       white-space: nowrap;
     }
+
     .bmn-data-table th a {
       color: #f8fafc;
       text-decoration: none;
@@ -157,18 +202,22 @@
       align-items: center;
       gap: 4px;
     }
+
     .bmn-data-table th a:hover {
       color: #93c5fd;
     }
+
     .bmn-data-table td {
       padding: 10px 12px;
       border-bottom: 1px solid #f1f5f9;
       color: #334155;
       vertical-align: middle;
     }
+
     .bmn-data-table tr:hover td {
       background: #f8fafc;
     }
+
     .bmn-data-table tr:last-child td {
       border-bottom: none;
     }
@@ -183,11 +232,36 @@
       font-weight: 600;
       white-space: nowrap;
     }
-    .bmn-badge-emerald { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-    .bmn-badge-rose { background: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; }
-    .bmn-badge-blue { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
-    .bmn-badge-amber { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-    .bmn-badge-slate { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+
+    .bmn-badge-emerald {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .bmn-badge-rose {
+      background: #fff1f2;
+      color: #9f1239;
+      border: 1px solid #fecdd3;
+    }
+
+    .bmn-badge-blue {
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+
+    .bmn-badge-amber {
+      background: #fffbeb;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .bmn-badge-slate {
+      background: #f8fafc;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
 
     /* Pagination Bar */
     .pagination-bar {
@@ -202,7 +276,11 @@
       font-size: 12px;
       color: #475569;
     }
-    .pagination-info { font-weight: 500; }
+
+    .pagination-info {
+      font-weight: 500;
+    }
+
     .pagination-controls {
       display: flex;
       align-items: center;
@@ -211,7 +289,9 @@
       margin: 0;
       padding: 0;
     }
-    .pagination-controls a, .pagination-controls span {
+
+    .pagination-controls a,
+    .pagination-controls span {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -227,17 +307,20 @@
       border: 1px solid #cbd5e1;
       transition: all 0.15s ease;
     }
+
     .pagination-controls a:hover {
       background: #eff6ff;
       border-color: #93c5fd;
       color: #1d4ed8;
     }
+
     .pagination-controls .active {
       background: #2563eb;
       border-color: #2563eb;
       color: #ffffff;
       cursor: default;
     }
+
     .pagination-controls .disabled {
       background: #f1f5f9;
       border-color: #e2e8f0;
@@ -246,241 +329,388 @@
     }
 
     @media print {
-      body { background: #fff !important; }
-      .kalapas-table-toolbar, .kalapas-submenu, .filter-panel, .pagination-bar, .rb-toggle-btn { display: none !important; }
-      .table-container, .rb-dashboard { box-shadow: none !important; border: 1px solid #000 !important; }
-      .bmn-data-table th { background: #eee !important; color: #000 !important; border-bottom: 2px solid #000 !important; }
-      .bmn-data-table td { border-bottom: 1px solid #ddd !important; color: #000 !important; }
+      body {
+        background: #fff !important;
+      }
+
+      .kalapas-table-toolbar,
+      .kalapas-submenu,
+      .filter-panel,
+      .pagination-bar,
+      .rb-toggle-btn {
+        display: none !important;
+      }
+
+      .table-container,
+      .rb-dashboard {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+      }
+
+      .bmn-data-table th {
+        background: #eee !important;
+        color: #000 !important;
+        border-bottom: 2px solid #000 !important;
+      }
+
+      .bmn-data-table td {
+        border-bottom: 1px solid #ddd !important;
+        color: #000 !important;
+      }
     }
   </style>
 </head>
-<body style="background:#f1f5f9; margin:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
 
-<div class="kalapas-table-wrap">
-  <!-- Top Navigation & Actions -->
-  <div class="kalapas-table-toolbar">
-    <div>
-      <h2 style="margin:0 0 4px 0; font-size:18px; font-weight:800; color:#0f172a; letter-spacing:-0.2px;"><%= sectionTitle %></h2>
-      <p style="margin:0; font-size:12px; color:#64748b;"><%= subtitle %></p>
-    </div>
-    <div style="display:flex; gap:8px;">
-      <button onclick="window.print()" class="kalapas-btn kalapas-btn-secondary">
-        🖨️ Cetak Laporan
-      </button>
-      <a href="<%= backUrl %>" class="kalapas-btn">
-        🧭 Kembali ke Dashboard
-      </a>
-    </div>
-  </div>
+<body
+  style="background:#f1f5f9; margin:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
 
-  <!-- Submenu Tata Usaha -->
-  <div class="kalapas-submenu">
-    <a href="/kalapas/table/tu-umum?tab=realisasi" class="<%= tuSubmenu.active === 'realisasi' ? 'active' : '' %>">📊 Realisasi Keuangan</a>
-    <a href="/kalapas/table/tu-umum?tab=rencana-kerja" class="<%= tuSubmenu.active === 'rencana-kerja' ? 'active' : '' %>">📅 Rencana Kerja</a>
-    <a href="/kalapas/table/tu-umum?tab=bmn" class="<%= tuSubmenu.active === 'bmn' ? 'active' : '' %>">📦 BMN (Daftar Barang)</a>
-    <a href="/kalapas/table/tu-umum?tab=kepegawaian" class="<%= tuSubmenu.active === 'kepegawaian' ? 'active' : '' %>">👥 Kepegawaian</a>
-  </div>
-
-  <!-- Modern Rekapitulasi BMN Component Directly Above Table -->
-  <%- include('partials/rekap-bmn', { rekap, filters, baseUrl: '/kalapas/table/tu-umum?tab=bmn' }) %>
-
-  <!-- Search and Filter Bar -->
-  <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-    <div style="background: #0f387d; color: #ffffff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
-      <span style="font-weight: 700; font-size: 13px; letter-spacing: 0.3px; text-transform: uppercase;">LAPORAN BARANG MILIK NEGARA (BMN)</span>
-      <span style="background: rgba(255,255,255,0.2); color: #fff; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
-        <%= pagination.totalFiltered %> <%= pagination.totalFiltered !== pagination.totalAll ? `dari ${pagination.totalAll}` : '' %> data
-      </span>
-    </div>
-    <div style="padding: 12px 16px; background: #ffffff;">
-      <form method="GET" action="/kalapas/table/tu-umum" style="display: flex; flex-direction: column; gap: 8px;">
-        <input type="hidden" name="tab" value="bmn">
-        <label style="font-size: 12px; color: #475569; font-weight: 600;">Pencarian tabel ini</label>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <input type="text" name="search" value="<%= filters.search || '' %>" placeholder="Cari data laporan barang pengguna (kode, uraian, nilai)..." style="flex: 1 1 280px; padding: 8px 12px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;">
-          <select name="perPage" style="padding: 8px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff;" title="Jumlah data per halaman">
-            <option value="15" <%= pagination.perPage === 15 ? 'selected' : '' %>>15 baris / hal</option>
-            <option value="25" <%= pagination.perPage === 25 ? 'selected' : '' %>>25 baris / hal</option>
-            <option value="50" <%= pagination.perPage === 50 ? 'selected' : '' %>>50 baris / hal</option>
-            <option value="100" <%= pagination.perPage === 100 ? 'selected' : '' %>>100 baris / hal</option>
-          </select>
-          <button type="submit" class="filter-btn filter-btn-primary">🔍 Cari</button>
-          <% if (filters.search || filters.kondisi || filters.status_bmn || filters.kategori) { %>
-            <a href="/kalapas/table/tu-umum?tab=bmn" class="filter-btn filter-btn-reset">✕ Reset</a>
-          <% } %>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <%
-    function displayMoney(val) {
-      if (val === null || val === undefined || val === '') return '0';
-      if (typeof val === 'number') return new Intl.NumberFormat('id-ID').format(val);
-      const str = String(val).trim();
-      if (str === '0' || str === '-') return str;
-      if (/^\d{1,3}(\.\d{3})+$/.test(str)) return str;
-      const num = parseFloat(str.replace(/[^0-9-]/g, ''));
-      if (Number.isFinite(num)) return new Intl.NumberFormat('id-ID').format(num);
-      return str;
-    }
-  %>
-
-  <!-- Paginated BMN Data Table: Authentic 12 Columns -->
-  <div class="table-container">
-    <div class="table-responsive">
-      <table class="bmn-data-table">
-        <thead>
-          <tr>
-            <th style="width: 35px; text-align: center;">#</th>
-            <th>
-              <a href="<%= makeSortUrl('kode', filters.sortDir === 'ASC' ? 'DESC' : 'ASC') %>">
-                KODE
-                <% if (filters.sortBy === 'kode') { %>
-                  <span><%= filters.sortDir === 'ASC' ? '▲' : '▼' %></span>
-                <% } %>
-              </a>
-            </th>
-            <th>
-              <a href="<%= makeSortUrl('uraian', filters.sortDir === 'ASC' ? 'DESC' : 'ASC') %>">
-                URAIAN
-                <% if (filters.sortBy === 'uraian') { %>
-                  <span><%= filters.sortDir === 'ASC' ? '▲' : '▼' %></span>
-                <% } %>
-              </a>
-            </th>
-            <th>SATUAN</th>
-            <th>TAHUN PEROLEHAN</th>
-            <th style="text-align: center;">SALDO AWAL QTY</th>
-            <th style="text-align: right;">
-              <a href="<%= makeSortUrl('saldo_awal_nilai', filters.sortDir === 'ASC' ? 'DESC' : 'ASC') %>">
-                SALDO AWAL NILAI
-                <% if (filters.sortBy === 'saldo_awal_nilai') { %>
-                  <span><%= filters.sortDir === 'ASC' ? '▲' : '▼' %></span>
-                <% } %>
-              </a>
-            </th>
-            <th style="text-align: center;">BERTAMBAH QTY</th>
-            <th style="text-align: right;">
-              <a href="<%= makeSortUrl('bertambah_nilai', filters.sortDir === 'ASC' ? 'DESC' : 'ASC') %>">
-                BERTAMBAH NILAI
-                <% if (filters.sortBy === 'bertambah_nilai') { %>
-                  <span><%= filters.sortDir === 'ASC' ? '▲' : '▼' %></span>
-                <% } %>
-              </a>
-            </th>
-            <th style="text-align: center;">BERKURANG QTY</th>
-            <th style="text-align: right;">BERKURANG NILAI</th>
-            <th style="text-align: center;">SALDO AKHIR QTY</th>
-            <th style="text-align: right;">
-              <a href="<%= makeSortUrl('saldo_akhir_nilai', filters.sortDir === 'ASC' ? 'DESC' : 'ASC') %>">
-                SALDO AKHIR NILAI
-                <% if (filters.sortBy === 'saldo_akhir_nilai') { %>
-                  <span><%= filters.sortDir === 'ASC' ? '▲' : '▼' %></span>
-                <% } %>
-              </a>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if (!rows.length) { %>
-            <tr>
-              <td colspan="13" style="text-align:center; padding: 40px; color: #94a3b8;">
-                <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Tidak ada data BMN yang cocok</div>
-                <div style="font-size: 12px;">Coba ubah kata kunci pencarian atau reset filter.</div>
-              </td>
-            </tr>
-          <% } else { %>
-            <% rows.forEach((item, idx) => { %>
-              <tr>
-                <td style="text-align: center; color: #94a3b8; font-weight: 600;"><%= pagination.startIndex + idx %></td>
-                <td style="font-family: monospace; font-weight: 700; color: #0f172a; white-space: nowrap;"><%= item.kode %></td>
-                <td style="font-weight: 600; color: #1e293b;"><%= item.uraian %></td>
-                <td style="color: #475569; white-space: nowrap;"><%= item.satuan || '-' %></td>
-                <td style="text-align: center; color: #64748b;"><%= item.tahun_perolehan || '-' %></td>
-                <td style="text-align: center; font-weight: 600;"><%= item.saldo_awal_kuantitas ?? '0' %></td>
-                <td style="text-align: right; font-family: monospace; font-weight: 600; color: #0f172a; white-space: nowrap;">
-                  <%= displayMoney(item.saldo_awal_nilai) %>
-                </td>
-                <td style="text-align: center; font-weight: 600;"><%= item.bertambah_kuantitas ?? '0' %></td>
-                <td style="text-align: right; font-family: monospace; font-weight: 600; color: #0f172a; white-space: nowrap;">
-                  <%= displayMoney(item.bertambah_nilai) %>
-                </td>
-                <td style="text-align: center; font-weight: 600;"><%= item.berkurang_kuantitas ?? '0' %></td>
-                <td style="text-align: right; font-family: monospace; font-weight: 600; color: #0f172a; white-space: nowrap;">
-                  <%= displayMoney(item.berkurang_nilai) %>
-                </td>
-                <td style="text-align: center; font-weight: 700; color: #1d4ed8;"><%= item.saldo_akhir_kuantitas ?? '0' %></td>
-                <td style="text-align: right; font-family: monospace; font-weight: 700; color: #0f172a; white-space: nowrap;">
-                  <%= displayMoney(item.saldo_akhir_nilai) %>
-                </td>
-              </tr>
-            <% }) %>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Pagination Navigation Controls -->
-    <% if (pagination.totalFiltered > 0) { %>
-      <div class="pagination-bar">
-        <div class="pagination-info">
-          Menampilkan <strong><%= pagination.startIndex %>–<%= pagination.endIndex %></strong> dari <strong><%= pagination.totalFiltered %></strong> data barang
-          <% if (pagination.totalFiltered !== pagination.totalAll) { %>
-            <span style="color: #64748b;">(difilter dari total <%= pagination.totalAll %>)</span>
-          <% } %>
-        </div>
-
-        <ul class="pagination-controls">
-          <!-- First & Prev -->
-          <% if (pagination.page > 1) { %>
-            <li><a href="<%= makePageUrl(1) %>" title="Halaman Pertama">&laquo;</a></li>
-            <li><a href="<%= makePageUrl(pagination.page - 1) %>" title="Sebelumnya">&lsaquo;</a></li>
-          <% } else { %>
-            <li><span class="disabled">&laquo;</span></li>
-            <li><span class="disabled">&lsaquo;</span></li>
-          <% } %>
-
-          <!-- Numeric Pages Window -->
-          <%
-            const delta = 2;
-            let startP = Math.max(1, pagination.page - delta);
-            let endP = Math.min(pagination.totalPages, pagination.page + delta);
-            if (pagination.page <= delta + 1) endP = Math.min(pagination.totalPages, delta * 2 + 1);
-            if (pagination.page >= pagination.totalPages - delta) startP = Math.max(1, pagination.totalPages - (delta * 2));
-          %>
-
-          <% if (startP > 1) { %>
-            <li><a href="<%= makePageUrl(1) %>">1</a></li>
-            <% if (startP > 2) { %><li><span class="disabled">...</span></li><% } %>
-          <% } %>
-
-          <% for (let p = startP; p <= endP; p++) { %>
-            <% if (p === pagination.page) { %>
-              <li><span class="active"><%= p %></span></li>
-            <% } else { %>
-              <li><a href="<%= makePageUrl(p) %>"><%= p %></a></li>
-            <% } %>
-          <% } %>
-
-          <% if (endP < pagination.totalPages) { %>
-            <% if (endP < pagination.totalPages - 1) { %><li><span class="disabled">...</span></li><% } %>
-            <li><a href="<%= makePageUrl(pagination.totalPages) %>"><%= pagination.totalPages %></a></li>
-          <% } %>
-
-          <!-- Next & Last -->
-          <% if (pagination.page < pagination.totalPages) { %>
-            <li><a href="<%= makePageUrl(pagination.page + 1) %>" title="Berikutnya">&rsaquo;</a></li>
-            <li><a href="<%= makePageUrl(pagination.totalPages) %>" title="Halaman Terakhir">&raquo;</a></li>
-          <% } else { %>
-            <li><span class="disabled">&rsaquo;</span></li>
-            <li><span class="disabled">&raquo;</span></li>
-          <% } %>
-        </ul>
+  <div class="kalapas-table-wrap">
+    <!-- Top Navigation & Actions -->
+    <div class="kalapas-table-toolbar">
+      <div>
+        <h2 style="margin:0 0 4px 0; font-size:18px; font-weight:800; color:#0f172a; letter-spacing:-0.2px;">
+          <%= sectionTitle %>
+        </h2>
+        <p style="margin:0; font-size:12px; color:#64748b;">
+          <%= subtitle %>
+        </p>
       </div>
-    <% } %>
+      <div style="display:flex; gap:8px;">
+        <button onclick="window.print()" class="kalapas-btn kalapas-btn-secondary">
+          🖨️ Cetak Laporan
+        </button>
+        <a href="<%= backUrl %>" class="kalapas-btn">
+          🧭 Kembali ke Dashboard
+        </a>
+      </div>
+    </div>
+
+    <!-- Submenu Tata Usaha -->
+    <div class="kalapas-submenu">
+      <a href="/kalapas/table/tu-umum?tab=realisasi" class="<%= tuSubmenu.active === 'realisasi' ? 'active' : '' %>">📊
+        Realisasi Keuangan</a>
+      <a href="/kalapas/table/tu-umum?tab=rencana-kerja"
+        class="<%= tuSubmenu.active === 'rencana-kerja' ? 'active' : '' %>">📅 Rencana Kerja</a>
+      <a href="/kalapas/table/tu-umum?tab=bmn" class="<%= tuSubmenu.active === 'bmn' ? 'active' : '' %>">📦 BMN (Daftar
+        Barang)</a>
+      <a href="/kalapas/table/tu-umum?tab=kepegawaian"
+        class="<%= tuSubmenu.active === 'kepegawaian' ? 'active' : '' %>">👥 Kepegawaian</a>
+    </div>
+
+    <!-- Modern Rekapitulasi BMN Component Directly Above Table -->
+    <%- include('partials/rekap-bmn', { rekap, filters, baseUrl: '/kalapas/table/tu-umum?tab=bmn' }) %>
+
+      <!-- Search and Filter Bar -->
+      <div
+        style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div
+          style="background: #0f387d; color: #ffffff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 700; font-size: 13px; letter-spacing: 0.3px; text-transform: uppercase;">LAPORAN
+            BARANG MILIK NEGARA (BMN)</span>
+          <span
+            style="background: rgba(255,255,255,0.2); color: #fff; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+            <%= pagination.totalFiltered %>
+              <%= pagination.totalFiltered !==pagination.totalAll ? `dari ${pagination.totalAll}` : '' %> data
+          </span>
+        </div>
+        <div style="padding: 12px 16px; background: #ffffff;">
+          <form method="GET" action="/kalapas/table/tu-umum" style="display: flex; flex-direction: column; gap: 8px;">
+            <input type="hidden" name="tab" value="bmn">
+            <% if (filters.kondisi) { %><input type="hidden" name="kondisi" value="<%= filters.kondisi %>">
+              <% } %>
+                <% if (filters.status_bmn) { %><input type="hidden" name="status_bmn" value="<%= filters.status_bmn %>">
+                  <% } %>
+                    <% if (filters.kategori) { %><input type="hidden" name="kategori" value="<%= filters.kategori %>">
+                      <% } %>
+                        <% if (filters.tahun) { %><input type="hidden" name="tahun" value="<%= filters.tahun %>">
+                          <% } %>
+                            <label style="font-size: 12px; color: #475569; font-weight: 600;">Pencarian tabel
+                              ini</label>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                              <input type="text" name="search" value="<%= filters.search || '' %>"
+                                placeholder="Cari data laporan barang pengguna (kode, uraian, nilai)..."
+                                style="flex: 1 1 280px; padding: 8px 12px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;">
+                              <select name="perPage"
+                                style="padding: 8px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff;"
+                                title="Jumlah data per halaman">
+                                <option value="15" <%=pagination.perPage===15 ? 'selected' : '' %>>15 baris / hal
+                                </option>
+                                <option value="25" <%=pagination.perPage===25 ? 'selected' : '' %>>25 baris / hal
+                                </option>
+                                <option value="50" <%=pagination.perPage===50 ? 'selected' : '' %>>50 baris / hal
+                                </option>
+                                <option value="100" <%=pagination.perPage===100 ? 'selected' : '' %>>100 baris / hal
+                                </option>
+                              </select>
+                              <button type="submit" class="filter-btn filter-btn-primary">🔍 Cari</button>
+                              <% if (filters.search || filters.kondisi || filters.status_bmn || filters.kategori) { %>
+                                <a href="/kalapas/table/tu-umum?tab=bmn" class="filter-btn filter-btn-reset">✕ Reset</a>
+                                <% } %>
+                            </div>
+          </form>
+        </div>
+      </div>
+
+      <% function displayMoney(val) { if (val===null || val===undefined || val==='' ) return '0' ; if (typeof
+        val==='number' ) return new Intl.NumberFormat('id-ID').format(val); const str=String(val).trim(); if (str==='0'
+        || str==='-' ) return str; if (/^\d{1,3}(\.\d{3})+$/.test(str)) return str; const
+        num=parseFloat(str.replace(/[^0-9-]/g, '' )); if (Number.isFinite(num)) return new
+        Intl.NumberFormat('id-ID').format(num); return str; } %>
+
+        <!-- Paginated BMN Data Table: Authentic 12 Columns -->
+        <div class="table-container">
+          <div class="table-responsive">
+            <table class="bmn-data-table">
+              <thead>
+                <tr>
+                  <th style="width: 35px; text-align: center;">#</th>
+                  <th>
+                    <a href="<%= makeSortUrl('kode', filters.sortDir === 'ASC' ? 'DESC' : 'ASC') %>">
+                      KODE
+                      <% if (filters.sortBy==='kode' ) { %>
+                        <span>
+                          <%= filters.sortDir==='ASC' ? '▲' : '▼' %>
+                        </span>
+                        <% } %>
+                    </a>
+                  </th>
+                  <th>
+                    <a href="<%= makeSortUrl('uraian', filters.sortDir === 'ASC' ? 'DESC' : 'ASC') %>">
+                      URAIAN
+                      <% if (filters.sortBy==='uraian' ) { %>
+                        <span>
+                          <%= filters.sortDir==='ASC' ? '▲' : '▼' %>
+                        </span>
+                        <% } %>
+                    </a>
+                  </th>
+                  <th>SATUAN</th>
+                  <th style="text-align: center;">
+                    <a href="<%= makeSortUrl('kondisi', filters.sortDir === 'ASC' ? 'DESC' : 'ASC') %>">
+                      KONDISI
+                      <% if (filters.sortBy==='kondisi' ) { %>
+                        <span>
+                          <%= filters.sortDir==='ASC' ? '▲' : '▼' %>
+                        </span>
+                        <% } %>
+                    </a>
+                  </th>
+                  <th style="text-align: center;">
+                    <a href="<%= makeSortUrl('status_bmn', filters.sortDir === 'ASC' ? 'DESC' : 'ASC') %>">
+                      STATUS
+                      <% if (filters.sortBy==='status_bmn' ) { %>
+                        <span>
+                          <%= filters.sortDir==='ASC' ? '▲' : '▼' %>
+                        </span>
+                        <% } %>
+                    </a>
+                  </th>
+                  <th>TAHUN PEROLEHAN</th>
+                  <th style="text-align: center;">SALDO AWAL QTY</th>
+                  <th style="text-align: right;">
+                    <a href="<%= makeSortUrl('saldo_awal_nilai', filters.sortDir === 'ASC' ? 'DESC' : 'ASC') %>">
+                      SALDO AWAL NILAI
+                      <% if (filters.sortBy==='saldo_awal_nilai' ) { %>
+                        <span>
+                          <%= filters.sortDir==='ASC' ? '▲' : '▼' %>
+                        </span>
+                        <% } %>
+                    </a>
+                  </th>
+                  <th style="text-align: center;">BERTAMBAH QTY</th>
+                  <th style="text-align: right;">
+                    <a href="<%= makeSortUrl('bertambah_nilai', filters.sortDir === 'ASC' ? 'DESC' : 'ASC') %>">
+                      BERTAMBAH NILAI
+                      <% if (filters.sortBy==='bertambah_nilai' ) { %>
+                        <span>
+                          <%= filters.sortDir==='ASC' ? '▲' : '▼' %>
+                        </span>
+                        <% } %>
+                    </a>
+                  </th>
+                  <th style="text-align: center;">BERKURANG QTY</th>
+                  <th style="text-align: right;">BERKURANG NILAI</th>
+                  <th style="text-align: center;">SALDO AKHIR QTY</th>
+                  <th style="text-align: right;">
+                    <a href="<%= makeSortUrl('saldo_akhir_nilai', filters.sortDir === 'ASC' ? 'DESC' : 'ASC') %>">
+                      SALDO AKHIR NILAI
+                      <% if (filters.sortBy==='saldo_akhir_nilai' ) { %>
+                        <span>
+                          <%= filters.sortDir==='ASC' ? '▲' : '▼' %>
+                        </span>
+                        <% } %>
+                    </a>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (!rows.length) { %>
+                  <tr>
+                    <td colspan="13" style="text-align:center; padding: 40px; color: #94a3b8;">
+                    <td colspan="15" style="text-align:center; padding: 40px; color: #94a3b8;">
+                      <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Tidak ada data BMN yang cocok
+                      </div>
+                      <div style="font-size: 12px;">Coba ubah kata kunci pencarian atau reset filter.</div>
+                    </td>
+                  </tr>
+                  <% } else { %>
+                    <% rows.forEach((item, idx)=> { %>
+                      <tr>
+                        <td style="text-align: center; color: #94a3b8; font-weight: 600;">
+                          <%= pagination.startIndex + idx %>
+                        </td>
+                        <td style="font-family: monospace; font-weight: 700; color: #0f172a; white-space: nowrap;">
+                          <%= item.kode %>
+                        </td>
+                        <td style="font-weight: 600; color: #1e293b;">
+                          <%= item.uraian %>
+                        </td>
+                        <td style="color: #475569; white-space: nowrap;">
+                          <%= item.satuan || '-' %>
+                        </td>
+                        <td style="text-align: center; white-space: nowrap;">
+                          <% if (String(item.kondisi || '' ).toLowerCase().includes('rusak')) { %>
+                            <span
+                              style="background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                              <span style="width: 6px; height: 6px; border-radius: 50%; background: #ef4444;"></span>
+                              Rusak Berat
+                            </span>
+                            <% } else { %>
+                              <span
+                                style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+                                Baik
+                              </span>
+                              <% } %>
+                        </td>
+                        <td style="text-align: center; white-space: nowrap;">
+                          <% if (String(item.status_bmn || '' ).toLowerCase().includes('henti') ||
+                            String(item.status_bmn || '' ).toLowerCase().includes('hapus')) { %>
+                            <span
+                              style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                              <span style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b;"></span>
+                              Henti Guna
+                            </span>
+                            <% } else { %>
+                              <span
+                                style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                <span style="width: 6px; height: 6px; border-radius: 50%; background: #3b82f6;"></span>
+                                Aktif
+                              </span>
+                              <% } %>
+                        </td>
+                        <td style="text-align: center; color: #64748b;">
+                          <%= item.tahun_perolehan || '-' %>
+                        </td>
+                        <td style="text-align: center; font-weight: 600;">
+                          <%= item.saldo_awal_kuantitas ?? '0' %>
+                        </td>
+                        <td
+                          style="text-align: right; font-family: monospace; font-weight: 600; color: #0f172a; white-space: nowrap;">
+                          <%= displayMoney(item.saldo_awal_nilai) %>
+                        </td>
+                        <td style="text-align: center; font-weight: 600;">
+                          <%= item.bertambah_kuantitas ?? '0' %>
+                        </td>
+                        <td
+                          style="text-align: right; font-family: monospace; font-weight: 600; color: #0f172a; white-space: nowrap;">
+                          <%= displayMoney(item.bertambah_nilai) %>
+                        </td>
+                        <td style="text-align: center; font-weight: 600;">
+                          <%= item.berkurang_kuantitas ?? '0' %>
+                        </td>
+                        <td
+                          style="text-align: right; font-family: monospace; font-weight: 600; color: #0f172a; white-space: nowrap;">
+                          <%= displayMoney(item.berkurang_nilai) %>
+                        </td>
+                        <td style="text-align: center; font-weight: 700; color: #1d4ed8;">
+                          <%= item.saldo_akhir_kuantitas ?? '0' %>
+                        </td>
+                        <td
+                          style="text-align: right; font-family: monospace; font-weight: 700; color: #0f172a; white-space: nowrap;">
+                          <%= displayMoney(item.saldo_akhir_nilai) %>
+                        </td>
+                      </tr>
+                      <% }) %>
+                        <% } %>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination Navigation Controls -->
+          <% if (pagination.totalFiltered> 0) { %>
+            <div class="pagination-bar">
+              <div class="pagination-info">
+                Menampilkan <strong>
+                  <%= pagination.startIndex %>–<%= pagination.endIndex %>
+                </strong> dari <strong>
+                  <%= pagination.totalFiltered %>
+                </strong> data barang
+                <% if (pagination.totalFiltered !==pagination.totalAll) { %>
+                  <span style="color: #64748b;">(difilter dari total <%= pagination.totalAll %>)</span>
+                  <% } %>
+              </div>
+
+              <ul class="pagination-controls">
+                <!-- First & Prev -->
+                <% if (pagination.page> 1) { %>
+                  <li><a href="<%= makePageUrl(1) %>" title="Halaman Pertama">&laquo;</a></li>
+                  <li><a href="<%= makePageUrl(pagination.page - 1) %>" title="Sebelumnya">&lsaquo;</a></li>
+                  <% } else { %>
+                    <li><span class="disabled">&laquo;</span></li>
+                    <li><span class="disabled">&lsaquo;</span></li>
+                    <% } %>
+
+                      <!-- Numeric Pages Window -->
+                      <% const delta=2; let startP=Math.max(1, pagination.page - delta); let
+                        endP=Math.min(pagination.totalPages, pagination.page + delta); if (pagination.page <=delta + 1)
+                        endP=Math.min(pagination.totalPages, delta * 2 + 1); if (pagination.page>= pagination.totalPages
+                        - delta) startP = Math.max(1, pagination.totalPages - (delta * 2));
+                        %>
+
+                        <% if (startP> 1) { %>
+                          <li><a href="<%= makePageUrl(1) %>">1</a></li>
+                          <% if (startP> 2) { %><li><span class="disabled">...</span></li>
+                            <% } %>
+                              <% } %>
+
+                                <% for (let p=startP; p <=endP; p++) { %>
+                                  <% if (p===pagination.page) { %>
+                                    <li><span class="active">
+                                        <%= p %>
+                                      </span></li>
+                                    <% } else { %>
+                                      <li><a href="<%= makePageUrl(p) %>">
+                                          <%= p %>
+                                        </a></li>
+                                      <% } %>
+                                        <% } %>
+
+                                          <% if (endP < pagination.totalPages) { %>
+                                            <% if (endP < pagination.totalPages - 1) { %>
+                                              <li><span class="disabled">...</span></li>
+                                              <% } %>
+                                                <li><a href="<%= makePageUrl(pagination.totalPages) %>">
+                                                    <%= pagination.totalPages %>
+                                                  </a></li>
+                                                <% } %>
+
+                                                  <!-- Next & Last -->
+                                                  <% if (pagination.page < pagination.totalPages) { %>
+                                                    <li><a href="<%= makePageUrl(pagination.page + 1) %>"
+                                                        title="Berikutnya">&rsaquo;</a></li>
+                                                    <li><a href="<%= makePageUrl(pagination.totalPages) %>"
+                                                        title="Halaman Terakhir">&raquo;</a></li>
+                                                    <% } else { %>
+                                                      <li><span class="disabled">&rsaquo;</span></li>
+                                                      <li><span class="disabled">&raquo;</span></li>
+                                                      <% } %>
+              </ul>
+            </div>
+            <% } %>
+        </div>
   </div>
-</div>
 
 </body>
+
 </html>

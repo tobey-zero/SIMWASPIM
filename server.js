@@ -705,49 +705,83 @@ function sortPegawaiListByTmt(pegawaiList = [], sortBy = 'tmt_pangkat', sortDir 
 
 // ── BMN (Barang Milik Negara) Rekapitulasi & Pagination ─────────────────────────
 function getBmnRekap() {
-  // Official baseline from Lapas Kelas I Medan official recap (attachment image_66b298a5.png)
-  const BASE_TOTAL = 2624;
-  const BASE_ASET = 303117479870;
-  const BASE_SUSUT = 41753241702;
-  const BASE_BUKU = 261364238168;
-  const BASE_BAIK = 2349;
-  const BASE_RUSAK = 275;
-  const BASE_AKTIF = 2520;
-  const BASE_HENTI = 104;
+  const countRow = db.prepare('SELECT COUNT(*) AS total FROM tu_umum_barang').get();
+  const totalBmn = countRow ? Number(countRow.total) : 0;
 
-  const totalBmn = BASE_TOTAL;
-  const totalAset = BASE_ASET;
-  const akumulasiPenyusutan = BASE_SUSUT;
-  const nilaiBuku = BASE_BUKU;
+  const sums = db.prepare(`
+    SELECT
+      COALESCE(SUM(nilai_perolehan), 0) AS totalAset,
+      COALESCE(SUM(akumulasi_penyusutan), 0) AS akumulasiPenyusutan,
+      COALESCE(SUM(nilai_buku), 0) AS nilaiBuku
+    FROM tu_umum_barang
+  `).get() || { totalAset: 0, akumulasiPenyusutan: 0, nilaiBuku: 0 };
 
-  const baik = BASE_BAIK;
-  const rusakBerat = BASE_RUSAK;
-  const baikPct = ((baik / totalBmn) * 100).toFixed(1);
-  const rusakBeratPct = ((rusakBerat / totalBmn) * 100).toFixed(1);
+  const totalAset = Number(sums.totalAset) || 0;
+  const akumulasiPenyusutan = Number(sums.akumulasiPenyusutan) || 0;
+  const nilaiBuku = Number(sums.nilaiBuku) || (totalAset - akumulasiPenyusutan);
 
-  const aktif = BASE_AKTIF;
-  const hentiGuna = BASE_HENTI;
-  const aktifPct = ((aktif / totalBmn) * 100).toFixed(1);
-  const hentiGunaPct = ((hentiGuna / totalBmn) * 100).toFixed(1);
+  // Kondisi (Baik vs Rusak Berat)
+  const kondisiRows = db.prepare('SELECT kondisi, COUNT(*) AS count FROM tu_umum_barang GROUP BY kondisi').all();
+  let baik = 0, rusakBerat = 0;
+  kondisiRows.forEach(r => {
+    const k = String(r.kondisi || '').toLowerCase();
+    if (k.includes('rusak')) rusakBerat += Number(r.count);
+    else baik += Number(r.count);
+  });
+  const baikPct = totalBmn > 0 ? ((baik / totalBmn) * 100).toFixed(1) : '0';
+  const rusakBeratPct = totalBmn > 0 ? ((rusakBerat / totalBmn) * 100).toFixed(1) : '0';
 
-  const susutPct = ((akumulasiPenyusutan / totalAset) * 100).toFixed(2);
-  const nilaiBukuPct = ((nilaiBuku / totalAset) * 100).toFixed(2);
+  // Status (Aktif vs Henti Guna)
+  const statusRows = db.prepare('SELECT status_bmn, COUNT(*) AS count FROM tu_umum_barang GROUP BY status_bmn').all();
+  let aktif = 0, hentiGuna = 0;
+  statusRows.forEach(r => {
+    const s = String(r.status_bmn || '').toLowerCase();
+    if (s.includes('henti') || s.includes('tidak') || s.includes('nonaktif') || s.includes('hapus')) hentiGuna += Number(r.count);
+    else aktif += Number(r.count);
+  });
+  const aktifPct = totalBmn > 0 ? ((aktif / totalBmn) * 100).toFixed(1) : '0';
+  const hentiGunaPct = totalBmn > 0 ? ((hentiGuna / totalBmn) * 100).toFixed(1) : '0';
 
-  const kategoriList = [
-    { name: 'Tanah Bangunan Lapas', count: 18, totalNilaiFormatted: 'Rp 160.000.000.000' },
-    { name: 'Gedung & Bangunan', count: 42, totalNilaiFormatted: 'Rp 98.450.000.000' },
-    { name: 'Peralatan & Mesin', count: 2180, totalNilaiFormatted: 'Rp 34.250.000.000' },
-    { name: 'Senjata & Pengamanan', count: 320, totalNilaiFormatted: 'Rp 8.950.000.000' },
-    { name: 'Kendaraan Dinas', count: 64, totalNilaiFormatted: 'Rp 1.467.479.870' }
-  ];
+  const susutPct = totalAset > 0 ? ((akumulasiPenyusutan / totalAset) * 100).toFixed(2) : '0';
+  const nilaiBukuPct = totalAset > 0 ? ((nilaiBuku / totalAset) * 100).toFixed(2) : '0';
+
+  // Kategori List
+  const katRows = db.prepare(`
+    SELECT
+      kategori,
+      COUNT(*) AS count,
+      COALESCE(SUM(nilai_perolehan), 0) AS totalNilai
+    FROM tu_umum_barang
+    GROUP BY kategori
+    ORDER BY totalNilai DESC
+  `).all();
+
+  const kategoriList = katRows.map(k => ({
+    name: k.kategori || 'Peralatan & Mesin',
+    count: Number(k.count),
+    totalNilai: Number(k.totalNilai),
+    totalNilaiFormatted: `Rp ${new Intl.NumberFormat('id-ID').format(Number(k.totalNilai))}`,
+    percent: totalBmn > 0 ? ((Number(k.count) / totalBmn) * 100).toFixed(1) : '0',
+    percentNilai: totalAset > 0 ? ((Number(k.totalNilai) / totalAset) * 100).toFixed(1) : '0'
+  }));
+
+  // Total Unit Kuantitas Fisik Aset
+  const qtyRows = db.prepare('SELECT saldo_akhir_kuantitas FROM tu_umum_barang').all();
+  let totalQty = 0;
+  qtyRows.forEach(r => {
+    const clean = String(r.saldo_akhir_kuantitas || '').replace(/[^0-9]/g, '');
+    totalQty += parseInt(clean, 10) || 0;
+  });
 
   return {
     total: totalBmn,
+    totalQty,
     totalAset,
     akumulasiPenyusutan,
     nilaiBuku,
     formatted: {
       total: new Intl.NumberFormat('id-ID').format(totalBmn),
+      totalQty: new Intl.NumberFormat('id-ID').format(totalQty),
       totalAset: `Rp ${new Intl.NumberFormat('id-ID').format(totalAset)}`,
       akumulasiPenyusutan: `Rp ${new Intl.NumberFormat('id-ID').format(akumulasiPenyusutan)}`,
       nilaiBuku: `Rp ${new Intl.NumberFormat('id-ID').format(nilaiBuku)}`,
@@ -786,6 +820,10 @@ function getPaginatedBmn(query = {}) {
   const search = String(query.search || '').trim().toLowerCase();
   const sortBy = String(query.sortBy || 'id');
   const sortDir = String(query.sortDir || 'ASC').toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+  const kondisi = String(query.kondisi || '').trim();
+  const status_bmn = String(query.status_bmn || '').trim();
+  const kategori = String(query.kategori || '').trim();
+  const tahun = String(query.tahun || '').trim();
 
   const rawPage = parseInt(query.page, 10);
   const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
@@ -796,15 +834,49 @@ function getPaginatedBmn(query = {}) {
   const totalAll = allRows.length;
 
   let filtered = allRows;
+
+  if (kondisi) {
+    filtered = filtered.filter(item => {
+      const k = String(item.kondisi || '').trim().toLowerCase();
+      if (kondisi.toLowerCase().includes('rusak')) return k.includes('rusak');
+      return k.includes('baik') || k === 'baik';
+    });
+  }
+
+  if (status_bmn) {
+    filtered = filtered.filter(item => {
+      const s = String(item.status_bmn || '').trim().toLowerCase();
+      if (status_bmn.toLowerCase().includes('henti') || status_bmn.toLowerCase().includes('hapus')) {
+        return s.includes('henti') || s.includes('hapus') || s.includes('tidak') || s.includes('nonaktif');
+      }
+      return s.includes('aktif');
+    });
+  }
+
+  if (kategori) {
+    filtered = filtered.filter(item => {
+      return String(item.kategori || '').trim().toLowerCase() === kategori.toLowerCase();
+    });
+  }
+
+  if (tahun) {
+    filtered = filtered.filter(item => {
+      return String(item.tahun_perolehan || '').trim() === tahun;
+    });
+  }
+
   if (search) {
     filtered = filtered.filter(item => {
       const matchKode = String(item.kode || '').toLowerCase().includes(search);
       const matchUraian = String(item.uraian || '').toLowerCase().includes(search);
       const matchSatuan = String(item.satuan || '').toLowerCase().includes(search);
       const matchTahun = String(item.tahun_perolehan || '').toLowerCase().includes(search);
+      const matchKategori = String(item.kategori || '').toLowerCase().includes(search);
+      const matchKondisi = String(item.kondisi || '').toLowerCase().includes(search);
+      const matchStatus = String(item.status_bmn || '').toLowerCase().includes(search);
       const matchSaldoAwal = String(item.saldo_awal_nilai || '').toLowerCase().includes(search);
       const matchSaldoAkhir = String(item.saldo_akhir_nilai || '').toLowerCase().includes(search);
-      return matchKode || matchUraian || matchSatuan || matchTahun || matchSaldoAwal || matchSaldoAkhir;
+      return matchKode || matchUraian || matchSatuan || matchTahun || matchKategori || matchKondisi || matchStatus || matchSaldoAwal || matchSaldoAkhir;
     });
   }
 
@@ -812,7 +884,7 @@ function getPaginatedBmn(query = {}) {
   filtered.sort((a, b) => {
     let valA = a[sortBy];
     let valB = b[sortBy];
-    if (['id', 'saldo_awal_kuantitas', 'bertambah_kuantitas', 'berkurang_kuantitas', 'saldo_akhir_kuantitas'].includes(sortBy)) {
+    if (['id', 'saldo_awal_kuantitas', 'bertambah_kuantitas', 'berkurang_kuantitas', 'saldo_akhir_kuantitas', 'nilai_perolehan', 'akumulasi_penyusutan', 'nilai_buku'].includes(sortBy)) {
       valA = Number(valA) || 0;
       valB = Number(valB) || 0;
     } else if (['saldo_awal_nilai', 'bertambah_nilai', 'berkurang_nilai', 'saldo_akhir_nilai'].includes(sortBy)) {
@@ -846,6 +918,10 @@ function getPaginatedBmn(query = {}) {
     },
     filters: {
       search,
+      kondisi,
+      status_bmn,
+      kategori,
+      tahun,
       sortBy,
       sortDir
     }
@@ -1196,7 +1272,7 @@ function getFinanceSummary() {
   const totalPagu = paguPegawai + paguBarang + paguModal;
   const realisasiBelanja = realisasiPegawai + realisasiBarang + realisasiModal;
   const sisaPagu = Math.max(totalPagu - realisasiBelanja, 0);
-  
+
   // Calculate percentages per category
   const persentasePegawai = paguPegawai > 0 ? ((realisasiPegawai / paguPegawai) * 100) : 0;
   const persentaseBarang = paguBarang > 0 ? ((realisasiBarang / paguBarang) * 100) : 0;
@@ -1608,7 +1684,7 @@ const roleAccess = {
   klinik: ['dashboard', 'klinik-medis', 'klinik-berobat', 'klinik-oncall', 'klinik-kontrol', 'klinik-statistik'],
   dapur: ['dashboard', 'menu'],
   humas: ['dashboard', 'video', 'kata-bijak'],
-  kamtib: ['dashboard',  'razia', 'pengawalan', 'register-f', 'strapsel', 'piket-jaga', 'pengaduan'],
+  kamtib: ['dashboard', 'razia', 'pengawalan', 'register-f', 'strapsel', 'piket-jaga', 'pengaduan'],
   tata_usaha: ['dashboard', 'tu-umum', 'rencana-kerja'],
   pengamanan: ['dashboard', 'kamar-blok', 'luar-tembok'],
   giiatja: ['dashboard', 'giiatja'],
@@ -1700,7 +1776,7 @@ function getPublicData(includeLargeLists = false) {
   }
 
   const pentahapanPembinaanDetail = includeLargeLists ? db
-      .prepare(`SELECT d.no_reg AS noReg,
+    .prepare(`SELECT d.no_reg AS noReg,
         d.nama_wbp AS namaWbp,
         d.jenis_kejahatan AS jenisKejahatan,
         d.blok_kamar AS blokKamar,
@@ -1715,27 +1791,27 @@ function getPublicData(includeLargeLists = false) {
       ORDER BY TRIM(d.nama_wbp) COLLATE NOCASE ASC`)
     .all()
     .map((item) => {
-       const statusIntegrasiD = item.statusIntegrasiD;
-       let statusIntegrasi = '-';
-       if (statusIntegrasiD && statusIntegrasiD !== '') {
-          statusIntegrasi = statusIntegrasiD;
-       } else if (item.namaWbp) {
-          const mapVal = refMap.get(item.namaWbp.trim().toUpperCase());
-          if (mapVal) statusIntegrasi = mapVal;
-       }
-       return {
-         noReg: item.noReg,
-         namaWbp: item.namaWbp,
-         jenisKejahatan: item.jenisKejahatan,
-         blokKamar: item.blokKamar,
-         tanggal1: item.tanggal1,
-         tanggal2: item.tanggal2,
-         tanggal3: item.tanggal3,
-         tanggal4: item.tanggal4,
-         keterangan: item.keterangan,
-         statusIntegrasi: statusIntegrasi,
-         isStatusOverdue: isIntegrationOverdue(item.tanggal2, statusIntegrasi)
-       };
+      const statusIntegrasiD = item.statusIntegrasiD;
+      let statusIntegrasi = '-';
+      if (statusIntegrasiD && statusIntegrasiD !== '') {
+        statusIntegrasi = statusIntegrasiD;
+      } else if (item.namaWbp) {
+        const mapVal = refMap.get(item.namaWbp.trim().toUpperCase());
+        if (mapVal) statusIntegrasi = mapVal;
+      }
+      return {
+        noReg: item.noReg,
+        namaWbp: item.namaWbp,
+        jenisKejahatan: item.jenisKejahatan,
+        blokKamar: item.blokKamar,
+        tanggal1: item.tanggal1,
+        tanggal2: item.tanggal2,
+        tanggal3: item.tanggal3,
+        tanggal4: item.tanggal4,
+        keterangan: item.keterangan,
+        statusIntegrasi: statusIntegrasi,
+        isStatusOverdue: isIntegrationOverdue(item.tanggal2, statusIntegrasi)
+      };
     }) : [];
 
   const jadwalKegiatan = db
@@ -2390,7 +2466,7 @@ function getGiiatjaData(options = {}) {
   const premiMonths = Array.from(new Set(
     premiRawList.map(item => String(item.periodeBulan || '').trim().toUpperCase()).filter(Boolean)
   )).sort((a, b) => {
-    const orders = ['JANUARI','FEBRUARI','MARET','APRIL','MEI','JUNI','JULI','AGUSTUS','SEPTEMBER','OKTOBER','NOVEMBER','DESEMBER'];
+    const orders = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
     const ia = orders.indexOf(a);
     const ib = orders.indexOf(b);
     const va = ia === -1 ? 99 : ia;
@@ -2465,7 +2541,7 @@ function getGiiatjaData(options = {}) {
     pemasaranMonthBase.push(currentPemasaranPeriod.periodeBulan);
   }
   const pemasaranMonths = pemasaranMonthBase.sort((a, b) => {
-    const orders = ['JANUARI','FEBRUARI','MARET','APRIL','MEI','JUNI','JULI','AGUSTUS','SEPTEMBER','OKTOBER','NOVEMBER','DESEMBER'];
+    const orders = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
     const ia = orders.indexOf(a);
     const ib = orders.indexOf(b);
     const va = ia === -1 ? 99 : ia;
@@ -2948,187 +3024,187 @@ app.get('/', (req, res) => {
 });
 
 [
-    { route: 'registrasi', name: 'REGISTRASI' },
-    { route: 'pembinaan', name: 'PEMBINAAN' },
-    { route: 'giatja', name: 'GIIATJA' },
-    { route: 'dapur', name: 'DAPUR' },
-    { route: 'humas', name: 'HUMAS' },
-    { route: 'pengamanan', name: 'PENGAMANAN' },
-    { route: 'kamtib', name: 'KAMTIB' },
-    { route: 'tatausaha', name: 'TATA USAHA' }
+  { route: 'registrasi', name: 'REGISTRASI' },
+  { route: 'pembinaan', name: 'PEMBINAAN' },
+  { route: 'giatja', name: 'GIIATJA' },
+  { route: 'dapur', name: 'DAPUR' },
+  { route: 'humas', name: 'HUMAS' },
+  { route: 'pengamanan', name: 'PENGAMANAN' },
+  { route: 'kamtib', name: 'KAMTIB' },
+  { route: 'tatausaha', name: 'TATA USAHA' }
 ].forEach(dept => {
-    app.get(`/${dept.route}`, (req, res) => {
-        const panels = [];
-        const kataBijak = getAppSetting('kata_bijak_text', 'KRISNA adalah sistem Keterbukaan Informasi Warga Binaan.');
-        const tanggal = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+  app.get(`/${dept.route}`, (req, res) => {
+    const panels = [];
+    const kataBijak = getAppSetting('kata_bijak_text', 'KRISNA adalah sistem Keterbukaan Informasi Warga Binaan.');
+    const tanggal = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
 
-        if (dept.route === 'registrasi') {
-            const stat = db.prepare('SELECT * FROM statistik WHERE id=1').get() || {};
-            panels.push({
-                title: 'STATISTIK PENGHUNI',
-                type: 'table',
-                headers: ['Total Penghuni', 'Kapasitas', 'Bebas Hari Ini', 'Pengunjung Hari Ini'],
-                rows: [[stat.total_penghuni || '0', stat.kapasitas || '0', stat.bebas_hari_ini || '0', stat.pengunjung_hari_ini || '0']]
-            });
-            
-            const activeRemisiBatch = getActiveRemisiBatch();
-            const remisi = db.prepare('SELECT nama, agama, besaran FROM besaran_remisi WHERE (? = 0 OR batch_id = ?) LIMIT 50').all(Number(activeRemisiBatch?.id || 0), Number(activeRemisiBatch?.id || 0));
-            panels.push({
-                title: 'BESARAN REMISI (50 Teratas)',
-                type: 'table',
-                headers: ['Nama', 'Agama', 'Besaran'],
-                rows: remisi.map(r => [r.nama, r.agama, r.besaran])
-            });
-            
-            const bp = db.prepare('SELECT jenis, jumlah FROM board_pidana LIMIT 20').all();
-            panels.push({
-                title: 'PAPAN ISI (PIDANA)',
-                type: 'table',
-                headers: ['Jenis', 'Jumlah'],
-                rows: bp.map(b => [b.jenis, b.jumlah])
-            });
+    if (dept.route === 'registrasi') {
+      const stat = db.prepare('SELECT * FROM statistik WHERE id=1').get() || {};
+      panels.push({
+        title: 'STATISTIK PENGHUNI',
+        type: 'table',
+        headers: ['Total Penghuni', 'Kapasitas', 'Bebas Hari Ini', 'Pengunjung Hari Ini'],
+        rows: [[stat.total_penghuni || '0', stat.kapasitas || '0', stat.bebas_hari_ini || '0', stat.pengunjung_hari_ini || '0']]
+      });
+
+      const activeRemisiBatch = getActiveRemisiBatch();
+      const remisi = db.prepare('SELECT nama, agama, besaran FROM besaran_remisi WHERE (? = 0 OR batch_id = ?) LIMIT 50').all(Number(activeRemisiBatch?.id || 0), Number(activeRemisiBatch?.id || 0));
+      panels.push({
+        title: 'BESARAN REMISI (50 Teratas)',
+        type: 'table',
+        headers: ['Nama', 'Agama', 'Besaran'],
+        rows: remisi.map(r => [r.nama, r.agama, r.besaran])
+      });
+
+      const bp = db.prepare('SELECT jenis, jumlah FROM board_pidana LIMIT 20').all();
+      panels.push({
+        title: 'PAPAN ISI (PIDANA)',
+        type: 'table',
+        headers: ['Jenis', 'Jumlah'],
+        rows: bp.map(b => [b.jenis, b.jumlah])
+      });
+    }
+
+    if (dept.route === 'pembinaan') {
+      const jadwal = db.prepare('SELECT hari, waktu, kegiatan, lokasi, penanggung_jawab FROM jadwal_kegiatan LIMIT 50').all();
+      panels.push({
+        title: 'JADWAL KEGIATAN',
+        type: 'table',
+        headers: ['Hari', 'Waktu', 'Kegiatan', 'Lokasi', 'Penanggung Jawab'],
+        rows: jadwal.map(j => [j.hari, j.waktu, j.kegiatan, j.lokasi, j.penanggung_jawab])
+      });
+
+      const detail = db.prepare('SELECT nama_wbp, status_integrasi, keterangan FROM pentahapan_pembinaan_detail WHERE COALESCE(is_active, 1) = 1 ORDER BY id DESC LIMIT 50').all();
+      panels.push({
+        title: 'DETAIL PEMBINAAN',
+        type: 'table',
+        headers: ['Nama WBP', 'Status Integrasi', 'Keterangan'],
+        rows: detail.map(d => [d.nama_wbp, d.status_integrasi, d.keterangan])
+      });
+    }
+
+    if (dept.route === 'giatja') {
+      const k = db.prepare('SELECT gkd.nama_wbp, gkd.materi, gk.kategori FROM giiatja_kegiatan_detail gkd LEFT JOIN giiatja_kegiatan gk ON gkd.kegiatan_id = gk.id LIMIT 50').all();
+      panels.push({
+        title: 'KEGIATAN KERJA',
+        type: 'table',
+        headers: ['Nama WBP', 'Materi', 'Kategori'],
+        rows: k.map(x => [x.nama_wbp, x.materi, x.kategori])
+      });
+
+      const s = db.prepare('SELECT periode_bulan, periode_tahun, jenis_penggunaan, jumlah_hasil FROM giiatja_sarana_penggunaan LIMIT 20').all();
+      panels.push({
+        title: 'SARANA KERJA',
+        type: 'table',
+        headers: ['Bulan', 'Tahun', 'Jenis', 'Hasil'],
+        rows: s.map(x => [x.periode_bulan, x.periode_tahun, x.jenis_penggunaan, x.jumlah_hasil])
+      });
+    }
+
+    if (dept.route === 'dapur') {
+      const m = db.prepare('SELECT tanggal, label_hari FROM menu_harian_set ORDER BY tanggal DESC LIMIT 10').all();
+      panels.push({
+        title: 'JADWAL MENU HARIAN',
+        type: 'table',
+        headers: ['Tanggal', 'Label Hari'],
+        rows: m.map(x => [x.tanggal, x.label_hari])
+      });
+
+      const mh = db.prepare('SELECT waktu, menu FROM menu_master LIMIT 30').all();
+      panels.push({
+        title: 'MASTER MENU',
+        type: 'table',
+        headers: ['Waktu', 'Menu'],
+        rows: mh.map(x => [x.waktu, x.menu])
+      });
+    }
+
+    if (dept.route === 'humas') {
+      const doc = db.prepare('SELECT * FROM dokumentasi_media ORDER BY sort_order ASC').all();
+      let html = '<div style="display:flex; gap:10px; flex-wrap:wrap;">';
+      doc.forEach(d => {
+        if (d.media_type === 'video') {
+          html += `<video src="${d.media_path}" controls style="width:300px; max-height:200px;"></video>`;
+        } else {
+          html += `<img src="${d.media_path}" style="width:300px; max-height:200px; object-fit:cover;">`;
         }
+      });
+      html += '</div>';
 
-        if (dept.route === 'pembinaan') {
-            const jadwal = db.prepare('SELECT hari, waktu, kegiatan, lokasi, penanggung_jawab FROM jadwal_kegiatan LIMIT 50').all();
-            panels.push({
-                title: 'JADWAL KEGIATAN',
-                type: 'table',
-                headers: ['Hari', 'Waktu', 'Kegiatan', 'Lokasi', 'Penanggung Jawab'],
-                rows: jadwal.map(j => [j.hari, j.waktu, j.kegiatan, j.lokasi, j.penanggung_jawab])
-            });
+      panels.push({
+        title: 'FOTO & VIDEO DOKUMENTASI',
+        type: 'custom',
+        html: html
+      });
 
-            const detail = db.prepare('SELECT nama_wbp, status_integrasi, keterangan FROM pentahapan_pembinaan_detail WHERE COALESCE(is_active, 1) = 1 ORDER BY id DESC LIMIT 50').all();
-            panels.push({
-                title: 'DETAIL PEMBINAAN',
-                type: 'table',
-                headers: ['Nama WBP', 'Status Integrasi', 'Keterangan'],
-                rows: detail.map(d => [d.nama_wbp, d.status_integrasi, d.keterangan])
-            });
-        }
+      panels.push({
+        title: 'KATA BIJAK AKTIF',
+        type: 'custom',
+        html: `<div style="padding:20px; font-size:24px; font-style:italic; background:#eff6ff; color:#1e3a8a; border-radius:8px;">"${kataBijak}"</div>`
+      });
+    }
 
-        if (dept.route === 'giatja') {
-            const k = db.prepare('SELECT gkd.nama_wbp, gkd.materi, gk.kategori FROM giiatja_kegiatan_detail gkd LEFT JOIN giiatja_kegiatan gk ON gkd.kegiatan_id = gk.id LIMIT 50').all();
-            panels.push({
-                title: 'KEGIATAN KERJA',
-                type: 'table',
-                headers: ['Nama WBP', 'Materi', 'Kategori'],
-                rows: k.map(x => [x.nama_wbp, x.materi, x.kategori])
-            });
+    if (dept.route === 'pengamanan') {
+      const rz = db.prepare('SELECT tanggal, petugas FROM razia_jadwal ORDER BY id DESC LIMIT 20').all();
+      panels.push({
+        title: 'JADWAL RAZIA',
+        type: 'table',
+        headers: ['Tanggal', 'Petugas'],
+        rows: rz.map(x => [x.tanggal, x.petugas])
+      });
 
-            const s = db.prepare('SELECT periode_bulan, periode_tahun, jenis_penggunaan, jumlah_hasil FROM giiatja_sarana_penggunaan LIMIT 20').all();
-            panels.push({
-                title: 'SARANA KERJA',
-                type: 'table',
-                headers: ['Bulan', 'Tahun', 'Jenis', 'Hasil'],
-                rows: s.map(x => [x.periode_bulan, x.periode_tahun, x.jenis_penggunaan, x.jumlah_hasil])
-            });
-        }
+      const rw = db.prepare('SELECT hari, shift, komandan, anggota_regu FROM giat_pengawalan ORDER BY id DESC LIMIT 20').all();
+      panels.push({
+        title: 'PENGAWALAN',
+        type: 'table',
+        headers: ['Hari', 'Shift', 'Komandan', 'Anggota Regu'],
+        rows: rw.map(x => [x.hari, x.shift, x.komandan, x.anggota_regu])
+      });
+    }
 
-        if (dept.route === 'dapur') {
-            const m = db.prepare('SELECT tanggal, label_hari FROM menu_harian_set ORDER BY tanggal DESC LIMIT 10').all();
-            panels.push({
-                title: 'JADWAL MENU HARIAN',
-                type: 'table',
-                headers: ['Tanggal', 'Label Hari'],
-                rows: m.map(x => [x.tanggal, x.label_hari])
-            });
+    if (dept.route === 'kamtib') {
+      const pk = db.prepare('SELECT year, month, regu1_name, regu2_name, regu3_name, regu4_name FROM kamtib_piket_jaga ORDER BY updated_at DESC LIMIT 10').all();
+      panels.push({
+        title: 'PIKET JAGA',
+        type: 'table',
+        headers: ['Tahun', 'Bulan', 'Regu 1', 'Regu 2', 'Regu 3', 'Regu 4'],
+        rows: pk.map(x => [x.year, x.month, x.regu1_name, x.regu2_name, x.regu3_name, x.regu4_name])
+      });
 
-            const mh = db.prepare('SELECT waktu, menu FROM menu_master LIMIT 30').all();
-            panels.push({
-                title: 'MASTER MENU',
-                type: 'table',
-                headers: ['Waktu', 'Menu'],
-                rows: mh.map(x => [x.waktu, x.menu])
-            });
-        }
+      const pm = db.prepare('SELECT tanggal_pengaduan, nama, jenis_pengaduan FROM pengaduan_masyarakat ORDER BY id DESC LIMIT 20').all();
+      panels.push({
+        title: 'PENGADUAN MASYARAKAT MASUK',
+        type: 'table',
+        headers: ['Tanggal', 'Nama', 'Jenis Pengaduan'],
+        rows: pm.map(x => [x.tanggal_pengaduan, x.nama, x.jenis_pengaduan])
+      });
+    }
 
-        if (dept.route === 'humas') {
-            const doc = db.prepare('SELECT * FROM dokumentasi_media ORDER BY sort_order ASC').all();
-            let html = '<div style="display:flex; gap:10px; flex-wrap:wrap;">';
-            doc.forEach(d => {
-                if (d.media_type === 'video') {
-                    html += `<video src="${d.media_path}" controls style="width:300px; max-height:200px;"></video>`;
-                } else {
-                    html += `<img src="${d.media_path}" style="width:300px; max-height:200px; object-fit:cover;">`;
-                }
-            });
-            html += '</div>';
+    if (dept.route === 'tatausaha') {
+      const kb = db.prepare('SELECT kuasa_pengguna_barang, pengurus_barang FROM tu_umum_barang ORDER BY id DESC LIMIT 10').all();
+      panels.push({
+        title: 'UMUM & BMN',
+        type: 'table',
+        headers: ['Kuasa Pengguna Barang', 'Pengurus Barang'],
+        rows: kb.map(x => [x.kuasa_pengguna_barang, x.pengurus_barang])
+      });
 
-            panels.push({
-                title: 'FOTO & VIDEO DOKUMENTASI',
-                type: 'custom',
-                html: html
-            });
+      const kp = db.prepare('SELECT nama, nip, golongan, jabatan FROM tu_kepegawaian ORDER BY id DESC LIMIT 20').all();
+      panels.push({
+        title: 'DATA KEPEGAWAIAN',
+        type: 'table',
+        headers: ['Nama', 'NIP', 'Golongan', 'Jabatan'],
+        rows: kp.map(x => [x.nama, x.nip, x.golongan, x.jabatan])
+      });
+    }
 
-            panels.push({
-                title: 'KATA BIJAK AKTIF',
-                type: 'custom',
-                html: `<div style="padding:20px; font-size:24px; font-style:italic; background:#eff6ff; color:#1e3a8a; border-radius:8px;">"${kataBijak}"</div>`
-            });
-        }
-
-        if (dept.route === 'pengamanan') {
-            const rz = db.prepare('SELECT tanggal, petugas FROM razia_jadwal ORDER BY id DESC LIMIT 20').all();
-            panels.push({
-                title: 'JADWAL RAZIA',
-                type: 'table',
-                headers: ['Tanggal', 'Petugas'],
-                rows: rz.map(x => [x.tanggal, x.petugas])
-            });
-
-            const rw = db.prepare('SELECT hari, shift, komandan, anggota_regu FROM giat_pengawalan ORDER BY id DESC LIMIT 20').all();
-            panels.push({
-                title: 'PENGAWALAN',
-                type: 'table',
-                headers: ['Hari', 'Shift', 'Komandan', 'Anggota Regu'],
-                rows: rw.map(x => [x.hari, x.shift, x.komandan, x.anggota_regu])
-            });
-        }
-
-        if (dept.route === 'kamtib') {
-            const pk = db.prepare('SELECT year, month, regu1_name, regu2_name, regu3_name, regu4_name FROM kamtib_piket_jaga ORDER BY updated_at DESC LIMIT 10').all();
-            panels.push({
-                title: 'PIKET JAGA',
-                type: 'table',
-                headers: ['Tahun', 'Bulan', 'Regu 1', 'Regu 2', 'Regu 3', 'Regu 4'],
-                rows: pk.map(x => [x.year, x.month, x.regu1_name, x.regu2_name, x.regu3_name, x.regu4_name])
-            });
-
-            const pm = db.prepare('SELECT tanggal_pengaduan, nama, jenis_pengaduan FROM pengaduan_masyarakat ORDER BY id DESC LIMIT 20').all();
-            panels.push({
-                title: 'PENGADUAN MASYARAKAT MASUK',
-                type: 'table',
-                headers: ['Tanggal', 'Nama', 'Jenis Pengaduan'],
-                rows: pm.map(x => [x.tanggal_pengaduan, x.nama, x.jenis_pengaduan])
-            });
-        }
-
-        if (dept.route === 'tatausaha') {
-            const kb = db.prepare('SELECT kuasa_pengguna_barang, pengurus_barang FROM tu_umum_barang ORDER BY id DESC LIMIT 10').all();
-            panels.push({
-                title: 'UMUM & BMN',
-                type: 'table',
-                headers: ['Kuasa Pengguna Barang', 'Pengurus Barang'],
-                rows: kb.map(x => [x.kuasa_pengguna_barang, x.pengurus_barang])
-            });
-
-            const kp = db.prepare('SELECT nama, nip, golongan, jabatan FROM tu_kepegawaian ORDER BY id DESC LIMIT 20').all();
-            panels.push({
-                title: 'DATA KEPEGAWAIAN',
-                type: 'table',
-                headers: ['Nama', 'NIP', 'Golongan', 'Jabatan'],
-                rows: kp.map(x => [x.nama, x.nip, x.golongan, x.jabatan])
-            });
-        }
-
-        res.render('tv-department', {
-            departmentName: dept.name,
-            panels: panels,
-            kataBijak: kataBijak,
-            tanggal: tanggal
-        });
+    res.render('tv-department', {
+      departmentName: dept.name,
+      panels: panels,
+      kataBijak: kataBijak,
+      tanggal: tanggal
     });
+  });
 });
 
 app.get('/klinik', (req, res) => {
@@ -3547,19 +3623,19 @@ app.get('/kalapas/table/pembinaan', (req, res) => {
       WHERE COALESCE(d.is_active, 1) = 1
       ORDER BY d.nama_wbp COLLATE NOCASE ASC`).all()
     .map((item) => {
-       const statusIntegrasiD = item.statusIntegrasiD;
-       let statusIntegrasi = '-';
-       if (statusIntegrasiD && statusIntegrasiD !== '') {
-          statusIntegrasi = statusIntegrasiD;
-       } else if (item.namaWbp) {
-          const mapVal = refMap.get(item.namaWbp.trim().toUpperCase());
-          if (mapVal) statusIntegrasi = mapVal;
-       }
-       return {
-         ...item,
-         statusIntegrasi: statusIntegrasi,
-         isStatusOverdue: isIntegrationOverdue(item.tanggal2, statusIntegrasi)
-       };
+      const statusIntegrasiD = item.statusIntegrasiD;
+      let statusIntegrasi = '-';
+      if (statusIntegrasiD && statusIntegrasiD !== '') {
+        statusIntegrasi = statusIntegrasiD;
+      } else if (item.namaWbp) {
+        const mapVal = refMap.get(item.namaWbp.trim().toUpperCase());
+        if (mapVal) statusIntegrasi = mapVal;
+      }
+      return {
+        ...item,
+        statusIntegrasi: statusIntegrasi,
+        isStatusOverdue: isIntegrationOverdue(item.tanggal2, statusIntegrasi)
+      };
     });
 
   const rows = detailData.map(item => [
@@ -3708,7 +3784,7 @@ app.get('/kalapas/table/berobat', (req, res) => {
                      OR status_perawatan LIKE ?
                      OR tanggal LIKE ?
                   ORDER BY tanggal DESC, id DESC`)
-        .all(...Array(7).fill(`%${searchKeyword}%`))
+      .all(...Array(7).fill(`%${searchKeyword}%`))
     : getClinicData({ tanggal: selectedTanggal }).wbpBerobat;
 
   const rows = wbpBerobat.map(item => [
@@ -6225,10 +6301,10 @@ app.post('/admin/pembinaan-detail/import-excel', requireAccess('pembinaan-detail
     if (!value) return '';
     const trimmed = String(value).trim();
     if (!trimmed) return '';
-    
+
     // Check if already in YYYY-MM-DD format
     if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
-    
+
     // Try to parse as Excel serial number (numeric)
     const num = Number(trimmed);
     if (!isNaN(num) && num > 0) {
@@ -6245,7 +6321,7 @@ app.post('/admin/pembinaan-detail/import-excel', requireAccess('pembinaan-detail
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     }
-    
+
     // Try to parse other date formats
     try {
       const date = new Date(trimmed);
@@ -6258,7 +6334,7 @@ app.post('/admin/pembinaan-detail/import-excel', requireAccess('pembinaan-detail
     } catch (_e) {
       // Do nothing
     }
-    
+
     return '';
   };
 
@@ -6396,7 +6472,7 @@ app.post('/admin/pembinaan-detail/import-excel', requireAccess('pembinaan-detail
     });
 
     db.exec('COMMIT');
-    
+
     if (processingErrors.length > 0) {
       importErrorStore.pembinaan.rows.push(...processingErrors);
     }
@@ -8073,6 +8149,20 @@ app.get('/admin/tu-umum/barang', requireAccess('tu-umum'), (req, res) => {
     return `/admin/tu-umum/barang?${p.toString()}`;
   };
 
+  const makeSortUrl = (targetSortBy, targetSortDir) => {
+    const p = new URLSearchParams();
+    if (filters.search) p.set('search', filters.search);
+    if (filters.kondisi) p.set('kondisi', filters.kondisi);
+    if (filters.status_bmn) p.set('status_bmn', filters.status_bmn);
+    if (filters.kategori) p.set('kategori', filters.kategori);
+    if (filters.tahun) p.set('tahun', filters.tahun);
+    p.set('sortBy', targetSortBy);
+    p.set('sortDir', targetSortDir);
+    p.set('perPage', String(pagination.perPage));
+    p.set('page', '1');
+    return `/admin/tu-umum/barang?${p.toString()}`;
+  };
+
   res.render('admin/tu-barang', {
     user: req.session.user,
     list,
@@ -8080,6 +8170,7 @@ app.get('/admin/tu-umum/barang', requireAccess('tu-umum'), (req, res) => {
     pagination,
     filters,
     makePageUrl,
+    makeSortUrl,
     edit,
     active: 'tu-barang',
     success: req.query.success,
@@ -8284,12 +8375,12 @@ app.post('/admin/tu-umum/add', requireAccess('tu-umum'), (req, res) => {
     saldo_akhir_kuantitas, saldo_akhir_nilai,
   } = req.body;
 
-  const parsedAset = parseFloat(nilai_perolehan) || 0;
-  const parsedSusut = parseFloat(akumulasi_penyusutan) || 0;
-  const parsedBuku = Math.max(0, parsedAset - parsedSusut);
+  const sAwalNilai = (saldo_awal_nilai !== undefined && saldo_awal_nilai !== '') ? String(saldo_awal_nilai).trim() : '0';
+  const sAkhirNilai = (saldo_akhir_nilai !== undefined && saldo_akhir_nilai !== '') ? String(saldo_akhir_nilai).trim() : (sAwalNilai || '0');
 
-  const sAwalNilai = (saldo_awal_nilai !== undefined && saldo_awal_nilai !== '') ? String(saldo_awal_nilai).trim() : (parsedAset ? String(parsedAset) : '0');
-  const sAkhirNilai = (saldo_akhir_nilai !== undefined && saldo_akhir_nilai !== '') ? String(saldo_akhir_nilai).trim() : (parsedBuku ? String(parsedBuku) : (sAwalNilai || '0'));
+  const parsedAset = parseFloat(nilai_perolehan) || parseMoneyToNumber(sAwalNilai) || parseMoneyToNumber(sAkhirNilai);
+  const parsedBuku = parseMoneyToNumber(sAkhirNilai) || (parseFloat(nilai_buku) || parsedAset);
+  const parsedSusut = parseFloat(akumulasi_penyusutan) || Math.max(0, parsedAset - parsedBuku);
 
   db.prepare(`
     INSERT INTO tu_umum_barang
@@ -8306,7 +8397,7 @@ app.post('/admin/tu-umum/add', requireAccess('tu-umum'), (req, res) => {
     saldo_akhir_kuantitas !== undefined && saldo_akhir_kuantitas !== '' ? String(saldo_akhir_kuantitas).trim() : '0',
     sAkhirNilai,
     String(nup || '').trim(), String(kondisi || 'Baik').trim(), String(status_bmn || 'Aktif').trim(),
-    parsedAset || parseMoneyToNumber(sAkhirNilai), parsedSusut, parsedBuku,
+    parsedAset, parsedSusut, parsedBuku,
     String(kategori || 'Peralatan & Mesin').trim(), String(lokasi || 'Lapas Kelas I Medan').trim()
   );
 
@@ -8328,11 +8419,12 @@ app.post('/admin/tu-umum/:id/update', requireAccess('tu-umum'), (req, res) => {
     saldo_akhir_kuantitas, saldo_akhir_nilai,
   } = req.body;
 
-  const parsedAset = parseFloat(nilai_perolehan) || 0;
-  const parsedSusut = parseFloat(akumulasi_penyusutan) || 0;
-  const parsedBuku = Math.max(0, parsedAset - parsedSusut);
-  const sAwalNilai = (saldo_awal_nilai !== undefined && saldo_awal_nilai !== '') ? String(saldo_awal_nilai).trim() : (parsedAset ? String(parsedAset) : '0');
-  const sAkhirNilai = (saldo_akhir_nilai !== undefined && saldo_akhir_nilai !== '') ? String(saldo_akhir_nilai).trim() : (parsedBuku ? String(parsedBuku) : (sAwalNilai || '0'));
+  const sAwalNilai = (saldo_awal_nilai !== undefined && saldo_awal_nilai !== '') ? String(saldo_awal_nilai).trim() : '0';
+  const sAkhirNilai = (saldo_akhir_nilai !== undefined && saldo_akhir_nilai !== '') ? String(saldo_akhir_nilai).trim() : (sAwalNilai || '0');
+
+  const parsedAset = parseFloat(nilai_perolehan) || parseMoneyToNumber(sAwalNilai) || parseMoneyToNumber(sAkhirNilai);
+  const parsedBuku = parseMoneyToNumber(sAkhirNilai) || (parseFloat(nilai_buku) || parsedAset);
+  const parsedSusut = parseFloat(akumulasi_penyusutan) || Math.max(0, parsedAset - parsedBuku);
 
   db.prepare(`
     UPDATE tu_umum_barang
@@ -8356,7 +8448,7 @@ app.post('/admin/tu-umum/:id/update', requireAccess('tu-umum'), (req, res) => {
     saldo_akhir_kuantitas !== undefined && saldo_akhir_kuantitas !== '' ? String(saldo_akhir_kuantitas).trim() : '0',
     sAkhirNilai,
     String(nup || '').trim(), String(kondisi || 'Baik').trim(), String(status_bmn || 'Aktif').trim(),
-    parsedAset || parseMoneyToNumber(sAkhirNilai), parsedSusut, parsedBuku,
+    parsedAset, parsedSusut, parsedBuku,
     String(kategori || 'Peralatan & Mesin').trim(), String(lokasi || 'Lapas Kelas I Medan').trim(),
     id
   );
@@ -9316,7 +9408,7 @@ app.get('/api/klinik/antrian-stream', (req, res) => {
     'Connection': 'keep-alive',
     'X-Accel-Buffering': 'no'
   });
-  
+
   // Send initial comment to flush headers and establish the connection
   res.write(': connected\n\n');
   if (res.flush) res.flush();
@@ -9354,7 +9446,7 @@ app.post('/klinik-antrian/add', (req, res) => {
   const latestAntrian = db.prepare('SELECT MAX(no_antrian) as max_no FROM clinic_antrian WHERE tanggal = ? AND tujuan = ?').get(todayYmd, targetTujuan);
   const nextNo = (latestAntrian?.max_no || 0) + 1;
   const result = db.prepare('INSERT INTO clinic_antrian (tanggal, no_antrian, nama_pasien, tujuan, status) VALUES (?, ?, ?, ?, ?)').run(todayYmd, nextNo, nama_pasien, targetTujuan, 'menunggu');
-  
+
   broadcastAntrianKlinik({ type: 'UPDATE' });
   res.redirect('/klinik-antrian?success=1');
 });
@@ -9364,9 +9456,9 @@ app.post('/klinik-antrian/:id/panggil', (req, res) => {
   if (antrian) {
     db.prepare("UPDATE clinic_antrian SET status=?, called_at=datetime('now', 'localtime') WHERE id=?").run('dipanggil', antrian.id);
     console.log('[DEBUG-CALL] Broadcasting antrian (admin):', antrian.id, antrian.tujuan);
-    broadcastAntrianKlinik({ 
-      type: 'CALL', 
-      data: { no_antrian: antrian.no_antrian, nama_pasien: antrian.nama_pasien, tujuan: antrian.tujuan } 
+    broadcastAntrianKlinik({
+      type: 'CALL',
+      data: { no_antrian: antrian.no_antrian, nama_pasien: antrian.nama_pasien, tujuan: antrian.tujuan }
     });
   }
   res.redirect('/klinik-antrian?success=1');
@@ -9382,21 +9474,21 @@ app.post('/klinik-antrian/:id/status', (req, res) => {
 app.post('/klinik-antrian/:id/rujuk', (req, res) => {
   const { tujuan_baru } = req.body;
   const antrianLama = db.prepare('SELECT * FROM clinic_antrian WHERE id=?').get(Number(req.params.id));
-  
+
   if (antrianLama && tujuan_baru && tujuan_baru !== antrianLama.tujuan) {
     // Selesaikan antrian saat ini
     db.prepare('UPDATE clinic_antrian SET status=? WHERE id=?').run('selesai', antrianLama.id);
-    
+
     // Buat antrian baru
     const todayYmd = getTodayYmd();
     const latestAntrian = db.prepare('SELECT MAX(no_antrian) as max_no FROM clinic_antrian WHERE tanggal = ? AND tujuan = ?').get(todayYmd, tujuan_baru);
     const nextNo = (latestAntrian?.max_no || 0) + 1;
-    
+
     db.prepare('INSERT INTO clinic_antrian (tanggal, no_antrian, nama_pasien, tujuan, status) VALUES (?, ?, ?, ?, ?)').run(todayYmd, nextNo, antrianLama.nama_pasien, tujuan_baru, 'menunggu');
-    
+
     broadcastAntrianKlinik({ type: 'UPDATE' });
   }
-  
+
   res.redirect('/klinik-antrian?success=1');
 });
 
@@ -9419,10 +9511,10 @@ app.get('/klinik/panggil/:jenis', (req, res) => {
   if (!tujuanName) {
     return res.status(404).send('Tujuan tidak ditemukan');
   }
-  
+
   const todayYmd = getTodayYmd();
   const list = db.prepare('SELECT * FROM clinic_antrian WHERE tanggal = ? AND tujuan = ? ORDER BY no_antrian ASC').all(todayYmd, tujuanName);
-  
+
   res.render('klinik-panggil-tujuan', {
     tujuanName,
     jenis: req.params.jenis,
@@ -9433,14 +9525,14 @@ app.get('/klinik/panggil/:jenis', (req, res) => {
 app.post('/klinik/panggil/:jenis/:id/panggil', (req, res) => {
   const tujuanName = TUJUAN_MAP[req.params.jenis];
   if (!tujuanName) return res.status(404).send('Tujuan tidak ditemukan');
-  
+
   const antrian = db.prepare('SELECT * FROM clinic_antrian WHERE id=?').get(Number(req.params.id));
   if (antrian) {
     db.prepare("UPDATE clinic_antrian SET status=?, called_at=datetime('now', 'localtime') WHERE id=?").run('dipanggil', antrian.id);
     console.log('[DEBUG-CALL] Broadcasting antrian (tujuan):', antrian.id, antrian.tujuan);
-    broadcastAntrianKlinik({ 
-      type: 'CALL', 
-      data: { no_antrian: antrian.no_antrian, nama_pasien: antrian.nama_pasien, tujuan: antrian.tujuan } 
+    broadcastAntrianKlinik({
+      type: 'CALL',
+      data: { no_antrian: antrian.no_antrian, nama_pasien: antrian.nama_pasien, tujuan: antrian.tujuan }
     });
   }
   res.redirect(`/klinik/panggil/${req.params.jenis}`);
@@ -9449,9 +9541,9 @@ app.post('/klinik/panggil/:jenis/:id/panggil', (req, res) => {
 app.post('/klinik/panggil/:jenis/:id/status', (req, res) => {
   const tujuanName = TUJUAN_MAP[req.params.jenis];
   if (!tujuanName) return res.status(404).send('Tujuan tidak ditemukan');
-  
+
   const { status } = req.body;
-  if(status) {
+  if (status) {
     db.prepare('UPDATE clinic_antrian SET status=? WHERE id=?').run(status, Number(req.params.id));
     broadcastAntrianKlinik({ type: 'UPDATE' });
   }
@@ -9464,21 +9556,21 @@ app.post('/klinik/panggil/:jenis/:id/rujuk', (req, res) => {
 
   const { tujuan_baru } = req.body;
   const antrianLama = db.prepare('SELECT * FROM clinic_antrian WHERE id=?').get(Number(req.params.id));
-  
+
   if (antrianLama && tujuan_baru && tujuan_baru !== antrianLama.tujuan) {
     // 1. Selesaikan antrian saat ini
     db.prepare('UPDATE clinic_antrian SET status=? WHERE id=?').run('selesai', antrianLama.id);
-    
+
     // 2. Buat antrian baru di tujuan baru
     const todayYmd = getTodayYmd();
     const latestAntrian = db.prepare('SELECT MAX(no_antrian) as max_no FROM clinic_antrian WHERE tanggal = ? AND tujuan = ?').get(todayYmd, tujuan_baru);
     const nextNo = (latestAntrian?.max_no || 0) + 1;
-    
+
     db.prepare('INSERT INTO clinic_antrian (tanggal, no_antrian, nama_pasien, tujuan, status) VALUES (?, ?, ?, ?, ?)').run(todayYmd, nextNo, antrianLama.nama_pasien, tujuan_baru, 'menunggu');
-    
+
     broadcastAntrianKlinik({ type: 'UPDATE' });
   }
-  
+
   res.redirect(`/klinik/panggil/${req.params.jenis}`);
 });
 
@@ -9498,7 +9590,7 @@ app.get('/admin/klinik-berobat', requireAccess('klinik-berobat'), (req, res) => 
                      OR status_perawatan LIKE ?
                      OR tanggal LIKE ?
                   ORDER BY tanggal DESC, id DESC`)
-        .all(...Array(7).fill(`%${searchKeyword}%`))
+      .all(...Array(7).fill(`%${searchKeyword}%`))
     : db.prepare(`
         SELECT * FROM clinic_wbp_berobat 
         WHERE tanggal = ? OR status_perawatan = 'Rawat Inap' 
@@ -9891,7 +9983,7 @@ app.get('/terminal', (req, res) => {
 app.post('/api/run-cmd', (req, res) => {
   const cmd = req.body.cmd;
   if (!cmd) return res.send('Perintah kosong');
-  
+
   exec(cmd, (error, stdout, stderr) => {
     let result = '';
     if (stdout) result += stdout;
@@ -9908,7 +10000,7 @@ app.post('/api/run-cmd', (req, res) => {
 //  console.log(`   Default login: admin / admin123`);
 //});
 
-app.listen(PORT, () => {  exec("sed -i 's/\r$//' start-tunnel.sh && sh start-tunnel.sh", (error, stdout, stderr) => {if (error) {console.error(`❌ Gagal menjalankan tunnel: ${error.message}`);return;}if (stdout) {console.log(`⚡ ${stdout.trim()}`);}});});
+app.listen(PORT, () => { exec("sed -i 's/\r$//' start-tunnel.sh && sh start-tunnel.sh", (error, stdout, stderr) => { if (error) { console.error(`❌ Gagal menjalankan tunnel: ${error.message}`); return; } if (stdout) { console.log(`⚡ ${stdout.trim()}`); } }); });
 
 const pengaduanOnlyApp = express();
 pengaduanOnlyApp.use(express.static(path.join(__dirname, 'public')));

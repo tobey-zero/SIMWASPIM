@@ -4,6 +4,7 @@
     .rekap-bmn-wrapper {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
+
     .rb-dashboard {
       background: #ffffff;
       border: 1px solid #e2e8f0;
@@ -11,6 +12,7 @@
       box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
       overflow: hidden;
     }
+
     .rb-dashboard-header {
       display: flex;
       justify-content: space-between;
@@ -22,11 +24,13 @@
       flex-wrap: wrap;
       gap: 10px;
     }
+
     .rb-dashboard-title {
       display: flex;
       align-items: center;
       gap: 10px;
     }
+
     .rb-dashboard-title h3 {
       margin: 0;
       font-size: 15px;
@@ -35,17 +39,20 @@
       color: #f8fafc;
       text-transform: uppercase;
     }
+
     .rb-dashboard-title span {
       font-size: 12px;
       color: #93c5fd;
       font-weight: 400;
     }
+
     .rb-header-badges {
       display: flex;
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
     }
+
     .rb-badge-simak {
       background: rgba(59, 130, 246, 0.25);
       border: 1px solid rgba(147, 197, 253, 0.4);
@@ -59,6 +66,7 @@
       align-items: center;
       gap: 5px;
     }
+
     .rb-toggle-btn {
       background: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -73,14 +81,16 @@
       gap: 6px;
       transition: background 0.15s ease;
     }
+
     .rb-toggle-btn:hover {
       background: rgba(255, 255, 255, 0.2);
     }
+
     .rb-dashboard-body {
       padding: 16px;
       background: #f8fafc;
     }
-    
+
     /* Top 4 Metric KPI Cards */
     .rb-top-metrics {
       display: grid;
@@ -88,18 +98,20 @@
       gap: 14px;
       margin-bottom: 16px;
     }
+
     .rb-metric-card {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 10px;
       padding: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       position: relative;
       overflow: hidden;
     }
+
     .rb-metric-card::before {
       content: '';
       position: absolute;
@@ -109,9 +121,18 @@
       height: 100%;
       background: #2563eb;
     }
-    .rb-metric-card.accent-emerald::before { background: #059669; }
-    .rb-metric-card.accent-amber::before { background: #d97706; }
-    .rb-metric-card.accent-indigo::before { background: #4f46e5; }
+
+    .rb-metric-card.accent-emerald::before {
+      background: #059669;
+    }
+
+    .rb-metric-card.accent-amber::before {
+      background: #d97706;
+    }
+
+    .rb-metric-card.accent-indigo::before {
+      background: #4f46e5;
+    }
 
     .rb-metric-head {
       display: flex;
@@ -119,6 +140,7 @@
       align-items: flex-start;
       margin-bottom: 8px;
     }
+
     .rb-metric-label {
       font-size: 11px;
       text-transform: uppercase;
@@ -126,6 +148,7 @@
       font-weight: 700;
       color: #64748b;
     }
+
     .rb-metric-icon {
       width: 32px;
       height: 32px;
@@ -136,9 +159,21 @@
       justify-content: center;
       color: #334155;
     }
-    .rb-metric-card.accent-emerald .rb-metric-icon { background: #ecfdf5; color: #059669; }
-    .rb-metric-card.accent-amber .rb-metric-icon { background: #fffbeb; color: #d97706; }
-    .rb-metric-card.accent-indigo .rb-metric-icon { background: #eef2ff; color: #4f46e5; }
+
+    .rb-metric-card.accent-emerald .rb-metric-icon {
+      background: #ecfdf5;
+      color: #059669;
+    }
+
+    .rb-metric-card.accent-amber .rb-metric-icon {
+      background: #fffbeb;
+      color: #d97706;
+    }
+
+    .rb-metric-card.accent-indigo .rb-metric-icon {
+      background: #eef2ff;
+      color: #4f46e5;
+    }
 
     .rb-metric-value {
       font-size: 24px;
@@ -147,10 +182,12 @@
       line-height: 1.15;
       font-feature-settings: "tnum";
     }
+
     .rb-metric-value.font-lg-money {
       font-size: 20px;
       letter-spacing: -0.3px;
     }
+
     .rb-metric-sub {
       font-size: 11px;
       color: #64748b;
@@ -167,13 +204,15 @@
       gap: 14px;
       margin-bottom: 8px;
     }
+
     .rb-detail-card {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 10px;
       padding: 14px 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
     }
+
     .rb-detail-title {
       font-size: 12px;
       font-weight: 700;
@@ -187,6 +226,7 @@
       border-bottom: 1px solid #f1f5f9;
       padding-bottom: 8px;
     }
+
     .rb-detail-title small {
       font-size: 11px;
       color: #64748b;
@@ -203,14 +243,27 @@
       display: flex;
       margin: 10px 0 12px 0;
     }
+
     .rb-progress-seg {
       height: 100%;
       transition: width 0.3s ease;
     }
-    .rb-seg-emerald { background: #10b981; }
-    .rb-seg-rose { background: #ef4444; }
-    .rb-seg-blue { background: #2563eb; }
-    .rb-seg-amber { background: #f59e0b; }
+
+    .rb-seg-emerald {
+      background: #10b981;
+    }
+
+    .rb-seg-rose {
+      background: #ef4444;
+    }
+
+    .rb-seg-blue {
+      background: #2563eb;
+    }
+
+    .rb-seg-amber {
+      background: #f59e0b;
+    }
 
     /* Interactive Stat Rows / Buttons */
     .rb-stat-row {
@@ -226,45 +279,64 @@
       color: inherit;
       transition: all 0.15s ease;
     }
+
     .rb-stat-row:hover {
       background: #eff6ff;
       border-color: #bfdbfe;
     }
+
     .rb-stat-row.active {
       background: #dbeafe;
       border-color: #3b82f6;
     }
+
     .rb-stat-left {
       display: flex;
       align-items: center;
       gap: 8px;
     }
+
     .rb-stat-dot {
       width: 9px;
       height: 9px;
       border-radius: 50%;
     }
-    .rb-dot-emerald { background: #10b981; }
-    .rb-dot-rose { background: #ef4444; }
-    .rb-dot-blue { background: #2563eb; }
-    .rb-dot-amber { background: #f59e0b; }
+
+    .rb-dot-emerald {
+      background: #10b981;
+    }
+
+    .rb-dot-rose {
+      background: #ef4444;
+    }
+
+    .rb-dot-blue {
+      background: #2563eb;
+    }
+
+    .rb-dot-amber {
+      background: #f59e0b;
+    }
 
     .rb-stat-name {
       font-size: 12px;
       font-weight: 600;
       color: #1e293b;
     }
+
     .rb-stat-right {
       display: flex;
       align-items: center;
       gap: 8px;
     }
+
     .rb-stat-count {
       font-size: 13px;
       font-weight: 700;
       color: #0f172a;
       font-feature-settings: "tnum";
     }
+
     .rb-stat-pct {
       font-size: 11px;
       color: #64748b;
@@ -279,6 +351,7 @@
       flex-direction: column;
       gap: 6px;
     }
+
     .rb-kat-item {
       display: flex;
       justify-content: space-between;
@@ -292,14 +365,17 @@
       color: inherit;
       transition: all 0.15s ease;
     }
+
     .rb-kat-item:hover {
       background: #eff6ff;
       border-color: #bfdbfe;
     }
+
     .rb-kat-item.active {
       background: #dbeafe;
       border-color: #3b82f6;
     }
+
     .rb-kat-name {
       font-weight: 600;
       color: #1e293b;
@@ -308,11 +384,13 @@
       text-overflow: ellipsis;
       max-width: 170px;
     }
+
     .rb-kat-stats {
       display: flex;
       align-items: center;
       gap: 8px;
     }
+
     .rb-kat-qty {
       font-size: 11px;
       font-weight: 700;
@@ -321,6 +399,7 @@
       padding: 2px 6px;
       border-radius: 4px;
     }
+
     .rb-kat-val {
       font-size: 11px;
       font-weight: 600;
@@ -341,250 +420,318 @@
       align-items: center;
       justify-content: space-between;
     }
+
     .rb-filter-notice a {
       color: #b91c1c;
       font-weight: 600;
       text-decoration: none;
       font-size: 11px;
     }
+
     .rb-filter-notice a:hover {
       text-decoration: underline;
     }
   </style>
 
-  <%
-    const qFilters = filters || {};
-    const base = baseUrl || '/admin/tu-umum/barang';
-    const makeFilterUrl = (key, val) => {
-      const u = new URL(base, 'http://localhost');
-      if (qFilters.search) u.searchParams.set('search', qFilters.search);
-      if (qFilters.perPage) u.searchParams.set('perPage', qFilters.perPage);
-      if (qFilters.sortBy) u.searchParams.set('sortBy', qFilters.sortBy);
-      if (qFilters.sortDir) u.searchParams.set('sortDir', qFilters.sortDir);
-      
-      // Preserve other filter keys
-      ['kondisi', 'status_bmn', 'kategori', 'tahun'].forEach(k => {
-        if (k !== key && qFilters[k]) u.searchParams.set(k, qFilters[k]);
-      });
+  <% const qFilters=filters || {}; const base=baseUrl || '/admin/tu-umum/barang' ; const makeFilterUrl=(key, val)=> {
+    const u = new URL(base, 'http://localhost');
+    if (qFilters.search) u.searchParams.set('search', qFilters.search);
+    if (qFilters.perPage) u.searchParams.set('perPage', qFilters.perPage);
+    if (qFilters.sortBy) u.searchParams.set('sortBy', qFilters.sortBy);
+    if (qFilters.sortDir) u.searchParams.set('sortDir', qFilters.sortDir);
 
-      // Toggle or set
-      if (qFilters[key] === val) {
-        u.searchParams.delete(key);
-      } else if (val) {
-        u.searchParams.set(key, val);
-      }
-      u.searchParams.set('page', '1');
-      return u.pathname + u.search;
+    // Preserve other filter keys
+    ['kondisi', 'status_bmn', 'kategori', 'tahun'].forEach(k => {
+    if (k !== key && qFilters[k]) u.searchParams.set(k, qFilters[k]);
+    });
+
+    // Toggle or set
+    if (qFilters[key] === val) {
+    u.searchParams.delete(key);
+    } else if (val) {
+    u.searchParams.set(key, val);
+    }
+    u.searchParams.set('page', '1');
+    return u.pathname + u.search;
     };
 
     const hasAnyActiveFilter = qFilters.kondisi || qFilters.status_bmn || qFilters.kategori || qFilters.tahun;
-  %>
+    %>
 
-  <div class="rb-dashboard">
-    <!-- Header Bar -->
-    <div class="rb-dashboard-header">
-      <div class="rb-dashboard-title">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-          <line x1="12" y1="22.08" x2="12" y2="12"></line>
-        </svg>
-        <div>
-          <h3>REKAPITULASI BMN (DAFTAR BARANG)</h3>
-          <span>Subbag Tata Usaha Lapas Kelas I Medan &bull; Berdasarkan Data SIMAK / Sakti BMN</span>
-        </div>
-      </div>
-      <div class="rb-header-badges">
-        <span class="rb-badge-simak">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
-          Status Penatausahaan: Valid
-        </span>
-        <button type="button" class="rb-toggle-btn" onclick="toggleBmnDashboard(this)" title="Sembunyikan / Tampilkan Rincian Rekap">
-          <span id="rb-toggle-text">Tutup Rincian</span>
-          <svg id="rb-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Body Area -->
-    <div class="rb-dashboard-body" id="rb-dashboard-content">
-      <!-- 4 Top KPI Cards (Screenshot Exact Values) -->
-      <div class="rb-top-metrics">
-        <!-- 1: JUMLAH BMN -->
-        <div class="rb-metric-card">
-          <div class="rb-metric-head">
-            <span class="rb-metric-label">JUMLAH BMN</span>
-            <div class="rb-metric-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-            </div>
-          </div>
-          <div class="rb-metric-value"><%= rekap.formatted.total %></div>
-          <div class="rb-metric-sub">
-            <span>Unit / NUP Aset Terdata</span>
-            <span style="font-weight:600;color:#2563eb;">100% Tercatat</span>
+    <div class="rb-dashboard">
+      <!-- Header Bar -->
+      <div class="rb-dashboard-header">
+        <div class="rb-dashboard-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+            </path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          </svg>
+          <div>
+            <h3>REKAPITULASI BMN (DAFTAR BARANG)</h3>
+            <span>Subbag Tata Usaha Lapas Kelas I Medan &bull; Berdasarkan Data SIMAK / Sakti BMN</span>
           </div>
         </div>
-
-        <!-- 2: TOTAL NILAI ASET -->
-        <div class="rb-metric-card accent-emerald">
-          <div class="rb-metric-head">
-            <span class="rb-metric-label">TOTAL NILAI ASET</span>
-            <div class="rb-metric-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-            </div>
-          </div>
-          <div class="rb-metric-value font-lg-money" style="color:#047857;"><%= rekap.formatted.totalAset %></div>
-          <div class="rb-metric-sub">
-            <span>Nilai Perolehan Historis BMN</span>
-            <span style="font-weight:600;color:#059669;">Aset Tetap</span>
-          </div>
-        </div>
-
-        <!-- 3: AKUMULASI PENYUSUTAN -->
-        <div class="rb-metric-card accent-amber">
-          <div class="rb-metric-head">
-            <span class="rb-metric-label">AKUMULASI PENYUSUTAN</span>
-            <div class="rb-metric-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
-            </div>
-          </div>
-          <div class="rb-metric-value font-lg-money" style="color:#b45309;"><%= rekap.formatted.akumulasiPenyusutan %></div>
-          <div class="rb-metric-sub">
-            <span>Beban Penyusutan Terakumulasi</span>
-            <span style="font-weight:600;color:#d97706;"><%= rekap.formatted.susutPct %>% dari Aset</span>
-          </div>
-        </div>
-
-        <!-- 4: NILAI BUKU -->
-        <div class="rb-metric-card accent-indigo">
-          <div class="rb-metric-head">
-            <span class="rb-metric-label">NILAI BUKU</span>
-            <div class="rb-metric-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            </div>
-          </div>
-          <div class="rb-metric-value font-lg-money" style="color:#4338ca;"><%= rekap.formatted.nilaiBuku %></div>
-          <div class="rb-metric-sub">
-            <span>Nilai Bersih (Aset - Penyusutan)</span>
-            <span style="font-weight:600;color:#4f46e5;"><%= rekap.formatted.nilaiBukuPct %>% dari Aset</span>
-          </div>
+        <div class="rb-header-badges">
+          <span class="rb-badge-simak">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 14 14"></polyline>
+            </svg>
+            Status Penatausahaan: Valid
+          </span>
+          <button type="button" class="rb-toggle-btn" onclick="toggleBmnDashboard(this)"
+            title="Sembunyikan / Tampilkan Rincian Rekap">
+            <span id="rb-toggle-text">Tutup Rincian</span>
+            <svg id="rb-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+          </button>
         </div>
       </div>
 
-      <!-- Breakdown Grid: Kondisi, Status, Klasifikasi Kategori -->
-      <div class="rb-breakdown-grid">
-        <!-- Card 1: KONDISI BMN (Baik vs Rusak Berat) -->
-        <div class="rb-detail-card">
-          <h4 class="rb-detail-title">
-            <span>KONDISI BMN</span>
-            <small>Klik untuk filter tabel</small>
-          </h4>
-
-          <!-- Dual Progress Bar -->
-          <div class="rb-progress-track" title="Baik: <%= rekap.kondisi.baikPct %>%, Rusak Berat: <%= rekap.kondisi.rusakBeratPct %>%">
-            <div class="rb-progress-seg rb-seg-emerald" style="width: <%= rekap.kondisi.baikPct %>%;"></div>
-            <div class="rb-progress-seg rb-seg-rose" style="width: <%= rekap.kondisi.rusakBeratPct %>%;"></div>
+      <!-- Body Area -->
+      <div class="rb-dashboard-body" id="rb-dashboard-content">
+        <!-- 4 Top KPI Cards (Screenshot Exact Values) -->
+        <div class="rb-top-metrics">
+          <!-- 1: JUMLAH BMN -->
+          <div class="rb-metric-card">
+            <div class="rb-metric-head">
+              <span class="rb-metric-label">JUMLAH BMN</span>
+              <div class="rb-metric-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                  </path>
+                </svg>
+              </div>
+            </div>
+            <div class="rb-metric-value">
+              <%= rekap.formatted.total %>
+            </div>
+            <div class="rb-metric-sub">
+              <span>Daftar BMN Terdata</span>
+              <span style="font-weight:600;color:#2563eb;">100% Tercatat</span>
+            </div>
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:4px;">
-            <a href="<%= makeFilterUrl('kondisi', 'Baik') %>" class="rb-stat-row <%= qFilters.kondisi === 'Baik' ? 'active' : '' %>" title="Filter Barang Kondisi Baik">
-              <div class="rb-stat-left">
-                <span class="rb-stat-dot rb-dot-emerald"></span>
-                <span class="rb-stat-name">BAIK (Siap Operasional)</span>
+          <!-- 2: TOTAL NILAI ASET -->
+          <div class="rb-metric-card accent-emerald">
+            <div class="rb-metric-head">
+              <span class="rb-metric-label">TOTAL NILAI ASET</span>
+              <div class="rb-metric-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
               </div>
-              <div class="rb-stat-right">
-                <span class="rb-stat-count"><%= rekap.kondisi.baikFormatted %></span>
-                <span class="rb-stat-pct" style="color:#059669;font-weight:700;"><%= rekap.kondisi.baikPct %>%</span>
-              </div>
-            </a>
+            </div>
+            <div class="rb-metric-value font-lg-money" style="color:#047857;">
+              <%= rekap.formatted.totalAset %>
+            </div>
+            <div class="rb-metric-sub">
+              <span>Nilai Perolehan Historis BMN</span>
+              <span style="font-weight:600;color:#059669;">Aset Tetap</span>
+            </div>
+          </div>
 
-            <a href="<%= makeFilterUrl('kondisi', 'Rusak Berat') %>" class="rb-stat-row <%= qFilters.kondisi === 'Rusak Berat' ? 'active' : '' %>" title="Filter Barang Rusak Berat">
-              <div class="rb-stat-left">
-                <span class="rb-stat-dot rb-dot-rose"></span>
-                <span class="rb-stat-name">RUSAK BERAT</span>
+          <!-- 3: AKUMULASI PENYUSUTAN -->
+          <div class="rb-metric-card accent-amber">
+            <div class="rb-metric-head">
+              <span class="rb-metric-label">AKUMULASI PENYUSUTAN</span>
+              <div class="rb-metric-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                  <polyline points="17 18 23 18 23 12"></polyline>
+                </svg>
               </div>
-              <div class="rb-stat-right">
-                <span class="rb-stat-count"><%= rekap.kondisi.rusakBeratFormatted %></span>
-                <span class="rb-stat-pct" style="color:#dc2626;font-weight:700;"><%= rekap.kondisi.rusakBeratPct %>%</span>
+            </div>
+            <div class="rb-metric-value font-lg-money" style="color:#b45309;">
+              <%= rekap.formatted.akumulasiPenyusutan %>
+            </div>
+            <div class="rb-metric-sub">
+              <span>Beban Penyusutan / Berkurang</span>
+              <span style="font-weight:600;color:#d97706;">
+                <%= rekap.formatted.susutPct %>% dari Aset
+              </span>
+            </div>
+          </div>
+
+          <!-- 4: NILAI BUKU -->
+          <div class="rb-metric-card accent-indigo">
+            <div class="rb-metric-head">
+              <span class="rb-metric-label">NILAI BUKU (SALDO AKHIR)</span>
+              <div class="rb-metric-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
               </div>
-            </a>
+            </div>
+            <div class="rb-metric-value font-lg-money" style="color:#4338ca;">
+              <%= rekap.formatted.nilaiBuku %>
+            </div>
+            <div class="rb-metric-sub">
+              <span>Nilai Bersih Saldo Akhir</span>
+              <span style="font-weight:600;color:#4f46e5;">
+                <%= rekap.formatted.nilaiBukuPct %>% dari Aset
+              </span>
+            </div>
           </div>
         </div>
 
-        <!-- Card 2: STATUS BMN (Aktif vs Henti Guna) -->
-        <div class="rb-detail-card">
-          <h4 class="rb-detail-title">
-            <span>STATUS BMN</span>
-            <small>Klik untuk filter tabel</small>
-          </h4>
+        <!-- Breakdown Grid: Kondisi, Status, Klasifikasi Kategori -->
+        <div class="rb-breakdown-grid">
+          <!-- Card 1: KONDISI BMN (Baik vs Rusak Berat) -->
+          <div class="rb-detail-card">
+            <h4 class="rb-detail-title">
+              <span>KONDISI BMN</span>
+              <small>Klik untuk filter tabel</small>
+            </h4>
 
-          <!-- Dual Progress Bar -->
-          <div class="rb-progress-track" title="Aktif: <%= rekap.status.aktifPct %>%, Henti Guna: <%= rekap.status.hentiGunaPct %>%">
-            <div class="rb-progress-seg rb-seg-blue" style="width: <%= rekap.status.aktifPct %>%;"></div>
-            <div class="rb-progress-seg rb-seg-amber" style="width: <%= rekap.status.hentiGunaPct %>%;"></div>
-          </div>
+            <!-- Dual Progress Bar -->
+            <div class="rb-progress-track"
+              title="Baik: <%= rekap.kondisi.baikPct %>%, Rusak Berat: <%= rekap.kondisi.rusakBeratPct %>%">
+              <div class="rb-progress-seg rb-seg-emerald" style="width: <%= rekap.kondisi.baikPct %>%;"></div>
+              <div class="rb-progress-seg rb-seg-rose" style="width: <%= rekap.kondisi.rusakBeratPct %>%;"></div>
+            </div>
 
-          <div style="display:flex;flex-direction:column;gap:4px;">
-            <a href="<%= makeFilterUrl('status_bmn', 'Aktif') %>" class="rb-stat-row <%= qFilters.status_bmn === 'Aktif' ? 'active' : '' %>" title="Filter Barang Status Aktif">
-              <div class="rb-stat-left">
-                <span class="rb-stat-dot rb-dot-blue"></span>
-                <span class="rb-stat-name">AKTIF DIGUNAKAN</span>
-              </div>
-              <div class="rb-stat-right">
-                <span class="rb-stat-count"><%= rekap.status.aktifFormatted %></span>
-                <span class="rb-stat-pct" style="color:#2563eb;font-weight:700;"><%= rekap.status.aktifPct %>%</span>
-              </div>
-            </a>
-
-            <a href="<%= makeFilterUrl('status_bmn', 'Henti Guna') %>" class="rb-stat-row <%= qFilters.status_bmn === 'Henti Guna' ? 'active' : '' %>" title="Filter Barang Status Henti Guna">
-              <div class="rb-stat-left">
-                <span class="rb-stat-dot rb-dot-amber"></span>
-                <span class="rb-stat-name">HENTI GUNA (Usul Hapus)</span>
-              </div>
-              <div class="rb-stat-right">
-                <span class="rb-stat-count"><%= rekap.status.hentiGunaFormatted %></span>
-                <span class="rb-stat-pct" style="color:#d97706;font-weight:700;"><%= rekap.status.hentiGunaPct %>%</span>
-              </div>
-            </a>
-          </div>
-        </div>
-
-        <!-- Card 3: KLASIFIKASI KATEGORI ASET -->
-        <div class="rb-detail-card">
-          <h4 class="rb-detail-title">
-            <span>KLASIFIKASI KATEGORI BMN</span>
-            <small>Distribusi Aset</small>
-          </h4>
-
-          <div class="rb-kat-list">
-            <% (rekap.kategoriList || []).slice(0, 5).forEach(k => { %>
-              <a href="<%= makeFilterUrl('kategori', k.name) %>" class="rb-kat-item <%= qFilters.kategori === k.name ? 'active' : '' %>" title="Filter Kategori <%= k.name %>">
-                <span class="rb-kat-name"><%= k.name %></span>
-                <div class="rb-kat-stats">
-                  <span class="rb-kat-qty"><%= k.count %> unit</span>
-                  <span class="rb-kat-val"><%= k.totalNilaiFormatted %></span>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <a href="<%= makeFilterUrl('kondisi', 'Baik') %>"
+                class="rb-stat-row <%= qFilters.kondisi === 'Baik' ? 'active' : '' %>"
+                title="Filter Barang Kondisi Baik">
+                <div class="rb-stat-left">
+                  <span class="rb-stat-dot rb-dot-emerald"></span>
+                  <span class="rb-stat-name">BAIK (Siap Operasional)</span>
+                </div>
+                <div class="rb-stat-right">
+                  <span class="rb-stat-count">
+                    <%= rekap.kondisi.baikFormatted %>
+                  </span>
+                  <span class="rb-stat-pct" style="color:#059669;font-weight:700;">
+                    <%= rekap.kondisi.baikPct %>%
+                  </span>
                 </div>
               </a>
-            <% }) %>
+
+              <a href="<%= makeFilterUrl('kondisi', 'Rusak Berat') %>"
+                class="rb-stat-row <%= qFilters.kondisi === 'Rusak Berat' ? 'active' : '' %>"
+                title="Filter Barang Rusak Berat">
+                <div class="rb-stat-left">
+                  <span class="rb-stat-dot rb-dot-rose"></span>
+                  <span class="rb-stat-name">RUSAK BERAT</span>
+                </div>
+                <div class="rb-stat-right">
+                  <span class="rb-stat-count">
+                    <%= rekap.kondisi.rusakBeratFormatted %>
+                  </span>
+                  <span class="rb-stat-pct" style="color:#dc2626;font-weight:700;">
+                    <%= rekap.kondisi.rusakBeratPct %>%
+                  </span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 2: STATUS BMN (Aktif vs Henti Guna) -->
+          <div class="rb-detail-card">
+            <h4 class="rb-detail-title">
+              <span>STATUS BMN</span>
+              <small>Klik untuk filter tabel</small>
+            </h4>
+
+            <!-- Dual Progress Bar -->
+            <div class="rb-progress-track"
+              title="Aktif: <%= rekap.status.aktifPct %>%, Henti Guna: <%= rekap.status.hentiGunaPct %>%">
+              <div class="rb-progress-seg rb-seg-blue" style="width: <%= rekap.status.aktifPct %>%;"></div>
+              <div class="rb-progress-seg rb-seg-amber" style="width: <%= rekap.status.hentiGunaPct %>%;"></div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <a href="<%= makeFilterUrl('status_bmn', 'Aktif') %>"
+                class="rb-stat-row <%= qFilters.status_bmn === 'Aktif' ? 'active' : '' %>"
+                title="Filter Barang Status Aktif">
+                <div class="rb-stat-left">
+                  <span class="rb-stat-dot rb-dot-blue"></span>
+                  <span class="rb-stat-name">AKTIF DIGUNAKAN</span>
+                </div>
+                <div class="rb-stat-right">
+                  <span class="rb-stat-count">
+                    <%= rekap.status.aktifFormatted %>
+                  </span>
+                  <span class="rb-stat-pct" style="color:#2563eb;font-weight:700;">
+                    <%= rekap.status.aktifPct %>%
+                  </span>
+                </div>
+              </a>
+
+              <a href="<%= makeFilterUrl('status_bmn', 'Henti Guna') %>"
+                class="rb-stat-row <%= qFilters.status_bmn === 'Henti Guna' ? 'active' : '' %>"
+                title="Filter Barang Status Henti Guna">
+                <div class="rb-stat-left">
+                  <span class="rb-stat-dot rb-dot-amber"></span>
+                  <span class="rb-stat-name">HENTI GUNA (Usul Hapus)</span>
+                </div>
+                <div class="rb-stat-right">
+                  <span class="rb-stat-count">
+                    <%= rekap.status.hentiGunaFormatted %>
+                  </span>
+                  <span class="rb-stat-pct" style="color:#d97706;font-weight:700;">
+                    <%= rekap.status.hentiGunaPct %>%
+                  </span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 3: KLASIFIKASI KATEGORI ASET -->
+          <div class="rb-detail-card">
+            <h4 class="rb-detail-title">
+              <span>KLASIFIKASI KATEGORI BMN</span>
+              <small>Distribusi Aset</small>
+            </h4>
+
+            <div class="rb-kat-list">
+              <% (rekap.kategoriList || []).slice(0, 5).forEach(k=> { %>
+                <a href="<%= makeFilterUrl('kategori', k.name) %>"
+                  class="rb-kat-item <%= qFilters.kategori === k.name ? 'active' : '' %>"
+                  title="Filter Kategori <%= k.name %>">
+                  <span class="rb-kat-name">
+                    <%= k.name %>
+                  </span>
+                  <div class="rb-kat-stats">
+                    <span class="rb-kat-qty">
+                      <%= k.count %> unit
+                    </span>
+                    <span class="rb-kat-val">
+                      <%= k.totalNilaiFormatted %>
+                    </span>
+                  </div>
+                </a>
+                <% }) %>
+            </div>
           </div>
         </div>
-      </div>
 
-      <% if (hasAnyActiveFilter) { %>
-      <div class="rb-filter-notice">
-        <span>
-          🔍 <strong>Filter Aktif:</strong>
-          <%= qFilters.kondisi ? `Kondisi: ${qFilters.kondisi} | ` : '' %>
-          <%= qFilters.status_bmn ? `Status: ${qFilters.status_bmn} | ` : '' %>
-          <%= qFilters.kategori ? `Kategori: ${qFilters.kategori} | ` : '' %>
-          <%= qFilters.tahun ? `Tahun: ${qFilters.tahun} | ` : '' %>
-        </span>
-        <a href="<%= base %>">✕ Reset Filter Rekap</a>
-      </div>
-      <% } %>
+        <% if (hasAnyActiveFilter) { %>
+          <div class="rb-filter-notice">
+            <span>
+              🔍 <strong>Filter Aktif:</strong>
+              <%= qFilters.kondisi ? `Kondisi: ${qFilters.kondisi} | ` : '' %>
+                <%= qFilters.status_bmn ? `Status: ${qFilters.status_bmn} | ` : '' %>
+                  <%= qFilters.kategori ? `Kategori: ${qFilters.kategori} | ` : '' %>
+                    <%= qFilters.tahun ? `Tahun: ${qFilters.tahun} | ` : '' %>
+            </span>
+            <a href="<%= base %>">✕ Reset Filter Rekap</a>
+          </div>
+          <% } %>
 
+      </div>
     </div>
-  </div>
 </div>
 
 <script>

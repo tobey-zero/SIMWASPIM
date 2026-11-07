@@ -30,7 +30,7 @@ try {
   }
 
   db.exec('COMMIT');
-  console.log('Successfully committed 2624 BMN rows into database!');
+  console.log(`Successfully committed ${rows.length} authentic BMN rows into database!`);
 } catch (err) {
   db.exec('ROLLBACK');
   console.error('Seed BMN error:', err);
@@ -46,10 +46,8 @@ const aktif = db.prepare("SELECT count(*) as c FROM tu_umum_barang WHERE status_
 const henti = db.prepare("SELECT count(*) as c FROM tu_umum_barang WHERE status_bmn = 'Henti Guna'").get().c;
 
 console.log('Seeded count:', countAfter);
-console.log('Sum Aset:', sumAset, 'Match 303117479870:', sumAset === 303117479870);
-console.log('Sum Susut:', sumSusut, 'Match 41753241702:', sumSusut === 41753241702);
-console.log('Sum Nilai Buku:', sumBuku, 'Match 261364238168:', sumBuku === 261364238168);
-console.log('Baik:', baik, 'Match 2349:', baik === 2349);
-console.log('Rusak Berat:', rusak, 'Match 275:', rusak === 275);
-console.log('Aktif:', aktif, 'Match 2520:', aktif === 2520);
-console.log('Henti Guna:', henti, 'Match 104:', henti === 104);
+console.log('Sum Nilai Perolehan:', new Intl.NumberFormat('id-ID').format(sumAset));
+console.log('Sum Akumulasi Penyusutan:', new Intl.NumberFormat('id-ID').format(sumSusut));
+console.log('Sum Nilai Buku:', new Intl.NumberFormat('id-ID').format(sumBuku));
+console.log('Kondisi - Baik:', baik, '| Rusak Berat:', rusak);
+console.log('Status - Aktif:', aktif, '| Henti Guna:', henti);
