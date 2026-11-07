@@ -836,6 +836,96 @@ if (!tuUmumBarangColumnNames.includes('nilai_buku')) db.exec("ALTER TABLE tu_umu
 if (!tuUmumBarangColumnNames.includes('kategori')) db.exec("ALTER TABLE tu_umum_barang ADD COLUMN kategori TEXT DEFAULT 'Peralatan & Mesin'");
 if (!tuUmumBarangColumnNames.includes('lokasi')) db.exec("ALTER TABLE tu_umum_barang ADD COLUMN lokasi TEXT DEFAULT 'Lapas Kelas I Medan'");
 
+// ── Auto-Migration & Backfill Kolom BMN (Agar Database Produksi Otomatis Terisi Benar saat Git Pull) ──
+function parseMoneyBmn(val) {
+  if (val === null || val === undefined) return 0;
+  if (typeof val === 'number') return Math.round(val);
+  const str = String(val).trim();
+  if (str === '' || str === '-' || str === '0') return 0;
+  const isNeg = str.includes('(') && str.includes(')');
+  const digits = str.replace(/[^0-9]/g, '');
+  const num = parseFloat(digits) || 0;
+  return isNeg ? -num : num;
+}
+
+function getCategoryBmn(kode, uraian) {
+  const k = String(kode || '').trim();
+  const u = String(uraian || '').toLowerCase();
+  if (k.startsWith('2')) return 'Tanah Bangunan Lapas';
+  if (k.startsWith('4')) return 'Gedung & Bangunan';
+  if (k.startsWith('302')) return 'Kendaraan Dinas';
+  if (
+    k.startsWith('309') ||
+    k.startsWith('315') ||
+    u.includes('senjata') ||
+    u.includes('pistol') ||
+    u.includes('senapan') ||
+    u.includes('rompi') ||
+    u.includes('metal detector') ||
+    u.includes('tameng') ||
+    u.includes('borgol') ||
+    u.includes('dalmas') ||
+    u.includes('huru-hara') ||
+    u.includes('security') ||
+    u.includes('gaspistol') ||
+    u.includes('flash ball') ||
+    u.includes('jammer')
+  ) {
+    return 'Senjata & Pengamanan';
+  }
+  return 'Peralatan & Mesin';
+}
+
+const bmnNeedsBackfill = db.prepare(`
+  SELECT COUNT(*) AS c
+  FROM tu_umum_barang
+  WHERE (nilai_perolehan = 0 OR nilai_perolehan IS NULL)
+    AND (
+      (saldo_akhir_nilai IS NOT NULL AND TRIM(saldo_akhir_nilai) NOT IN ('0', '', '-'))
+      OR (saldo_awal_nilai IS NOT NULL AND TRIM(saldo_awal_nilai) NOT IN ('0', '', '-'))
+    )
+`).get()?.c || 0;
+
+if (bmnNeedsBackfill > 0) {
+  const allBmn = db.prepare('SELECT id, kode, uraian, saldo_awal_kuantitas, saldo_awal_nilai, bertambah_kuantitas, bertambah_nilai, berkurang_kuantitas, berkurang_nilai, saldo_akhir_kuantitas, saldo_akhir_nilai, kondisi, status_bmn, kategori FROM tu_umum_barang').all();
+  const updateBmnStmt = db.prepare(`
+    UPDATE tu_umum_barang
+    SET nilai_perolehan = ?,
+        akumulasi_penyusutan = ?,
+        nilai_buku = ?,
+        kategori = ?,
+        kondisi = ?,
+        status_bmn = ?
+    WHERE id = ?
+  `);
+
+  db.exec('BEGIN');
+  try {
+    for (const r of allBmn) {
+      const numAwal = parseMoneyBmn(r.saldo_awal_nilai);
+      const numTambah = parseMoneyBmn(r.bertambah_nilai);
+      const numKurang = parseMoneyBmn(r.berkurang_nilai);
+      const numAkhir = parseMoneyBmn(r.saldo_akhir_nilai);
+      const numAkhirQty = parseMoneyBmn(r.saldo_akhir_kuantitas);
+
+      const nilaiPerolehan = (numAwal + numTambah) > 0 ? (numAwal + numTambah) : numAkhir;
+      const nilaiBuku = numAkhir;
+      const akumulasiPenyusutan = Math.max(0, nilaiPerolehan - nilaiBuku);
+      const kategori = getCategoryBmn(r.kode, r.uraian);
+      const isDefunct = (numAkhirQty === 0 && numAkhir === 0);
+      const kondisi = isDefunct ? 'Rusak Berat' : (r.kondisi && r.kondisi !== 'Baik' ? r.kondisi : (isDefunct ? 'Rusak Berat' : 'Baik'));
+      const status_bmn = isDefunct ? 'Henti Guna' : (r.status_bmn && r.status_bmn !== 'Aktif' ? r.status_bmn : (isDefunct ? 'Henti Guna' : 'Aktif'));
+
+      updateBmnStmt.run(nilaiPerolehan, akumulasiPenyusutan, nilaiBuku, kategori, kondisi, status_bmn, r.id);
+    }
+    db.exec('COMMIT');
+    console.log(`✅ Sukses auto-migrasi data BMN (${allBmn.length} aset diperbarui nilainya).`);
+  } catch (err) {
+    db.exec('ROLLBACK');
+    console.error('Gagal auto-migrasi BMN:', err);
+  }
+}
+
 const tuKepegawaianColumns = db.prepare("PRAGMA table_info('tu_kepegawaian')").all();
 const tuKepegawaianColumnNames = tuKepegawaianColumns.map(col => col.name);
 if (!tuKepegawaianColumnNames.includes('tmt_pangkat')) db.exec('ALTER TABLE tu_kepegawaian ADD COLUMN tmt_pangkat TEXT');

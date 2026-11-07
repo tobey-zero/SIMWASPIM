@@ -708,7 +708,7 @@ function getBmnRekap() {
   const countRow = db.prepare('SELECT COUNT(*) AS total FROM tu_umum_barang').get();
   const totalBmn = countRow ? Number(countRow.total) : 0;
 
-  const sums = db.prepare(`
+  let sums = db.prepare(`
     SELECT
       COALESCE(SUM(nilai_perolehan), 0) AS totalAset,
       COALESCE(SUM(akumulasi_penyusutan), 0) AS akumulasiPenyusutan,
@@ -716,9 +716,35 @@ function getBmnRekap() {
     FROM tu_umum_barang
   `).get() || { totalAset: 0, akumulasiPenyusutan: 0, nilaiBuku: 0 };
 
-  const totalAset = Number(sums.totalAset) || 0;
-  const akumulasiPenyusutan = Number(sums.akumulasiPenyusutan) || 0;
-  const nilaiBuku = Number(sums.nilaiBuku) || (totalAset - akumulasiPenyusutan);
+  let totalAset = Number(sums.totalAset) || 0;
+  let akumulasiPenyusutan = Number(sums.akumulasiPenyusutan) || 0;
+  let nilaiBuku = Number(sums.nilaiBuku) || (totalAset - akumulasiPenyusutan);
+
+  // Helper parser rupiah robust jika kolom nilai_perolehan bernilai 0 di database lama
+  function parseMoneyStr(val) {
+    if (val === null || val === undefined) return 0;
+    if (typeof val === 'number') return Math.round(val);
+    const str = String(val).trim();
+    if (str === '' || str === '-' || str === '0') return 0;
+    const digits = str.replace(/[^0-9]/g, '');
+    return parseFloat(digits) || 0;
+  }
+
+  // Fallback kalkulasi otomatis jika nilai_perolehan di DB masih 0
+  if (totalAset === 0 && totalBmn > 0) {
+    const rawRows = db.prepare('SELECT saldo_awal_nilai, bertambah_nilai, berkurang_nilai, saldo_akhir_nilai FROM tu_umum_barang').all();
+    rawRows.forEach(r => {
+      const numAwal = parseMoneyStr(r.saldo_awal_nilai);
+      const numTambah = parseMoneyStr(r.bertambah_nilai);
+      const numAkhir = parseMoneyStr(r.saldo_akhir_nilai);
+      const aset = (numAwal + numTambah) > 0 ? (numAwal + numTambah) : numAkhir;
+      const buku = numAkhir;
+      const susut = Math.max(0, aset - buku);
+      totalAset += aset;
+      akumulasiPenyusutan += susut;
+      nilaiBuku += buku;
+    });
+  }
 
   // Kondisi (Baik vs Rusak Berat)
   const kondisiRows = db.prepare('SELECT kondisi, COUNT(*) AS count FROM tu_umum_barang GROUP BY kondisi').all();
@@ -728,6 +754,20 @@ function getBmnRekap() {
     if (k.includes('rusak')) rusakBerat += Number(r.count);
     else baik += Number(r.count);
   });
+
+  // Fallback kondisi jika semuanya belum terklasifikasi
+  if (rusakBerat === 0 && totalBmn > 0) {
+    const checkDefunct = db.prepare(`
+      SELECT COUNT(*) AS c FROM tu_umum_barang
+      WHERE (saldo_akhir_kuantitas = '0' OR saldo_akhir_kuantitas = 0)
+        AND (saldo_akhir_nilai = '0' OR saldo_akhir_nilai = 0 OR saldo_akhir_nilai = '' OR saldo_akhir_nilai IS NULL)
+    `).get()?.c || 0;
+    if (checkDefunct > 0) {
+      rusakBerat = checkDefunct;
+      baik = Math.max(0, totalBmn - rusakBerat);
+    }
+  }
+
   const baikPct = totalBmn > 0 ? ((baik / totalBmn) * 100).toFixed(1) : '0';
   const rusakBeratPct = totalBmn > 0 ? ((rusakBerat / totalBmn) * 100).toFixed(1) : '0';
 
@@ -739,6 +779,13 @@ function getBmnRekap() {
     if (s.includes('henti') || s.includes('tidak') || s.includes('nonaktif') || s.includes('hapus')) hentiGuna += Number(r.count);
     else aktif += Number(r.count);
   });
+
+  // Fallback status jika hentiGuna masih 0
+  if (hentiGuna === 0 && rusakBerat > 0) {
+    hentiGuna = rusakBerat;
+    aktif = Math.max(0, totalBmn - hentiGuna);
+  }
+
   const aktifPct = totalBmn > 0 ? ((aktif / totalBmn) * 100).toFixed(1) : '0';
   const hentiGunaPct = totalBmn > 0 ? ((hentiGuna / totalBmn) * 100).toFixed(1) : '0';
 
@@ -746,7 +793,7 @@ function getBmnRekap() {
   const nilaiBukuPct = totalAset > 0 ? ((nilaiBuku / totalAset) * 100).toFixed(2) : '0';
 
   // Kategori List
-  const katRows = db.prepare(`
+  let katRows = db.prepare(`
     SELECT
       kategori,
       COUNT(*) AS count,
@@ -755,6 +802,56 @@ function getBmnRekap() {
     GROUP BY kategori
     ORDER BY totalNilai DESC
   `).all();
+
+  // Fallback jika kategori belum ter-backfill di tabel
+  if (katRows.length <= 1 && totalBmn > 10) {
+    const allRowsKat = db.prepare('SELECT kode, uraian, saldo_awal_nilai, bertambah_nilai, saldo_akhir_nilai FROM tu_umum_barang').all();
+    const katMap = {};
+    function getCategoryFallback(kode, uraian) {
+      const k = String(kode || '').trim();
+      const u = String(uraian || '').toLowerCase();
+      if (k.startsWith('2')) return 'Tanah Bangunan Lapas';
+      if (k.startsWith('4')) return 'Gedung & Bangunan';
+      if (k.startsWith('302')) return 'Kendaraan Dinas';
+      if (
+        k.startsWith('309') ||
+        k.startsWith('315') ||
+        u.includes('senjata') ||
+        u.includes('pistol') ||
+        u.includes('senapan') ||
+        u.includes('rompi') ||
+        u.includes('metal detector') ||
+        u.includes('tameng') ||
+        u.includes('borgol') ||
+        u.includes('dalmas') ||
+        u.includes('huru-hara') ||
+        u.includes('security') ||
+        u.includes('gaspistol') ||
+        u.includes('flash ball') ||
+        u.includes('jammer')
+      ) {
+        return 'Senjata & Pengamanan';
+      }
+      return 'Peralatan & Mesin';
+    }
+
+    allRowsKat.forEach(r => {
+      const cat = getCategoryFallback(r.kode, r.uraian);
+      const numAwal = parseMoneyStr(r.saldo_awal_nilai);
+      const numTambah = parseMoneyStr(r.bertambah_nilai);
+      const numAkhir = parseMoneyStr(r.saldo_akhir_nilai);
+      const val = (numAwal + numTambah) > 0 ? (numAwal + numTambah) : numAkhir;
+      if (!katMap[cat]) katMap[cat] = { count: 0, totalNilai: 0 };
+      katMap[cat].count++;
+      katMap[cat].totalNilai += val;
+    });
+
+    katRows = Object.keys(katMap).map(catName => ({
+      kategori: catName,
+      count: katMap[catName].count,
+      totalNilai: katMap[catName].totalNilai
+    })).sort((a, b) => b.totalNilai - a.totalNilai);
+  }
 
   const kategoriList = katRows.map(k => ({
     name: k.kategori || 'Peralatan & Mesin',
