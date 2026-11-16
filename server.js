@@ -522,18 +522,31 @@ function getKepegawaianRekap() {
     JFU: total > 0 ? ((typeMap.JFU / total) * 100).toFixed(1) : '0'
   };
 
-  // Seksi List
-  const seksiRows = db.prepare('SELECT penempatan_seksi, COUNT(*) AS count FROM tu_kepegawaian GROUP BY penempatan_seksi').all();
-  const seksiMap = {};
-  seksiRows.forEach(r => { seksiMap[String(r.penempatan_seksi || '').trim().toUpperCase()] = Number(r.count); });
+  // Penempatan / Bidang List
+  const bidangRows = db.prepare('SELECT penempatan_bidang, COUNT(*) AS count FROM tu_kepegawaian GROUP BY penempatan_bidang').all();
+  const bidangMap = {};
+  bidangRows.forEach(r => {
+    const k = String(r.penempatan_bidang || '').trim().toUpperCase();
+    if (k) bidangMap[k] = (bidangMap[k] || 0) + Number(r.count);
+  });
 
-  const seksiList = [
-    { code: 'KPLP', name: 'KPLP (Kesatuan Pengamanan)', count: seksiMap['KPLP'] || 0, color: '#dc2626' },
-    { code: 'PEMBINAAN NARAPIDANA', name: 'Pembinaan Narapidana & Anak Didik', count: seksiMap['PEMBINAAN NARAPIDANA'] || 0, color: '#2563eb' },
-    { code: 'TATA USAHA', name: 'Tata Usaha', count: seksiMap['TATA USAHA'] || 0, color: '#059669' },
-    { code: 'KEGIATAN KERJA', name: 'Kegiatan Kerja (Giatja)', count: seksiMap['KEGIATAN KERJA'] || 0, color: '#d97706' },
-    { code: 'ADM KEAMANAN DAN TATA TERTIB', name: 'Adm. Keamanan & Ketertiban', count: seksiMap['ADM KEAMANAN DAN TATA TERTIB'] || 0, color: '#7c3aed' }
-  ].map(s => ({ ...s, percent: total > 0 ? ((s.count / total) * 100).toFixed(1) : '0' }));
+  const bidangMeta = [
+    { code: 'RUPAM', name: 'RUPAM (Regu Pengamanan)', color: '#0284c7' },
+    { code: 'PEMBINAAN NARAPIDANA', name: 'Pembinaan Narapidana & Anak Didik', color: '#2563eb' },
+    { code: 'TATA USAHA', name: 'Tata Usaha', color: '#059669' },
+    { code: 'KPLP', name: 'KPLP (Kesatuan Pengamanan)', color: '#dc2626' },
+    { code: 'GIATJA', name: 'Kegiatan Kerja (Giatja)', color: '#d97706' },
+    { code: 'ADM. KAMTIB', name: 'Adm. Keamanan & Ketertiban', color: '#7c3aed' }
+  ];
+
+  const bidangList = bidangMeta.map(b => ({
+    ...b,
+    count: bidangMap[b.code] || 0,
+    percent: total > 0 ? (((bidangMap[b.code] || 0) / total) * 100).toFixed(1) : '0'
+  }));
+
+  // Seksi List (alias of bidangList for backward compatibility)
+  const seksiList = bidangList;
 
   // Pangkat
   const pangkatRows = db.prepare('SELECT pangkat_gol, COUNT(*) AS count FROM tu_kepegawaian GROUP BY pangkat_gol').all();
@@ -593,10 +606,21 @@ function getKepegawaianRekap() {
     percent: total > 0 ? ((s.count / total) * 100).toFixed(1) : '0'
   }));
 
-  const naikPangkatCount = db.prepare("SELECT COUNT(*) AS c FROM tu_kepegawaian WHERE tmt_pangkat LIKE '2026%'").get()?.c || 0;
+  const currentYear = new Date().getFullYear();
+  const naikPangkatTahun = getAppSetting('kepegawaian_naik_pangkat_tahun', String(currentYear));
+  let naikPangkatCount = getAppSetting('kepegawaian_naik_pangkat_count', '');
+  if (naikPangkatCount === '') {
+    const dbCount = db.prepare("SELECT COUNT(*) AS c FROM tu_kepegawaian WHERE tmt_pangkat LIKE ?").get(`${naikPangkatTahun}%`)?.c;
+    naikPangkatCount = dbCount !== undefined ? dbCount : 0;
+  } else {
+    naikPangkatCount = Number(naikPangkatCount) || 0;
+  }
+  const naikPangkatSubtext = getAppSetting('kepegawaian_naik_pangkat_keterangan', `Pegawai dengan jadwal/TMT kenaikan pangkat di tahun ${naikPangkatTahun}`);
 
   return {
     total,
+    bidangList,
+    seksiList,
     gender: {
       laki,
       lakiPercent: total > 0 ? ((laki / total) * 100).toFixed(1) : '0',
@@ -606,7 +630,8 @@ function getKepegawaianRekap() {
     typeMap,
     typePercent,
     naikPangkatCount,
-    seksiList,
+    naikPangkatTahun,
+    naikPangkatSubtext,
     golonganIV,
     golonganIII,
     golonganII,
@@ -619,6 +644,7 @@ function getKepegawaianRekap() {
 function getPaginatedKepegawaian(query = {}) {
   const { sortBy, sortDir } = parseKepegawaianSortQuery(query);
   const search = String(query.search || '').trim().toLowerCase();
+  const bidang = String(query.bidang || '').trim().toUpperCase();
   const seksi = String(query.seksi || '').trim().toUpperCase();
   const type = String(query.type || '').trim().toUpperCase();
   const rawPage = parseInt(query.page, 10);
@@ -630,8 +656,17 @@ function getPaginatedKepegawaian(query = {}) {
   const totalAll = allRows.length;
 
   let filtered = allRows;
-  if (seksi) {
-    filtered = filtered.filter(item => String(item.penempatan_seksi || '').trim().toUpperCase() === seksi);
+  if (bidang) {
+    filtered = filtered.filter(item => {
+      const itemBidang = String(item.penempatan_bidang || '').trim().toUpperCase();
+      return itemBidang === bidang;
+    });
+  } else if (seksi) {
+    filtered = filtered.filter(item => {
+      const itemBidang = String(item.penempatan_bidang || '').trim().toUpperCase();
+      const itemSeksi = String(item.penempatan_seksi || '').trim().toUpperCase();
+      return itemBidang === seksi || itemSeksi === seksi || (seksi === 'RUPAM' && itemSeksi.startsWith('RUPAM'));
+    });
   }
   if (type) {
     filtered = filtered.filter(item => String(item.type_pegawai || '').trim().toUpperCase() === type);
@@ -642,10 +677,11 @@ function getPaginatedKepegawaian(query = {}) {
       const matchNip = String(item.nip || '').toLowerCase().includes(search);
       const matchJabatan = String(item.jabatan || '').toLowerCase().includes(search);
       const matchPangkat = String(item.pangkat_gol || '').toLowerCase().includes(search);
+      const matchBidang = String(item.penempatan_bidang || '').toLowerCase().includes(search);
       const matchSeksi = String(item.penempatan_seksi || '').toLowerCase().includes(search);
       const matchAgama = String(item.agama || '').toLowerCase().includes(search);
       const matchPendidikan = String(item.pendidikan || '').toLowerCase().includes(search);
-      return matchNama || matchNip || matchJabatan || matchPangkat || matchSeksi || matchAgama || matchPendidikan;
+      return matchNama || matchNip || matchJabatan || matchPangkat || matchBidang || matchSeksi || matchAgama || matchPendidikan;
     });
   }
 
@@ -669,7 +705,8 @@ function getPaginatedKepegawaian(query = {}) {
     },
     filters: {
       search,
-      seksi,
+      bidang: bidang || seksi,
+      seksi: seksi || bidang,
       type,
       sortBy,
       sortDir
@@ -4685,7 +4722,8 @@ app.get('/kalapas/table/tu-umum', (req, res) => {
     const p = new URLSearchParams();
     p.set('tab', 'kepegawaian');
     if (filters.search) p.set('search', filters.search);
-    if (filters.seksi) p.set('seksi', filters.seksi);
+    if (filters.bidang) p.set('bidang', filters.bidang);
+    else if (filters.seksi) p.set('seksi', filters.seksi);
     if (filters.type) p.set('type', filters.type);
     if (filters.sortBy) p.set('sortBy', filters.sortBy);
     if (filters.sortDir) p.set('sortDir', filters.sortDir);
@@ -4698,7 +4736,8 @@ app.get('/kalapas/table/tu-umum', (req, res) => {
     const p = new URLSearchParams();
     p.set('tab', 'kepegawaian');
     if (filters.search) p.set('search', filters.search);
-    if (filters.seksi) p.set('seksi', filters.seksi);
+    if (filters.bidang) p.set('bidang', filters.bidang);
+    else if (filters.seksi) p.set('seksi', filters.seksi);
     if (filters.type) p.set('type', filters.type);
     p.set('sortBy', targetSortBy);
     p.set('sortDir', targetSortDir);
@@ -8281,7 +8320,8 @@ app.get('/admin/tu-umum/kepegawaian', requireAccess('tu-umum'), (req, res) => {
   const makePageUrl = (targetPage) => {
     const p = new URLSearchParams();
     if (filters.search) p.set('search', filters.search);
-    if (filters.seksi) p.set('seksi', filters.seksi);
+    if (filters.bidang) p.set('bidang', filters.bidang);
+    else if (filters.seksi) p.set('seksi', filters.seksi);
     if (filters.type) p.set('type', filters.type);
     if (filters.sortBy) p.set('sortBy', filters.sortBy);
     if (filters.sortDir) p.set('sortDir', filters.sortDir);
@@ -8293,7 +8333,8 @@ app.get('/admin/tu-umum/kepegawaian', requireAccess('tu-umum'), (req, res) => {
   const makeSortUrl = (targetSortBy, targetSortDir) => {
     const p = new URLSearchParams();
     if (filters.search) p.set('search', filters.search);
-    if (filters.seksi) p.set('seksi', filters.seksi);
+    if (filters.bidang) p.set('bidang', filters.bidang);
+    else if (filters.seksi) p.set('seksi', filters.seksi);
     if (filters.type) p.set('type', filters.type);
     p.set('sortBy', targetSortBy);
     p.set('sortDir', targetSortDir);
@@ -8304,7 +8345,8 @@ app.get('/admin/tu-umum/kepegawaian', requireAccess('tu-umum'), (req, res) => {
 
   const preserveFilterParams = new URLSearchParams();
   if (filters.search) preserveFilterParams.set('search', filters.search);
-  if (filters.seksi) preserveFilterParams.set('seksi', filters.seksi);
+  if (filters.bidang) preserveFilterParams.set('bidang', filters.bidang);
+  else if (filters.seksi) preserveFilterParams.set('seksi', filters.seksi);
   if (filters.type) preserveFilterParams.set('type', filters.type);
   if (filters.sortBy) preserveFilterParams.set('sortBy', filters.sortBy);
   if (filters.sortDir) preserveFilterParams.set('sortDir', filters.sortDir);
@@ -8564,7 +8606,8 @@ app.post('/admin/tu-umum/:id/delete', requireAccess('tu-umum'), (req, res) => {
 function buildKepegawaianRedirectQuery(reqQuery = {}) {
   const p = new URLSearchParams();
   if (reqQuery.search) p.set('search', String(reqQuery.search));
-  if (reqQuery.seksi) p.set('seksi', String(reqQuery.seksi));
+  if (reqQuery.bidang) p.set('bidang', String(reqQuery.bidang));
+  else if (reqQuery.seksi) p.set('seksi', String(reqQuery.seksi));
   if (reqQuery.type) p.set('type', String(reqQuery.type));
   if (reqQuery.sortBy) p.set('sortBy', String(reqQuery.sortBy));
   if (reqQuery.sortDir) p.set('sortDir', String(reqQuery.sortDir));
@@ -8573,6 +8616,24 @@ function buildKepegawaianRedirectQuery(reqQuery = {}) {
   const s = p.toString();
   return s ? `?${s}` : '';
 }
+
+app.post('/admin/tu-umum/kepegawaian/naik-pangkat', requireAccess('tu-umum'), (req, res) => {
+  const count = parseInt(req.body.naik_pangkat_count, 10);
+  const tahun = (req.body.naik_pangkat_tahun || '').trim() || String(new Date().getFullYear());
+  const keterangan = (req.body.naik_pangkat_keterangan || '').trim();
+
+  setAppSetting('kepegawaian_naik_pangkat_count', Number.isInteger(count) && count >= 0 ? count : 0);
+  setAppSetting('kepegawaian_naik_pangkat_tahun', tahun);
+  if (keterangan) {
+    setAppSetting('kepegawaian_naik_pangkat_keterangan', keterangan);
+  } else {
+    setAppSetting('kepegawaian_naik_pangkat_keterangan', `Pegawai dengan jadwal/TMT kenaikan pangkat di tahun ${tahun}`);
+  }
+
+  const redirectQuery = buildKepegawaianRedirectQuery(req.query);
+  const prefix = redirectQuery ? `${redirectQuery}&` : '?';
+  res.redirect(`/admin/tu-umum/kepegawaian${prefix}success=1`);
+});
 
 app.post('/admin/tu-umum/pegawai/add', requireAccess('tu-umum'), (req, res) => {
   const redirectQuery = buildKepegawaianRedirectQuery(req.query);

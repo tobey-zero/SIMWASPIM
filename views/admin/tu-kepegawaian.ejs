@@ -151,7 +151,7 @@
       <% if (success) { %><div class="alert alert-success">✅ Data berhasil disimpan.</div><% } %>
 
       <!-- REKAPITULASI KEPEGAWAIAN MODERN (DI ATAS TABEL) -->
-      <%- include('../partials/rekap-kepegawaian', { rekap }) %>
+      <%- include('../partials/rekap-kepegawaian', { rekap, isAdmin: true, preserveFilterQuery }) %>
 
       <!-- FORM EDIT PEGAWAI (JIKA SEDANG MODE EDIT) -->
       <% if (editPegawai) { %>
@@ -172,14 +172,17 @@
             <div class="form-group"><label>Status</label><input type="text" name="status" value="<%= editPegawai.status || '' %>"></div>
             <div class="form-group"><label>Pendidikan</label><input type="text" name="pendidikan" value="<%= editPegawai.pendidikan || '' %>"></div>
             <div class="form-group">
-              <label>Penempatan/Seksi</label>
-              <select name="penempatan_seksi">
-                <% ['KPLP', 'PEMBINAAN NARAPIDANA', 'TATA USAHA', 'KEGIATAN KERJA', 'ADM KEAMANAN DAN TATA TERTIB'].forEach(sek => { %>
-                  <option value="<%= sek %>" <%= editPegawai.penempatan_seksi === sek ? 'selected' : '' %>><%= sek %></option>
+              <label>Penempatan/Bidang</label>
+              <select name="penempatan_bidang">
+                <% ['RUPAM', 'PEMBINAAN NARAPIDANA', 'TATA USAHA', 'KPLP', 'GIATJA', 'ADM. KAMTIB'].forEach(bid => { %>
+                  <option value="<%= bid %>" <%= (editPegawai.penempatan_bidang || '').toUpperCase() === bid ? 'selected' : '' %>><%= bid %></option>
                 <% }) %>
               </select>
             </div>
-            <div class="form-group"><label>Penempatan/Bidang</label><input type="text" name="penempatan_bidang" value="<%= editPegawai.penempatan_bidang || '' %>"></div>
+            <div class="form-group">
+              <label>Penempatan/Seksi</label>
+              <input type="text" name="penempatan_seksi" value="<%= editPegawai.penempatan_seksi || '' %>" placeholder="Misal: RUPAM I, UMUM, BIMKEMAS, KEAMANAN...">
+            </div>
             <div class="form-group">
               <label>Jenis Kelamin</label>
               <select name="jenis_kelamin">
@@ -252,16 +255,17 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>Penempatan / Seksi</label>
-                <select name="penempatan_seksi">
-                  <option value="KPLP">KPLP</option>
-                  <option value="PEMBINAAN NARAPIDANA">PEMBINAAN NARAPIDANA</option>
-                  <option value="TATA USAHA">TATA USAHA</option>
-                  <option value="KEGIATAN KERJA">KEGIATAN KERJA</option>
-                  <option value="ADM KEAMANAN DAN TATA TERTIB">ADM KEAMANAN DAN TATA TERTIB</option>
+                <label>Penempatan / Bidang</label>
+                <select name="penempatan_bidang">
+                  <% ['RUPAM', 'PEMBINAAN NARAPIDANA', 'TATA USAHA', 'KPLP', 'GIATJA', 'ADM. KAMTIB'].forEach(bid => { %>
+                    <option value="<%= bid %>"><%= bid %></option>
+                  <% }) %>
                 </select>
               </div>
-              <div class="form-group"><label>Penempatan / Bidang</label><input type="text" name="penempatan_bidang" placeholder="Unit kerja / regu"></div>
+              <div class="form-group">
+                <label>Penempatan / Seksi</label>
+                <input type="text" name="penempatan_seksi" placeholder="Misal: RUPAM I, UMUM, BIMKEMAS, KEAMANAN...">
+              </div>
               <div class="form-group">
                 <label>Jenis Kelamin</label>
                 <select name="jenis_kelamin">
@@ -290,10 +294,10 @@
 
         <input type="text" name="search" placeholder="🔍 Cari nama pegawai, NIP, jabatan..." value="<%= filters.search || '' %>">
 
-        <select name="seksi">
-          <option value="">Semua Seksi / Unit</option>
-          <% rekap.seksiList.forEach(s => { %>
-            <option value="<%= s.code %>" <%= filters.seksi === s.code ? 'selected' : '' %>><%= s.name %></option>
+        <select name="bidang">
+          <option value="">Semua Penempatan / Bidang</option>
+          <% (rekap.bidangList || rekap.seksiList || []).forEach(s => { %>
+            <option value="<%= s.code %>" <%= (filters.bidang === s.code || filters.seksi === s.code) ? 'selected' : '' %>><%= s.name %></option>
           <% }) %>
         </select>
 
@@ -312,7 +316,7 @@
         </select>
 
         <button type="submit" class="btn btn-primary btn-sm">Terapkan</button>
-        <% if (filters.search || filters.seksi || filters.type) { %>
+        <% if (filters.search || filters.bidang || filters.seksi || filters.type) { %>
           <a href="/admin/tu-umum/kepegawaian" class="btn btn-secondary btn-sm">Reset</a>
         <% } %>
       </form>
@@ -359,6 +363,7 @@
                   <th>Agama</th>
                   <th>Status</th>
                   <th>Pendidikan</th>
+                  <th>Penempatan/Bidang</th>
                   <th>Penempatan/Seksi</th>
                   <th>Jenis Kelamin</th>
                   <th>Type</th>
@@ -378,6 +383,11 @@
                   <td><%= item.agama || '-' %></td>
                   <td><%= item.status || '-' %></td>
                   <td><%= item.pendidikan || '-' %></td>
+                  <td>
+                    <span style="font-weight:700; color:#1e40af; background:#eff6ff; padding:2px 6px; border-radius:4px; font-size:11px; display:inline-block;">
+                      <%= item.penempatan_bidang || '-' %>
+                    </span>
+                  </td>
                   <td><span style="font-weight:600; color:#334155;"><%= item.penempatan_seksi || '-' %></span></td>
                   <td><%= item.jenis_kelamin || '-' %></td>
                   <td>
@@ -399,7 +409,7 @@
 
                 <% if (!pegawaiList.length) { %>
                   <tr>
-                    <td colspan="14" style="text-align:center;color:#94a3b8;padding:30px;">
+                    <td colspan="15" style="text-align:center;color:#94a3b8;padding:30px;">
                       Tidak ada data pegawai yang sesuai dengan filter atau kata kunci pencarian.
                     </td>
                   </tr>

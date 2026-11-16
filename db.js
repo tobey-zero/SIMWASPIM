@@ -931,6 +931,24 @@ const tuKepegawaianColumnNames = tuKepegawaianColumns.map(col => col.name);
 if (!tuKepegawaianColumnNames.includes('tmt_pangkat')) db.exec('ALTER TABLE tu_kepegawaian ADD COLUMN tmt_pangkat TEXT');
 if (!tuKepegawaianColumnNames.includes('tmt_jabatan')) db.exec('ALTER TABLE tu_kepegawaian ADD COLUMN tmt_jabatan TEXT');
 
+// ── Auto-Normalization Data Kepegawaian (Penempatan Bidang & Pangkat) ──
+try {
+  db.exec(`
+    UPDATE tu_kepegawaian SET penempatan_bidang = 'RUPAM' WHERE (penempatan_bidang IS NULL OR TRIM(penempatan_bidang) = '') AND UPPER(penempatan_seksi) LIKE 'RUPAM%';
+    UPDATE tu_kepegawaian SET penempatan_bidang = 'PEMBINAAN NARAPIDANA' WHERE penempatan_bidang LIKE 'PEMBINAAN%NARAPIDANA';
+    UPDATE tu_kepegawaian SET penempatan_bidang = 'ADM. KAMTIB' WHERE penempatan_bidang = 'ADM.KAMTIB';
+    UPDATE tu_kepegawaian SET pangkat_gol = 'Penata Muda Tingkat I (III/b)' WHERE pangkat_gol = 'Penata Muda Tingkat I (III/b';
+    UPDATE tu_kepegawaian SET pangkat_gol = 'Pengatur Muda Tingkat I (II/b)' WHERE pangkat_gol = 'Pengatur Muda Tingkat I (II/b';
+    UPDATE tu_kepegawaian SET jenis_kelamin = 'Perempuan' WHERE UPPER(jenis_kelamin) = 'PEREMPUAN';
+    UPDATE tu_kepegawaian SET pendidikan = 'STRATA 1' WHERE LOWER(pendidikan) = 'strata 1';
+    UPDATE tu_kepegawaian SET agama = 'KRISTEN' WHERE LOWER(agama) = 'kristen';
+    UPDATE tu_kepegawaian SET status = 'MENIKAH' WHERE LOWER(status) = 'menikah';
+    UPDATE tu_kepegawaian SET status = 'BELUM MENIKAH' WHERE LOWER(status) = 'belum menikah';
+  `);
+} catch (errKepeg) {
+  console.error('Gagal auto-normalisasi tu_kepegawaian:', errKepeg);
+}
+
 const housingRoomColumns = db.prepare("PRAGMA table_info('housing_rooms')").all();
 const housingRoomColumnNames = housingRoomColumns.map(col => col.name);
 if (!housingRoomColumnNames.includes('kapasitas')) db.exec('ALTER TABLE housing_rooms ADD COLUMN kapasitas INTEGER NOT NULL DEFAULT 0');
