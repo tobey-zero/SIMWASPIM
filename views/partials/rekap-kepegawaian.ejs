@@ -419,12 +419,11 @@
             <span class="rk-metric-label">Kenaikan Pangkat (<%= rekap.naikPangkatTahun || '2026' %>)</span>
             <div style="display:flex; align-items:center; gap:6px;">
               <span class="rk-metric-badge amber">Tahun <%= rekap.naikPangkatTahun || '2026' %></span>
-              <% if (typeof isAdmin !=='undefined' && isAdmin) { %>
-                <button type="button" class="rk-edit-btn" onclick="openNaikPangkatModal()"
-                  title="Edit Target / Realisasi Kenaikan Pangkat">
+              <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                <button type="button" class="rk-edit-btn" onclick="openNaikPangkatModal()" title="Edit Target / Realisasi Kenaikan Pangkat">
                   ✏️ Edit
                 </button>
-                <% } %>
+              <% } %>
             </div>
           </div>
           <div class="rk-metric-val" style="color: #b45309;">
@@ -432,8 +431,7 @@
               <span class="rk-unit">Orang</span>
           </div>
           <div class="rk-metric-sub">
-            <%= rekap.naikPangkatSubtext || `Pegawai dengan jadwal/TMT kenaikan pangkat di tahun
-              ${rekap.naikPangkatTahun || '2026' }` %>
+            <%= rekap.naikPangkatSubtext || `Pegawai dengan jadwal/TMT kenaikan pangkat di tahun ${rekap.naikPangkatTahun || '2026'}` %>
           </div>
         </div>
 
@@ -451,8 +449,7 @@
             </div>
             <div style="font-size:13px; font-weight:700; color:#be185d;">
               👩 <%= rekap.gender.perempuan %> Perempuan <span style="font-size:11px; color:#64748b; font-weight:500;">(
-                  <%= rekap.gender.perempuanPercent %>%)
-                </span>
+                  <%= rekap.gender.perempuanPercent %>%)</span>
             </div>
           </div>
           <div class="rk-ratio-bar">
@@ -474,28 +471,22 @@
               style="background:#f5f3ff; color:#6d28d9; border-color:#ddd6fe;">Jabatan</span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:baseline; font-size:12px;">
-            <span title="Struktural" style="font-weight:700; color:#2563eb;">Struktural: <%= (rekap.typeMap &&
-                rekap.typeMap['STRUKTURAL']) || 17 %></span>
-            <span title="Jabatan Fungsional Tertentu" style="font-weight:700; color:#7c3aed;">JFT: <%= (rekap.typeMap &&
-                rekap.typeMap['JFT']) || 21 %></span>
-            <span title="Jabatan Fungsional Umum" style="font-weight:700; color:#059669;">JFU: <%= (rekap.typeMap &&
-                rekap.typeMap['JFU']) || 208 %></span>
+            <span title="Struktural" style="font-weight:700; color:#2563eb;">Struktural: <%= (rekap.typeMap && rekap.typeMap['STRUKTURAL']) || 17 %></span>
+            <span title="Jabatan Fungsional Tertentu" style="font-weight:700; color:#7c3aed;">JFT: <%=
+                (rekap.typeMap && rekap.typeMap['JFT']) || 21 %></span>
+            <span title="Jabatan Fungsional Umum" style="font-weight:700; color:#059669;">JFU: <%= (rekap.typeMap && rekap.typeMap['JFU']) || 208 %></span>
           </div>
           <div class="rk-ratio-bar">
             <div class="rk-ratio-segment"
               style="width: <%= (rekap.typePercent && rekap.typePercent['STRUKTURAL']) || 6.9 %>%; background: #2563eb;"
               title="Struktural: <%= (rekap.typeMap && rekap.typeMap['STRUKTURAL']) || 17 %>"></div>
-            <div class="rk-ratio-segment"
-              style="width: <%= (rekap.typePercent && rekap.typePercent['JFT']) || 8.5 %>%; background: #7c3aed;"
+            <div class="rk-ratio-segment" style="width: <%= (rekap.typePercent && rekap.typePercent['JFT']) || 8.5 %>%; background: #7c3aed;"
               title="JFT: <%= (rekap.typeMap && rekap.typeMap['JFT']) || 21 %>"></div>
-            <div class="rk-ratio-segment"
-              style="width: <%= (rekap.typePercent && rekap.typePercent['JFU']) || 84.6 %>%; background: #10b981;"
+            <div class="rk-ratio-segment" style="width: <%= (rekap.typePercent && rekap.typePercent['JFU']) || 84.6 %>%; background: #10b981;"
               title="JFU: <%= (rekap.typeMap && rekap.typeMap['JFU']) || 208 %>"></div>
           </div>
           <div class="rk-metric-sub">
-            <%= (rekap.typeMap && rekap.typeMap['STRUKTURAL']) || 17 %> Pejabat Struktural · <%= (rekap.typeMap &&
-                rekap.typeMap['JFT']) || 21 %> JF Tertentu · <%= (rekap.typeMap && rekap.typeMap['JFU']) || 208 %> JF
-                  Umum / Pelaksana
+            <%= (rekap.typeMap && rekap.typeMap['STRUKTURAL']) || 17 %> Pejabat Struktural · <%= (rekap.typeMap && rekap.typeMap['JFT']) || 21 %> JF Tertentu · <%= (rekap.typeMap && rekap.typeMap['JFU']) || 208 %> JF Umum / Pelaksana
           </div>
         </div>
       </div>
@@ -514,7 +505,7 @@
           </div>
 
           <div>
-            <% (rekap.bidangList || rekap.seksiList || []).forEach(bidang=> { %>
+            <% (rekap.bidangList || rekap.seksiList || []).forEach(bidang => { %>
               <div class="rk-stat-row rk-clickable-row" onclick="quickFilterBidang('<%= bidang.code %>')"
                 title="Klik untuk memfilter tabel ke Bidang <%= bidang.name %>" style="cursor: pointer;">
                 <div class="rk-stat-info">
@@ -529,11 +520,10 @@
                   </span>
                 </div>
                 <div class="rk-stat-track">
-                  <div class="rk-stat-fill" style="width: <%= bidang.percent %>%; background: <%= bidang.color %>;">
-                  </div>
+                  <div class="rk-stat-fill" style="width: <%= bidang.percent %>%; background: <%= bidang.color %>;"></div>
                 </div>
               </div>
-              <% }) %>
+            <% }) %>
           </div>
         </div>
 
@@ -755,60 +745,41 @@
   }
 </script>
 
-<% if (typeof isAdmin !=='undefined' && isAdmin) { %>
-  <!-- Modal Edit Kenaikan Pangkat (Admin Only) -->
-  <div id="modalEditNaikPangkat"
-    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(2px);">
-    <div
-      style="background:#ffffff; border-radius:12px; width:92%; max-width:480px; overflow:hidden; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3); border:1px solid #e2e8f0; font-family:inherit;">
-      <div
-        style="background:#b45309; color:#ffffff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center;">
-        <h4
-          style="font-size:14px; font-weight:700; margin:0; display:flex; align-items:center; gap:8px; color:#ffffff;">
-          <span>🎖️ Atur Data Kenaikan Pangkat Pegawai</span>
-        </h4>
-        <button type="button" onclick="closeNaikPangkatModal()"
-          style="background:transparent; border:none; color:#ffffff; font-size:22px; cursor:pointer; line-height:1;">&times;</button>
-      </div>
-      <form method="POST"
-        action="/admin/tu-umum/kepegawaian/naik-pangkat<%= typeof preserveFilterQuery !== 'undefined' ? preserveFilterQuery : '' %>"
-        style="padding:18px;">
-        <div
-          style="background:#fef3c7; border:1px solid #fde68a; border-radius:6px; padding:10px 12px; margin-bottom:14px; font-size:12px; color:#92400e; line-height:1.45;">
-          💡 <strong>Pengaturan Data Manual:</strong> Jumlah usulan kenaikan pangkat tidak dapat ditarik otomatis dari
-          data berkas pegawai. Anda dapat memperbarui jumlah estimasi/realisasi kenaikan pangkat di sini.
-        </div>
-
-        <div style="margin-bottom:12px;">
-          <label style="font-weight:700; font-size:12px; color:#1e293b; display:block; margin-bottom:4px;">Tahun
-            Periode</label>
-          <input type="text" name="naik_pangkat_tahun" value="<%= rekap.naikPangkatTahun || '2026' %>" required
-            style="width:100%; box-sizing:border-box; padding:8px 10px; font-size:13px; border:1px solid #cbd5e1; border-radius:6px;">
-        </div>
-
-        <div style="margin-bottom:12px;">
-          <label style="font-weight:700; font-size:12px; color:#1e293b; display:block; margin-bottom:4px;">Jumlah
-            Pegawai Naik Pangkat (Orang)</label>
-          <input type="number" name="naik_pangkat_count" min="0" value="<%= rekap.naikPangkatCount || 0 %>" required
-            style="width:100%; box-sizing:border-box; padding:8px 10px; font-size:13px; border:1px solid #cbd5e1; border-radius:6px;">
-        </div>
-
-        <div style="margin-bottom:16px;">
-          <label style="font-weight:700; font-size:12px; color:#1e293b; display:block; margin-bottom:4px;">Keterangan /
-            Subtext</label>
-          <input type="text" name="naik_pangkat_keterangan" value="<%= rekap.naikPangkatSubtext || '' %>"
-            placeholder="Contoh: Pegawai dengan usul kenaikan pangkat periode 2026"
-            style="width:100%; box-sizing:border-box; padding:8px 10px; font-size:13px; border:1px solid #cbd5e1; border-radius:6px;">
-        </div>
-
-        <div style="display:flex; justify-content:flex-end; gap:8px;">
-          <button type="button" onclick="closeNaikPangkatModal()"
-            style="padding:7px 14px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; font-size:12px; font-weight:600; color:#475569; cursor:pointer;">Batal</button>
-          <button type="submit"
-            style="padding:7px 14px; background:#b45309; border:none; border-radius:6px; font-size:12px; font-weight:600; color:#ffffff; cursor:pointer;">💾
-            Simpan Data</button>
-        </div>
-      </form>
+<% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+<!-- Modal Edit Kenaikan Pangkat (Admin Only) -->
+<div id="modalEditNaikPangkat" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(2px);">
+  <div style="background:#ffffff; border-radius:12px; width:92%; max-width:480px; overflow:hidden; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3); border:1px solid #e2e8f0; font-family:inherit;">
+    <div style="background:#b45309; color:#ffffff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center;">
+      <h4 style="font-size:14px; font-weight:700; margin:0; display:flex; align-items:center; gap:8px; color:#ffffff;">
+        <span>🎖️ Atur Data Kenaikan Pangkat Pegawai</span>
+      </h4>
+      <button type="button" onclick="closeNaikPangkatModal()" style="background:transparent; border:none; color:#ffffff; font-size:22px; cursor:pointer; line-height:1;">&times;</button>
     </div>
+    <form method="POST" action="/admin/tu-umum/kepegawaian/naik-pangkat<%= typeof preserveFilterQuery !== 'undefined' ? preserveFilterQuery : '' %>" style="padding:18px;">
+      <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:6px; padding:10px 12px; margin-bottom:14px; font-size:12px; color:#92400e; line-height:1.45;">
+        💡 <strong>Pengaturan Data Manual:</strong> Jumlah usulan kenaikan pangkat tidak dapat ditarik otomatis dari data berkas pegawai. Anda dapat memperbarui jumlah estimasi/realisasi kenaikan pangkat di sini.
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:700; font-size:12px; color:#1e293b; display:block; margin-bottom:4px;">Tahun Periode</label>
+        <input type="text" name="naik_pangkat_tahun" value="<%= rekap.naikPangkatTahun || '2026' %>" required style="width:100%; box-sizing:border-box; padding:8px 10px; font-size:13px; border:1px solid #cbd5e1; border-radius:6px;">
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:700; font-size:12px; color:#1e293b; display:block; margin-bottom:4px;">Jumlah Pegawai Naik Pangkat (Orang)</label>
+        <input type="number" name="naik_pangkat_count" min="0" value="<%= rekap.naikPangkatCount || 0 %>" required style="width:100%; box-sizing:border-box; padding:8px 10px; font-size:13px; border:1px solid #cbd5e1; border-radius:6px;">
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-weight:700; font-size:12px; color:#1e293b; display:block; margin-bottom:4px;">Keterangan / Subtext</label>
+        <input type="text" name="naik_pangkat_keterangan" value="<%= rekap.naikPangkatSubtext || '' %>" placeholder="Contoh: Pegawai dengan usul kenaikan pangkat periode 2026" style="width:100%; box-sizing:border-box; padding:8px 10px; font-size:13px; border:1px solid #cbd5e1; border-radius:6px;">
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" onclick="closeNaikPangkatModal()" style="padding:7px 14px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; font-size:12px; font-weight:600; color:#475569; cursor:pointer;">Batal</button>
+        <button type="submit" style="padding:7px 14px; background:#b45309; border:none; border-radius:6px; font-size:12px; font-weight:600; color:#ffffff; cursor:pointer;">💾 Simpan Data</button>
+      </div>
+    </form>
   </div>
-  <% } %>
+</div>
+<% } %>
